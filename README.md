@@ -91,10 +91,7 @@ Tableau de bord : KPIs, statistiques, exports.
 
 Administration & sécurité : gestion des utilisateurs, rôles, logs d’audit.
 
-
-
 ### Planning (Août 2026)
-
 
 * [X] Phase 1 (03/08) : Analyse & conception (MCD, MLD, MPD, UML).
 * [ ] Phase 2 (10/08) : Backend & base de données (entités JPA, repositories, services). --> En cours
@@ -104,11 +101,9 @@ Administration & sécurité : gestion des utilisateurs, rôles, logs d’audit.
 
 ### Livrables
 
-
 * [X] Cahier des charges validé
-
 * [X] Diagrammes de conception (MCD, MLD, UML)
-* [ ] Base PostgreSQL initialisée
+* [X] Base PostgreSQL initialisée
 * [ ] Code source complet (Frontend + Backend)
 * [ ] Documentation technique & guide utilisateur
 
