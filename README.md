@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Docs/Images/logocg1.png" alt="Logo Commune Golfe 1" width="120"/>
+  <img src="docs/images/logocg1.png" alt="Logo Commune Golfe 1" width="120"/>
 </p>
 
 <h1 align="center">MAIRIE DU GOLFE 1 - Bè Apédomé</h1>
@@ -113,5 +113,5 @@ Administration & sécurité : gestion des utilisateurs, rôles, logs d’audit.
 * [ ] Documentation technique & guide utilisateur
 
 <p align="center">
-<img src="Docs/Images/logocg1.png" alt="Logo Commune Golfe 1" width="80"/>
+<img src="docs/images/logocg1.png" alt="Logo Commune Golfe 1" width="80"/>
 </p>
