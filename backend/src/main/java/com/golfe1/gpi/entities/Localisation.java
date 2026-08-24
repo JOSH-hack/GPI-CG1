@@ -4,8 +4,8 @@ Nom du fichier   : Localisation.java
 Objectif         : Entité JPA représentant les localisations géographiques et administratives
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - "site" renommé "annexe", ajout du champ "poste"
 
 */
 
@@ -22,17 +22,21 @@ public class Localisation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idLocalisation;
 
-    @Column(nullable = false, length = 150)
-    private String site;
+    @Column(nullable = false, length = 100)
+    private String annexe;
 
+    @Column(nullable = false, length = 100)
     private String service;
+
     private String bureau;
+    private String poste;
 
     public Localisation() {
     }
 
-    public Localisation(String site) {
-        this.site = site;
+    public Localisation(String annexe, String service) {
+        this.annexe = annexe;
+        this.service = service;
     }
 
     public Long getIdLocalisation() {
@@ -43,12 +47,12 @@ public class Localisation {
         this.idLocalisation = idLocalisation;
     }
 
-    public String getSite() {
-        return site;
+    public String getAnnexe() {
+        return annexe;
     }
 
-    public void setSite(String site) {
-        this.site = site;
+    public void setAnnexe(String annexe) {
+        this.annexe = annexe;
     }
 
     public String getService() {
@@ -65,6 +69,14 @@ public class Localisation {
 
     public void setBureau(String bureau) {
         this.bureau = bureau;
+    }
+
+    public String getPoste() {
+        return poste;
+    }
+
+    public void setPoste(String poste) {
+        this.poste = poste;
     }
 
     @Override
@@ -86,9 +98,10 @@ public class Localisation {
     public String toString() {
         return "Localisation{" +
                 "idLocalisation=" + idLocalisation +
-                ", site='" + site + '\'' +
+                ", annexe='" + annexe + '\'' +
                 ", service='" + service + '\'' +
                 ", bureau='" + bureau + '\'' +
+                ", poste='" + poste + '\'' +
                 '}';
     }
 }

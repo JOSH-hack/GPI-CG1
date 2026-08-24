@@ -4,8 +4,8 @@ Nom du fichier   : Panne.java
 Objectif         : Entité JPA représentant les pannes et incidents
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : "noteSatisfaction" passé de Integer à Short (colonne SMALLINT dans schema.sql)
 
 */
 
@@ -39,7 +39,7 @@ public class Panne {
     @Column(nullable = false, length = 30)
     private StatutPanne statut = StatutPanne.SIGNALEE;
 
-    private Integer noteSatisfaction;
+    private Short noteSatisfaction;
 
     @ManyToOne
     @JoinColumn(name = "id_equipement", nullable = false)
@@ -92,11 +92,11 @@ public class Panne {
         this.statut = statut;
     }
 
-    public Integer getNoteSatisfaction() {
+    public Short getNoteSatisfaction() {
         return noteSatisfaction;
     }
 
-    public void setNoteSatisfaction(Integer noteSatisfaction) {
+    public void setNoteSatisfaction(Short noteSatisfaction) {
         this.noteSatisfaction = noteSatisfaction;
     }
 
