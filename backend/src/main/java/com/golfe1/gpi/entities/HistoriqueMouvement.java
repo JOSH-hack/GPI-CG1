@@ -4,8 +4,8 @@ Nom du fichier   : HistoriqueMouvement.java
 Objectif         : Entité JPA représentant les mouvements des équipements
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - ajout de ancienneValeur/nouvelleValeur, "type" renommé "typeMouvement", correction du nom de colonne de l'opérateur
 
 */
 
@@ -25,9 +25,16 @@ public class HistoriqueMouvement {
     private Long idMouvement;
 
     @Enumerated(EnumType.STRING)
-    private TypeMouvement type;
+    @Column(nullable = false, length = 30)
+    private TypeMouvement typeMouvement;
 
+    @Column(nullable = false, length = 255)
     private String motif;
+
+    private String ancienneValeur;
+    private String nouvelleValeur;
+
+    @Column(nullable = false)
     private LocalDateTime dateMouvement = LocalDateTime.now();
 
     @ManyToOne
@@ -35,7 +42,7 @@ public class HistoriqueMouvement {
     private Equipement equipement;
 
     @ManyToOne
-    @JoinColumn(name = "id_utilisateur", nullable = false)
+    @JoinColumn(name = "id_utilisateur_operateur", nullable = false)
     private Utilisateur operateur;
 
     public HistoriqueMouvement() {
@@ -49,12 +56,12 @@ public class HistoriqueMouvement {
         this.idMouvement = idMouvement;
     }
 
-    public TypeMouvement getType() {
-        return type;
+    public TypeMouvement getTypeMouvement() {
+        return typeMouvement;
     }
 
-    public void setType(TypeMouvement type) {
-        this.type = type;
+    public void setTypeMouvement(TypeMouvement typeMouvement) {
+        this.typeMouvement = typeMouvement;
     }
 
     public String getMotif() {
@@ -63,6 +70,22 @@ public class HistoriqueMouvement {
 
     public void setMotif(String motif) {
         this.motif = motif;
+    }
+
+    public String getAncienneValeur() {
+        return ancienneValeur;
+    }
+
+    public void setAncienneValeur(String ancienneValeur) {
+        this.ancienneValeur = ancienneValeur;
+    }
+
+    public String getNouvelleValeur() {
+        return nouvelleValeur;
+    }
+
+    public void setNouvelleValeur(String nouvelleValeur) {
+        this.nouvelleValeur = nouvelleValeur;
     }
 
     public LocalDateTime getDateMouvement() {
@@ -108,7 +131,7 @@ public class HistoriqueMouvement {
     public String toString() {
         return "HistoriqueMouvement{" +
                 "idMouvement=" + idMouvement +
-                ", type=" + type +
+                ", typeMouvement=" + typeMouvement +
                 ", motif='" + motif + '\'' +
                 ", dateMouvement=" + dateMouvement +
                 '}';

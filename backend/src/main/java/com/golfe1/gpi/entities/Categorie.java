@@ -1,16 +1,18 @@
 /*
 
 Nom du fichier   : Categorie.java
-Objectif         : Entité JPA représentant les catégories d’équipements
+Objectif         : Entité JPA représentant les catégories d'équipements
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - "nom" renommé "libelle", 
+                    "description" retiré (absent de la table), ajout du champ obligatoire "type" (enum TypeCategorie)
 
 */
 
 package com.golfe1.gpi.entities;
 
+import com.golfe1.gpi.entities.enums.TypeCategorie;
 import jakarta.persistence.*;
 import java.util.Objects;
 
@@ -22,16 +24,19 @@ public class Categorie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idCategorie;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String nom;
+    @Column(nullable = false, length = 100)
+    private String libelle;
 
-    private String description;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TypeCategorie type;
 
     public Categorie() {
     }
 
-    public Categorie(String nom) {
-        this.nom = nom;
+    public Categorie(String libelle, TypeCategorie type) {
+        this.libelle = libelle;
+        this.type = type;
     }
 
     public Long getIdCategorie() {
@@ -42,20 +47,20 @@ public class Categorie {
         this.idCategorie = idCategorie;
     }
 
-    public String getNom() {
-        return nom;
+    public String getLibelle() {
+        return libelle;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setLibelle(String libelle) {
+        this.libelle = libelle;
     }
 
-    public String getDescription() {
-        return description;
+    public TypeCategorie getType() {
+        return type;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setType(TypeCategorie type) {
+        this.type = type;
     }
 
     @Override
@@ -77,8 +82,8 @@ public class Categorie {
     public String toString() {
         return "Categorie{" +
                 "idCategorie=" + idCategorie +
-                ", nom='" + nom + '\'' +
-                ", description='" + description + '\'' +
+                ", libelle='" + libelle + '\'' +
+                ", type=" + type +
                 '}';
     }
 }

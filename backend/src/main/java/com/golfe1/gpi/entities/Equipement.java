@@ -4,8 +4,8 @@ Nom du fichier   : Equipement.java
 Objectif         : Entité JPA représentant les équipements informatiques
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - ajout du champ "tagQr", "coutAcquisition" passé de Double à BigDecimal (colonne NUMERIC(12,2))
 
 */
 
@@ -13,6 +13,7 @@ package com.golfe1.gpi.entities;
 
 import com.golfe1.gpi.entities.enums.StatutEquipement;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -28,6 +29,7 @@ public class Equipement {
     @Column(nullable = false, unique = true, length = 50)
     private String codeInventaire;
 
+    private String tagQr;
     private String numeroSerie;
     private String nom;
     private String marque;
@@ -37,9 +39,9 @@ public class Equipement {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private StatutEquipement statut;
+    private StatutEquipement statut = StatutEquipement.EN_STOCK;
 
-    private Double coutAcquisition;
+    private BigDecimal coutAcquisition;
 
     @ManyToOne
     @JoinColumn(name = "id_categorie", nullable = false)
@@ -70,6 +72,14 @@ public class Equipement {
 
     public void setCodeInventaire(String codeInventaire) {
         this.codeInventaire = codeInventaire;
+    }
+
+    public String getTagQr() {
+        return tagQr;
+    }
+
+    public void setTagQr(String tagQr) {
+        this.tagQr = tagQr;
     }
 
     public String getNumeroSerie() {
@@ -128,11 +138,11 @@ public class Equipement {
         this.statut = statut;
     }
 
-    public Double getCoutAcquisition() {
+    public BigDecimal getCoutAcquisition() {
         return coutAcquisition;
     }
 
-    public void setCoutAcquisition(Double coutAcquisition) {
+    public void setCoutAcquisition(BigDecimal coutAcquisition) {
         this.coutAcquisition = coutAcquisition;
     }
 

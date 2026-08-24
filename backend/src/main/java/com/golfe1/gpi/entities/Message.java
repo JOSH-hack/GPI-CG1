@@ -1,11 +1,11 @@
 /*
 
 Nom du fichier   : Message.java
-Objectif         : Entité JPA représentant les messages échangés entre utilisateurs
+Objectif         : Entité JPA représentant les messages du chat d'une intervention à distance
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - "destinataire" retiré (absent de la table), ajout du lien vers "intervention" (chat rattaché à l'intervention, pas point-à-point), correction du nom de colonne de l'expéditeur
 
 */
 
@@ -23,19 +23,19 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idMessage;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String contenu;
 
     @Column(nullable = false)
     private LocalDateTime dateEnvoi = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "id_expediteur", nullable = false)
-    private Utilisateur expediteur;
+    @JoinColumn(name = "id_intervention", nullable = false)
+    private Intervention intervention;
 
     @ManyToOne
-    @JoinColumn(name = "id_destinataire", nullable = false)
-    private Utilisateur destinataire;
+    @JoinColumn(name = "id_utilisateur_expediteur", nullable = false)
+    private Utilisateur expediteur;
 
     public Message() {
     }
@@ -64,20 +64,20 @@ public class Message {
         this.dateEnvoi = dateEnvoi;
     }
 
+    public Intervention getIntervention() {
+        return intervention;
+    }
+
+    public void setIntervention(Intervention intervention) {
+        this.intervention = intervention;
+    }
+
     public Utilisateur getExpediteur() {
         return expediteur;
     }
 
     public void setExpediteur(Utilisateur expediteur) {
         this.expediteur = expediteur;
-    }
-
-    public Utilisateur getDestinataire() {
-        return destinataire;
-    }
-
-    public void setDestinataire(Utilisateur destinataire) {
-        this.destinataire = destinataire;
     }
 
     @Override

@@ -4,8 +4,8 @@ Nom du fichier   : Intervention.java
 Objectif         : Entité JPA représentant les interventions techniques
 Propriétaire     : Josué BEDEL
 Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de mise à jour : 24/08/2026
+Objet de mise à jour : Alignement avec schema.sql final - "description" retiré (remplacé par diagnostic/solution), ajout de piecesRemplacees/dateResolution/rapport/dateRapport/dateValidationDsi/validateurDsi, "type" renommé "typeIntervention", correction du nom de colonne pour le technicien (id_utilisateur_technicien)
 
 */
 
@@ -25,25 +25,45 @@ public class Intervention {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idIntervention;
 
-    @Column(nullable = false)
-    private String description;
+    @Column(columnDefinition = "TEXT")
+    private String diagnostic;
+
+    @Column(columnDefinition = "TEXT")
+    private String solution;
+
+    @Column(columnDefinition = "TEXT")
+    private String piecesRemplacees;
 
     @Column(nullable = false)
     private LocalDateTime dateIntervention = LocalDateTime.now();
 
-    @Enumerated(EnumType.STRING)
-    private TypeIntervention type;
+    private LocalDateTime dateResolution;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TypeIntervention typeIntervention;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private ResultatIntervention resultat;
+
+    @Column(columnDefinition = "TEXT")
+    private String rapport;
+
+    private LocalDateTime dateRapport;
+    private LocalDateTime dateValidationDsi;
 
     @ManyToOne
     @JoinColumn(name = "id_panne", nullable = false)
     private Panne panne;
 
     @ManyToOne
-    @JoinColumn(name = "id_utilisateur", nullable = false)
+    @JoinColumn(name = "id_utilisateur_technicien", nullable = false)
     private Utilisateur technicien;
+
+    @ManyToOne
+    @JoinColumn(name = "id_utilisateur_validateur_dsi")
+    private Utilisateur validateurDsi;
 
     public Intervention() {
     }
@@ -56,12 +76,28 @@ public class Intervention {
         this.idIntervention = idIntervention;
     }
 
-    public String getDescription() {
-        return description;
+    public String getDiagnostic() {
+        return diagnostic;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDiagnostic(String diagnostic) {
+        this.diagnostic = diagnostic;
+    }
+
+    public String getSolution() {
+        return solution;
+    }
+
+    public void setSolution(String solution) {
+        this.solution = solution;
+    }
+
+    public String getPiecesRemplacees() {
+        return piecesRemplacees;
+    }
+
+    public void setPiecesRemplacees(String piecesRemplacees) {
+        this.piecesRemplacees = piecesRemplacees;
     }
 
     public LocalDateTime getDateIntervention() {
@@ -72,12 +108,20 @@ public class Intervention {
         this.dateIntervention = dateIntervention;
     }
 
-    public TypeIntervention getType() {
-        return type;
+    public LocalDateTime getDateResolution() {
+        return dateResolution;
     }
 
-    public void setType(TypeIntervention type) {
-        this.type = type;
+    public void setDateResolution(LocalDateTime dateResolution) {
+        this.dateResolution = dateResolution;
+    }
+
+    public TypeIntervention getTypeIntervention() {
+        return typeIntervention;
+    }
+
+    public void setTypeIntervention(TypeIntervention typeIntervention) {
+        this.typeIntervention = typeIntervention;
     }
 
     public ResultatIntervention getResultat() {
@@ -86,6 +130,30 @@ public class Intervention {
 
     public void setResultat(ResultatIntervention resultat) {
         this.resultat = resultat;
+    }
+
+    public String getRapport() {
+        return rapport;
+    }
+
+    public void setRapport(String rapport) {
+        this.rapport = rapport;
+    }
+
+    public LocalDateTime getDateRapport() {
+        return dateRapport;
+    }
+
+    public void setDateRapport(LocalDateTime dateRapport) {
+        this.dateRapport = dateRapport;
+    }
+
+    public LocalDateTime getDateValidationDsi() {
+        return dateValidationDsi;
+    }
+
+    public void setDateValidationDsi(LocalDateTime dateValidationDsi) {
+        this.dateValidationDsi = dateValidationDsi;
     }
 
     public Panne getPanne() {
@@ -102,6 +170,14 @@ public class Intervention {
 
     public void setTechnicien(Utilisateur technicien) {
         this.technicien = technicien;
+    }
+
+    public Utilisateur getValidateurDsi() {
+        return validateurDsi;
+    }
+
+    public void setValidateurDsi(Utilisateur validateurDsi) {
+        this.validateurDsi = validateurDsi;
     }
 
     @Override
@@ -123,8 +199,7 @@ public class Intervention {
     public String toString() {
         return "Intervention{" +
                 "idIntervention=" + idIntervention +
-                ", description='" + description + '\'' +
-                ", type=" + type +
+                ", typeIntervention=" + typeIntervention +
                 ", resultat=" + resultat +
                 '}';
     }
