@@ -1,5 +1,7 @@
 -- GPI - Gestion du Parc Informatique - Commune du Golfe 1
--- Script DDL - derive du MPD 
+-- Cible : schema "gpi" (cree au prealable via CREATE SCHEMA gpi AUTHORIZATION gpi;)
+
+SET search_path TO gpi;
 
 -- UTILISATEUR
 CREATE TABLE utilisateur (
@@ -27,6 +29,7 @@ CREATE TABLE localisation (
     id_localisation     SERIAL PRIMARY KEY,
     annexe              VARCHAR(100) NOT NULL,
     service             VARCHAR(100) NOT NULL,
+    bureau              VARCHAR(100),
     poste               VARCHAR(100)
 );
 
@@ -91,7 +94,8 @@ CREATE TABLE equipement_reseau (
                              CHECK (type_adresse IN ('STATIQUE','DYNAMIQUE')),
     nom_hote                  VARCHAR(100),
     passerelle                VARCHAR(45),
-    masque                    VARCHAR(45)
+    masque                    VARCHAR(45),
+    nombre_ports              INTEGER
 );
 
 -- PANNE
