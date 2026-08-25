@@ -2,9 +2,9 @@
 
 Nom du fichier   : InterventionService.java
 Objectif         : Logique métier des interventions techniques 
-                    - création, chat, et transaction "Terminer l'intervention"
-                     (RG-04 : mise à jour automatique du statut équipement + 
-                     création de l'historique de mouvement en une seule transaction)
+                    - création, diagnostic, rédaction du rapport par le technicien,
+                      validation DSI (2 étapes séparées),
+                      traçabilité automatique (RG-04)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
 
@@ -14,6 +14,9 @@ package com.golfe1.gpi.services;
 
 import com.golfe1.gpi.entities.*;
 import com.golfe1.gpi.entities.enums.*;
+import com.golfe1.gpi.exceptions.BusinessRuleException;
+import com.golfe1.gpi.exceptions.ResourceNotFoundException;
+import com.golfe1.gpi.exceptions.UnauthorizedActionException;
 import com.golfe1.gpi.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,13 +45,14 @@ public class InterventionService {
         this.utilisateurRepository = utilisateurRepository;
     }
 
-    // Creation d'une intervention (le technicien prend en charge une panne)
+    //  CREATION 
+
     @Transactional
     public Intervention creerIntervention(Long idPanne, Long idTechnicien, TypeIntervention typeIntervention) {
         Panne panne = panneRepository.findById(idPanne)
-                .orElseThrow(() -> new IllegalArgumentException("Panne introuvable : " + idPanne));
+                .orElseThrow(() -> new ResourceNotFoundException("Panne", idPanne));
         Utilisateur technicien = utilisateurRepository.findById(idTechnicien)
-                .orElseThrow(() -> new IllegalArgumentException("Technicien introuvable : " + idTechnicien));
+                .orElseThrow(() -> new ResourceNotFoundException("Technicien", idTechnicien));
 
         Intervention intervention = new Intervention();
         intervention.setPanne(panne);
@@ -62,7 +66,8 @@ public class InterventionService {
         return interventionRepository.save(intervention);
     }
 
-    // Enregistrement du diagnostic / solution en cours d'intervention
+    //  DIAGNOSTIC / SOLUTION 
+
     @Transactional
     public Intervention enregistrerDiagnostic(Long idIntervention, String diagnostic, String solution,
             String piecesRemplacees) {
@@ -73,55 +78,102 @@ public class InterventionService {
         return interventionRepository.save(intervention);
     }
 
-    // RG-04 : Terminer l'intervention 
-    // Une seule transaction : cloture l'intervention + met a jour le statut de
-    // l'equipement + trace le changement dans l'historique des mouvements.
-    // Aucune action manuelle separee n'est necessaire pour le statut equipement.
-    @Transactional
-    public Intervention terminerIntervention(Long idIntervention, ResultatIntervention resultat,
-            Long idUtilisateurOperateur) {
+    //  ETAPE 1 : TECHNICIEN REDIGE LE RAPPORT
 
+
+    @Transactional
+    public Intervention redigerRapport(Long idIntervention, String rapport, Long idTechnicien) {
         Intervention intervention = getInterventionOuException(idIntervention);
+
+        // Vérifier que c'est bien le technicien assigné qui rédige
+        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
+            throw new UnauthorizedActionException("Seul le technicien assigné peut rédiger le rapport");
+        }
+
+        if (intervention.getDateResolution() != null) {
+            throw new BusinessRuleException("L'intervention est déjà clôturée");
+        }
+
+        intervention.setRapport(rapport);
+        intervention.setDateRapport(LocalDateTime.now());
+
+        return interventionRepository.save(intervention);
+    }
+
+    //  ETAPE 2 : DSI VALIDE 
+    // Seul le DSI peut valider. À ce moment seulement, le statut de l'équipement
+    // est mis à jour et la panne est clôturée (RG-04).
+
+    @Transactional
+    public Intervention validerParDsi(Long idIntervention, Long idValidateurDsi) {
+        Intervention intervention = getInterventionOuException(idIntervention);
+        Utilisateur validateur = utilisateurRepository.findById(idValidateurDsi)
+                .orElseThrow(() -> new ResourceNotFoundException("Validateur DSI", idValidateurDsi));
+
+        // Vérifier le rôle DSI
+        if (validateur.getRole() != RoleUtilisateur.DSI) {
+            throw new UnauthorizedActionException("Seul le DSI peut valider une intervention");
+        }
+
+        // Vérifier que le rapport a été rédigé
+        if (intervention.getRapport() == null || intervention.getRapport().isBlank()) {
+            throw new BusinessRuleException("Le rapport doit être rédigé avant validation");
+        }
+
+        // Vérifier que ce n'est pas déjà validé
+        if (intervention.getDateValidationDsi() != null) {
+            throw new BusinessRuleException("Cette intervention est déjà validée");
+        }
+
         Panne panne = intervention.getPanne();
         Equipement equipement = panne.getEquipement();
-        Utilisateur operateur = utilisateurRepository.findById(idUtilisateurOperateur)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + idUtilisateurOperateur));
 
         StatutEquipement ancienStatut = equipement.getStatut();
+        ResultatIntervention resultat = intervention.getResultat();
+
+        // Si l'intervention n'a pas encore de résultat, on considère que c'est une
+        // réparation
+        if (resultat == null) {
+            resultat = ResultatIntervention.REPARATION;
+            intervention.setResultat(resultat);
+        }
+
         StatutEquipement nouveauStatut = (resultat == ResultatIntervention.REPARATION)
                 ? StatutEquipement.EN_SERVICE
-                : ancienStatut; // DEPANNAGE : suivi necessaire, on ne remet pas EN_SERVICE automatiquement
+                : ancienStatut;
 
-        //Cloture de l'intervention
-        intervention.setResultat(resultat);
+        // Clôture de l'intervention
+        intervention.setValidateurDsi(validateur);
+        intervention.setDateValidationDsi(LocalDateTime.now());
         intervention.setDateResolution(LocalDateTime.now());
         interventionRepository.save(intervention);
 
-        //Cloture de la panne associee
+        // Clôture de la panne
         panne.setStatut(StatutPanne.REPAREE);
         panneRepository.save(panne);
 
-        //Mise a jour du statut de l'equipement (uniquement si changement reel)
+        // Mise à jour du statut de l'équipement (uniquement si changement réel)
         if (nouveauStatut != ancienStatut) {
             equipement.setStatut(nouveauStatut);
             equipementRepository.save(equipement);
         }
 
-        //Tracabilite : creation de la ligne HistoriqueMouvement (RG-04)
+        // Traçabilité RG-04
         HistoriqueMouvement mouvement = new HistoriqueMouvement();
         mouvement.setTypeMouvement(TypeMouvement.CHANGEMENT_STATUT);
-        mouvement.setMotif("Intervention terminee - " + resultat);
+        mouvement.setMotif("Intervention validée par DSI - " + resultat);
         mouvement.setAncienneValeur(ancienStatut.name());
         mouvement.setNouvelleValeur(nouveauStatut.name());
         mouvement.setEquipement(equipement);
-        mouvement.setOperateur(operateur);
+        mouvement.setOperateur(validateur);
         mouvement.setDateMouvement(LocalDateTime.now());
         historiqueMouvementRepository.save(mouvement);
 
         return intervention;
     }
 
-    // Consultation des interventions 
+    //  CONSULTATION 
+
     public List<Intervention> listerParPanne(Long idPanne) {
         return interventionRepository.findByPanneIdPanne(idPanne);
     }
@@ -132,6 +184,6 @@ public class InterventionService {
 
     private Intervention getInterventionOuException(Long idIntervention) {
         return interventionRepository.findById(idIntervention)
-                .orElseThrow(() -> new IllegalArgumentException("Intervention introuvable : " + idIntervention));
+                .orElseThrow(() -> new ResourceNotFoundException("Intervention", idIntervention));
     }
 }

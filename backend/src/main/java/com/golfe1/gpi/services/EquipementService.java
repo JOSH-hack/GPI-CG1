@@ -14,6 +14,8 @@ package com.golfe1.gpi.services;
 import com.golfe1.gpi.entities.*;
 import com.golfe1.gpi.entities.enums.StatutEquipement;
 import com.golfe1.gpi.entities.enums.TypeMouvement;
+import com.golfe1.gpi.exceptions.BusinessRuleException;
+import com.golfe1.gpi.exceptions.ResourceNotFoundException;
 import com.golfe1.gpi.repositories.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +53,7 @@ public class EquipementService {
         this.utilisateurRepository = utilisateurRepository;
     }
 
-    // Creation des sous-types
+    //  CREATION DES SOUS-TYPES 
 
     @Transactional
     public EquipementMateriel creerEquipementMateriel(EquipementMateriel equipement, Long idCategorie,
@@ -85,18 +87,19 @@ public class EquipementService {
 
     private void appliquerCategorieEtLocalisation(Equipement equipement, Long idCategorie, Long idLocalisation) {
         if (equipementRepository.existsByCodeInventaire(equipement.getCodeInventaire())) {
-            throw new IllegalArgumentException(
+            throw new BusinessRuleException(
                     "Le code inventaire existe deja : " + equipement.getCodeInventaire());
         }
         Categorie categorie = categorieRepository.findById(idCategorie)
-                .orElseThrow(() -> new IllegalArgumentException("Categorie introuvable : " + idCategorie));
+                .orElseThrow(() -> new ResourceNotFoundException("Categorie", idCategorie));
         Localisation localisation = localisationRepository.findById(idLocalisation)
-                .orElseThrow(() -> new IllegalArgumentException("Localisation introuvable : " + idLocalisation));
+                .orElseThrow(() -> new ResourceNotFoundException("Localisation", idLocalisation));
         equipement.setCategorie(categorie);
         equipement.setLocalisation(localisation);
     }
 
-    // Affectation a un agent (avec tracabilite du mouvement)
+    //  AFFECTATION A UN AGENT 
+
     @Transactional
     public Equipement affecterAgent(Long idEquipement, Agent nouvelAgent, Long idUtilisateurOperateur) {
         Equipement equipement = getEquipementOuException(idEquipement);
@@ -118,14 +121,14 @@ public class EquipementService {
         return equipement;
     }
 
-    // Deplacement (avec tracabilite du mouvement)
+    //  DEPLACEMENT 
+
     @Transactional
     public Equipement deplacer(Long idEquipement, Long idNouvelleLocalisation, String motif,
             Long idUtilisateurOperateur) {
         Equipement equipement = getEquipementOuException(idEquipement);
         Localisation nouvelleLocalisation = localisationRepository.findById(idNouvelleLocalisation)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Localisation introuvable : " + idNouvelleLocalisation));
+                .orElseThrow(() -> new ResourceNotFoundException("Localisation", idNouvelleLocalisation));
         Utilisateur operateur = getUtilisateurOuException(idUtilisateurOperateur);
 
         String ancienneValeur = equipement.getLocalisation().getAnnexe() + " - "
@@ -140,22 +143,27 @@ public class EquipementService {
         return equipement;
     }
 
-    // Mise au rebut
-    // Action directe par le technicien/administrateur pas besoin de validation DSI.
-    // Le motif est obligatoire et trace dans l'historique des mouvements.
+    //  MISE AU REBUT 
+    // Action directe par le technicien/administrateur, pas besoin de validation
+    // DSI.
+    // Le motif est obligatoire et tracé dans l'historique des mouvements.
+    // L'agent est détaché de l'équipement.
+
     @Transactional
     public Equipement mettreAuRebut(Long idEquipement, String motif, Long idUtilisateurOperateur) {
         if (motif == null || motif.isBlank()) {
-            throw new IllegalArgumentException("Le motif de mise au rebut est obligatoire");
+            throw new BusinessRuleException("Le motif de mise au rebut est obligatoire");
         }
 
         Equipement equipement = getEquipementOuException(idEquipement);
         Utilisateur operateur = getUtilisateurOuException(idUtilisateurOperateur);
 
         StatutEquipement ancienStatut = equipement.getStatut();
+
+        // Détacher l'agent et changer le statut
+        equipement.setAgent(null);
         equipement.setStatut(StatutEquipement.MIS_AU_REBUT);
         equipementRepository.save(equipement);
-        equipement.setAgent(null); // Desaffectation automatique lors de la mise au rebut
 
         enregistrerMouvement(equipement, TypeMouvement.CHANGEMENT_STATUT, "Mise au rebut - " + motif,
                 ancienStatut.name(), StatutEquipement.MIS_AU_REBUT.name(), operateur);
@@ -176,7 +184,8 @@ public class EquipementService {
         historiqueMouvementRepository.save(mouvement);
     }
 
-    // Consultation 
+    //  CONSULTATION 
+
     public List<Equipement> listerParStatut(StatutEquipement statut) {
         return equipementRepository.findByStatut(statut);
     }
@@ -187,7 +196,7 @@ public class EquipementService {
 
     public Equipement getParCodeInventaire(String codeInventaire) {
         return equipementRepository.findByCodeInventaire(codeInventaire)
-                .orElseThrow(() -> new IllegalArgumentException("Equipement introuvable : " + codeInventaire));
+                .orElseThrow(() -> new ResourceNotFoundException("Equipement", "code inventaire", codeInventaire));
     }
 
     public Long compterParStatut(StatutEquipement statut) {
@@ -196,11 +205,11 @@ public class EquipementService {
 
     private Equipement getEquipementOuException(Long idEquipement) {
         return equipementRepository.findById(idEquipement)
-                .orElseThrow(() -> new IllegalArgumentException("Equipement introuvable : " + idEquipement));
+                .orElseThrow(() -> new ResourceNotFoundException("Equipement", idEquipement));
     }
 
     private Utilisateur getUtilisateurOuException(Long idUtilisateur) {
         return utilisateurRepository.findById(idUtilisateur)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + idUtilisateur));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", idUtilisateur));
     }
 }
