@@ -14,8 +14,12 @@ package com.golfe1.gpi.entities;
 import com.golfe1.gpi.entities.enums.PrioritePanne;
 import com.golfe1.gpi.entities.enums.StatutPanne;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
+
 
 @Entity
 @Table(name = "panne")
@@ -39,6 +43,8 @@ public class Panne {
     @Column(nullable = false, length = 30)
     private StatutPanne statut = StatutPanne.SIGNALEE;
 
+    @Min(1) @Max(5)
+    @Column(name = "note_satisfaction")
     private Short noteSatisfaction;
 
     @ManyToOne
