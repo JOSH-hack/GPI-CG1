@@ -13,6 +13,7 @@ import com.golfe1.gpi.entities.Equipement;
 import com.golfe1.gpi.entities.Panne;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.entities.enums.PrioritePanne;
+import com.golfe1.gpi.entities.enums.StatutEquipement;
 import com.golfe1.gpi.entities.enums.StatutPanne;
 import com.golfe1.gpi.repositories.EquipementRepository;
 import com.golfe1.gpi.repositories.PanneRepository;
@@ -74,13 +75,19 @@ public class PanneService {
     }
 
     // Reforme (panne jugee irreparable donc on mes l'equipement au rebus)
-    @Transactional
-    public Panne reformerPanne(Long idPanne) {
-        Panne panne = getPanneOuException(idPanne);
-        panne.setStatut(StatutPanne.REFORMEE);
-        return panneRepository.save(panne);
-    }
-
+@Transactional
+public Panne reformerPanne(Long idPanne, Long idUtilisateurOperateur) {
+    Panne panne = getPanneOuException(idPanne);
+    panne.setStatut(StatutPanne.REFORMEE);
+    
+    // L'équipement est jugé irréparable du coup il sera mis au rebut
+    Equipement eq = panne.getEquipement();
+    eq.setStatut(StatutEquipement.MIS_AU_REBUT);
+    eq.setAgent(null);
+    equipementRepository.save(eq);
+    
+    return panneRepository.save(panne);
+}
     // Consultation
     public List<Panne> listerActives() {
         return panneRepository.findPannesActives();

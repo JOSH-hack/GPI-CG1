@@ -155,6 +155,7 @@ public class EquipementService {
         StatutEquipement ancienStatut = equipement.getStatut();
         equipement.setStatut(StatutEquipement.MIS_AU_REBUT);
         equipementRepository.save(equipement);
+        equipement.setAgent(null); // Desaffectation automatique lors de la mise au rebut
 
         enregistrerMouvement(equipement, TypeMouvement.CHANGEMENT_STATUT, "Mise au rebut - " + motif,
                 ancienStatut.name(), StatutEquipement.MIS_AU_REBUT.name(), operateur);
