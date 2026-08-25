@@ -111,7 +111,7 @@ public class InterventionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Validateur DSI", idValidateurDsi));
 
         // Vérifier le rôle DSI
-        if (validateur.getRole() != RoleUtilisateur.DSI) {
+        if (validateur.getRole() != RoleUtilisateur.RESPONSABLE_DSI ) {
             throw new UnauthorizedActionException("Seul le DSI peut valider une intervention");
         }
 

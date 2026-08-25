@@ -1,9 +1,13 @@
 /*
 
 Nom du fichier   : PanneService.java
-Objectif         : Logique métier des pannes - signalement, consultation, notation de satisfaction par l'agent
+Objectif         : Logique métier des pannes - signalement, consultation, notation,
+                    reforme (délégation à EquipementService pour la mise au rebut)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
+Date de mise à jour : 25/08/2026
+Objet de mise à jour : reformerPanne() délègue la mise au rebut à EquipementService
+                       pour garantir la traçabilité unique (RG-04)
 
 */
 
@@ -13,8 +17,9 @@ import com.golfe1.gpi.entities.Equipement;
 import com.golfe1.gpi.entities.Panne;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.entities.enums.PrioritePanne;
-import com.golfe1.gpi.entities.enums.StatutEquipement;
 import com.golfe1.gpi.entities.enums.StatutPanne;
+import com.golfe1.gpi.exceptions.BusinessRuleException;
+import com.golfe1.gpi.exceptions.ResourceNotFoundException;
 import com.golfe1.gpi.repositories.EquipementRepository;
 import com.golfe1.gpi.repositories.PanneRepository;
 import com.golfe1.gpi.repositories.UtilisateurRepository;
@@ -30,24 +35,26 @@ public class PanneService {
     private final PanneRepository panneRepository;
     private final EquipementRepository equipementRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final EquipementService equipementService;
 
     public PanneService(PanneRepository panneRepository,
             EquipementRepository equipementRepository,
-            UtilisateurRepository utilisateurRepository) {
+            UtilisateurRepository utilisateurRepository,
+            EquipementService equipementService) {
         this.panneRepository = panneRepository;
         this.equipementRepository = equipementRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.equipementService = equipementService;
     }
 
-    //  Signalement de panne 
-    // idSignaleur provient TOUJOURS du JWT cote controleur (SecurityContext),
-    // jamais d'un champ du formulaire permet d'éviter toute usurpation d'identite
+    // SIGNALEMENT DE PANNE
+
     @Transactional
     public Panne signalerPanne(Long idEquipement, Long idSignaleur, String description, PrioritePanne priorite) {
         Equipement equipement = equipementRepository.findById(idEquipement)
-                .orElseThrow(() -> new IllegalArgumentException("Equipement introuvable : " + idEquipement));
+                .orElseThrow(() -> new ResourceNotFoundException("Equipement", idEquipement));
         Utilisateur signaleur = utilisateurRepository.findById(idSignaleur)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + idSignaleur));
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", idSignaleur));
 
         Panne panne = new Panne();
         panne.setEquipement(equipement);
@@ -60,35 +67,53 @@ public class PanneService {
         return panneRepository.save(panne);
     }
 
-    // Notation de satisfaction (par l'agent, une fois la panne reparee)
+    // NOTATION DE SATISFACTION
+
     @Transactional
     public Panne noterSatisfaction(Long idPanne, Short note) {
         if (note < 1 || note > 5) {
-            throw new IllegalArgumentException("La note de satisfaction doit etre comprise entre 1 et 5");
+            throw new BusinessRuleException("La note de satisfaction doit être comprise entre 1 et 5");
         }
         Panne panne = getPanneOuException(idPanne);
         if (panne.getStatut() != StatutPanne.REPAREE) {
-            throw new IllegalStateException("La panne doit etre reparee avant de pouvoir etre notee");
+            throw new BusinessRuleException("La panne doit être réparée avant de pouvoir être notée");
         }
         panne.setNoteSatisfaction(note);
         return panneRepository.save(panne);
     }
 
-    // Reforme (panne jugee irreparable donc on mes l'equipement au rebus)
-@Transactional
-public Panne reformerPanne(Long idPanne, Long idUtilisateurOperateur) {
-    Panne panne = getPanneOuException(idPanne);
-    panne.setStatut(StatutPanne.REFORMEE);
-    
-    // L'équipement est jugé irréparable du coup il sera mis au rebut
-    Equipement eq = panne.getEquipement();
-    eq.setStatut(StatutEquipement.MIS_AU_REBUT);
-    eq.setAgent(null);
-    equipementRepository.save(eq);
-    
-    return panneRepository.save(panne);
-}
-    // Consultation
+    // REFORME
+    // Délégation à EquipementService.mettreAuRebut() pour garantir
+    // la traçabilité unique (RG-04) et éviter la duplication de code.
+
+    @Transactional
+    public Panne reformerPanne(Long idPanne, String motif, Long idUtilisateurOperateur) {
+        if (motif == null || motif.isBlank()) {
+            throw new BusinessRuleException("Le motif de reforme est obligatoire");
+        }
+
+        Panne panne = getPanneOuException(idPanne);
+
+        if (panne.getStatut() == StatutPanne.REFORMEE) {
+            throw new BusinessRuleException("Cette panne est déjà reformée");
+        }
+
+        // Clôture de la panne
+        panne.setStatut(StatutPanne.REFORMEE);
+        panneRepository.save(panne);
+
+        // Délégation à EquipementService pour la mise au rebut + traçabilité
+        Equipement equipement = panne.getEquipement();
+        equipementService.mettreAuRebut(
+                equipement.getIdEquipement(),
+                "Reforme suite panne - " + motif,
+                idUtilisateurOperateur);
+
+        return panne;
+    }
+
+    // CONSULTATION
+
     public List<Panne> listerActives() {
         return panneRepository.findPannesActives();
     }
@@ -107,6 +132,6 @@ public Panne reformerPanne(Long idPanne, Long idUtilisateurOperateur) {
 
     private Panne getPanneOuException(Long idPanne) {
         return panneRepository.findById(idPanne)
-                .orElseThrow(() -> new IllegalArgumentException("Panne introuvable : " + idPanne));
+                .orElseThrow(() -> new ResourceNotFoundException("Panne", idPanne));
     }
 }
