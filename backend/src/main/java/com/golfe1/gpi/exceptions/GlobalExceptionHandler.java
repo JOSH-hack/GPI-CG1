@@ -123,6 +123,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        // En production : log l'erreur côté serveur mais ne pas exposer les détails
+        // ex.printStackTrace(); // ← COMMENTÉ en production
+
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Erreur interne",
