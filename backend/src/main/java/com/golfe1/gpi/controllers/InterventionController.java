@@ -128,4 +128,15 @@ public class InterventionController {
         String token = authHeader.substring(7);
         return jwtUtil.extractUserId(token);
     }
+
+    @PutMapping("/{id}/resultat")
+    @PreAuthorize("hasRole('TECHNICIEN')")
+    public ResponseEntity<InterventionResponse> enregistrerResultat(
+            @PathVariable Long id,
+            @RequestParam com.golfe1.gpi.entities.enums.ResultatIntervention resultat,
+            HttpServletRequest request) {
+        Long idTechnicien = extraireIdUtilisateur(request);
+        Intervention intervention = interventionService.enregistrerResultat(id, resultat, idTechnicien);
+        return ResponseEntity.ok(interventionMapper.toResponse(intervention));
+    }
 }

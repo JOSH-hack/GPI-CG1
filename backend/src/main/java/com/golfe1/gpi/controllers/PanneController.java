@@ -1,12 +1,3 @@
-/*
-
-Nom du fichier   : PanneController.java
-Objectif         : Endpoints REST pour la gestion des pannes (signalement, notation, reforme)
-Propriétaire     : Josué BEDEL
-Date de création : 25/08/2026
-
-*/
-
 package com.golfe1.gpi.controllers;
 
 import com.golfe1.gpi.dto.mapper.PanneMapper;
@@ -41,7 +32,7 @@ public class PanneController {
 
     // SIGNALEMENT
     @PostMapping("/signaler")
-    @PreAuthorize("hasRole('AGENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<PanneResponse> signaler(
             @Valid @RequestBody PanneRequest request,
             HttpServletRequest httpRequest) {
@@ -54,19 +45,26 @@ public class PanneController {
         return ResponseEntity.status(HttpStatus.CREATED).body(panneMapper.toResponse(panne));
     }
 
-    // NOTATION
+    // NOTATION (uniquement l'agent qui a signalé la panne)
     @PostMapping("/{id}/noter")
-    @PreAuthorize("hasRole('AGENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('AGENT')")
     public ResponseEntity<PanneResponse> noter(
             @PathVariable Long id,
-            @RequestParam Short note) {
-        Panne panne = panneService.noterSatisfaction(id, note);
+            @RequestParam Short note,
+            HttpServletRequest httpRequest) {
+        Long idUtilisateur = extraireIdUtilisateur(httpRequest);
+        Panne panne = panneService.getParId(id);
+        if (!panne.getUtilisateurSignaleur().getIdUtilisateur().equals(idUtilisateur)) {
+            throw new com.golfe1.gpi.exceptions.UnauthorizedActionException(
+                    "Vous ne pouvez noter que vos propres signalements");
+        }
+        panne = panneService.noterSatisfaction(id, note);
         return ResponseEntity.ok(panneMapper.toResponse(panne));
     }
 
     // REFORME
     @PostMapping("/{id}/reformer")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<PanneResponse> reformer(
             @PathVariable Long id,
             @RequestParam String motif,
@@ -78,49 +76,46 @@ public class PanneController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<PanneResponse>> listerActives() {
         List<Panne> pannes = panneService.listerActives();
-        List<PanneResponse> responses = pannes.stream()
-                .map(panneMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(pannes.stream().map(panneMapper::toResponse).toList());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<PanneResponse> getParId(@PathVariable Long id) {
-        Panne panne = panneService.listerParStatut(StatutPanne.SIGNALEE).stream()
-                .filter(p -> p.getIdPanne().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Panne non trouvée"));
+        Panne panne = panneService.getParId(id);
         return ResponseEntity.ok(panneMapper.toResponse(panne));
     }
 
     @GetMapping("/equipement/{idEquipement}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<PanneResponse>> listerParEquipement(@PathVariable Long idEquipement) {
         List<Panne> pannes = panneService.listerParEquipement(idEquipement);
-        List<PanneResponse> responses = pannes.stream()
-                .map(panneMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(pannes.stream().map(panneMapper::toResponse).toList());
     }
 
     @GetMapping("/statut/{statut}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<PanneResponse>> listerParStatut(@PathVariable StatutPanne statut) {
         List<Panne> pannes = panneService.listerParStatut(statut);
-        List<PanneResponse> responses = pannes.stream()
-                .map(panneMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(pannes.stream().map(panneMapper::toResponse).toList());
     }
 
     @GetMapping("/critiques")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<Long> compterCritiques() {
         return ResponseEntity.ok(panneService.compterCritiquesNonReparees());
+    }
+
+    // AGENT - SES PROPRES SIGNALEMENTS
+    @GetMapping("/mes-signalements")
+    @PreAuthorize("hasRole('AGENT')")
+    public ResponseEntity<List<PanneResponse>> mesSignalements(HttpServletRequest httpRequest) {
+        Long idUtilisateur = extraireIdUtilisateur(httpRequest);
+        List<Panne> pannes = panneService.listerParSignaleur(idUtilisateur);
+        return ResponseEntity.ok(pannes.stream().map(panneMapper::toResponse).toList());
     }
 
     // UTILITAIRE

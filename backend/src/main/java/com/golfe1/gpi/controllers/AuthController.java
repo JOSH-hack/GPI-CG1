@@ -14,6 +14,13 @@ import com.golfe1.gpi.dto.response.UtilisateurResponse;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.UtilisateurService;
+import com.golfe1.gpi.dto.mapper.UtilisateurMapper;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,13 +37,17 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UtilisateurService utilisateurService;
+    private final UtilisateurMapper utilisateurMapper;
+
 
     public AuthController(AuthenticationManager authenticationManager,
             JwtUtil jwtUtil,
-            UtilisateurService utilisateurService) {
+            UtilisateurService utilisateurService,
+            UtilisateurMapper utilisateurMapper) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.utilisateurService = utilisateurService;
+        this.utilisateurMapper = utilisateurMapper;
     }
 
     @PostMapping("/login")
@@ -62,7 +73,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UtilisateurResponse> register(@RequestBody UtilisateurRequest request) {
+    public ResponseEntity<UtilisateurResponse> register(@Valid @RequestBody UtilisateurRequest request) {
         Utilisateur utilisateur = utilisateurService.creerUtilisateur(
                 request.getNom(),
                 request.getPrenom(),
@@ -70,8 +81,7 @@ public class AuthController {
                 request.getMotDePasse(),
                 request.getRole());
 
-        // On devrais retourner un DTO, mais pour l'instant on retourne l'entité
-        // (à mapper plus tard quand tu auras intégré les mappers dans les services)
-        return ResponseEntity.ok(null); // Remplace par le mapper quand prêt
+        UtilisateurResponse response = utilisateurMapper.toResponse(utilisateur);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

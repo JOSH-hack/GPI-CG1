@@ -4,6 +4,9 @@ Nom du fichier   : PieceJointeController.java
 Objectif         : Endpoints REST pour l'upload, le streaming et la gestion des pièces jointes
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
+Date de mise à jour : 27/08/2026
+Objet de mise à jour : correction des rôles (ADMIN/DSI -> ADMIN_INFO/ADMIN_SYSTEME/RESPONSABLE_DSI),
+                       supprimer() transmet désormais idOperateur au service pour vérification d'autorisation
 
 */
 
@@ -55,7 +58,7 @@ public class PieceJointeController {
 
     // UPLOAD
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('AGENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('AGENT') or hasRole('TECHNICIEN')")
     public ResponseEntity<PieceJointeResponse> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam Long idPanne,
@@ -86,7 +89,7 @@ public class PieceJointeController {
 
     // STREAMING (compteur de vues)
     @GetMapping("/{id}/stream")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<Resource> stream(@PathVariable Long id) {
         PieceJointe pieceJointe = pieceJointeService.consulter(id);
 
@@ -115,18 +118,18 @@ public class PieceJointeController {
 
     // SUPPRESSION MANUELLE
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<PieceJointeResponse> supprimer(
             @PathVariable Long id,
             HttpServletRequest request) {
-        Long idTechnicien = extraireIdUtilisateur(request);
-        PieceJointe pieceJointe = pieceJointeService.supprimerParTechnicien(id);
+        Long idOperateur = extraireIdUtilisateur(request);
+        PieceJointe pieceJointe = pieceJointeService.supprimerParTechnicien(id, idOperateur);
         return ResponseEntity.ok(pieceJointeMapper.toResponse(pieceJointe));
     }
 
     // CONSULTATION
     @GetMapping("/panne/{idPanne}")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<PieceJointeResponse>> listerParPanne(@PathVariable Long idPanne) {
         List<PieceJointe> pieces = pieceJointeService.listerParPanne(idPanne);
         List<PieceJointeResponse> responses = pieces.stream()

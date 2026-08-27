@@ -1,12 +1,3 @@
-/*
-
-Nom du fichier   : EquipementController.java
-Objectif         : Endpoints REST pour la gestion des équipements (CRUD + sous-types + actions métier)
-Propriétaire     : Josué BEDEL
-Date de création : 25/08/2026
-
-*/
-
 package com.golfe1.gpi.controllers;
 
 import com.golfe1.gpi.dto.mapper.EquipementMapper;
@@ -15,6 +6,7 @@ import com.golfe1.gpi.dto.response.*;
 import com.golfe1.gpi.entities.*;
 import com.golfe1.gpi.entities.enums.StatutEquipement;
 import com.golfe1.gpi.security.JwtUtil;
+import com.golfe1.gpi.services.AgentService;
 import com.golfe1.gpi.services.EquipementService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -31,20 +23,23 @@ public class EquipementController {
 
     private final EquipementService equipementService;
     private final EquipementMapper equipementMapper;
+    private final AgentService agentService;
     private final JwtUtil jwtUtil;
 
     public EquipementController(EquipementService equipementService,
             EquipementMapper equipementMapper,
+            AgentService agentService,
             JwtUtil jwtUtil) {
         this.equipementService = equipementService;
         this.equipementMapper = equipementMapper;
+        this.agentService = agentService;
         this.jwtUtil = jwtUtil;
     }
 
     // CREATION SOUS-TYPES
 
     @PostMapping("/materiel")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementMaterielResponse> creerMateriel(
             @Valid @RequestBody EquipementMaterielRequest request) {
         EquipementMateriel eq = equipementService.creerEquipementMateriel(
@@ -55,7 +50,7 @@ public class EquipementController {
     }
 
     @PostMapping("/logiciel")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementLogicielResponse> creerLogiciel(
             @Valid @RequestBody EquipementLogicielRequest request) {
         EquipementLogiciel eq = equipementService.creerEquipementLogiciel(
@@ -66,7 +61,7 @@ public class EquipementController {
     }
 
     @PostMapping("/reseau")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementReseauResponse> creerReseau(
             @Valid @RequestBody EquipementReseauRequest request) {
         EquipementReseau eq = equipementService.creerEquipementReseau(
@@ -79,19 +74,18 @@ public class EquipementController {
     // ACTIONS MÉTIER
 
     @PostMapping("/{id}/affecter")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> affecterAgent(
             @PathVariable Long id,
             @RequestParam Long idAgent,
             HttpServletRequest request) {
         Long idOperateur = extraireIdUtilisateur(request);
-        Equipement eq = equipementService.affecterAgent(id, new Agent(), idOperateur); // Agent sera chargé dans le
-                                                                                       // service
+        Equipement eq = equipementService.affecterAgent(id, idAgent, idOperateur);
         return ResponseEntity.ok(equipementMapper.toResponse(eq));
     }
 
     @PostMapping("/{id}/deplacer")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> deplacer(
             @PathVariable Long id,
             @RequestParam Long idNouvelleLocalisation,
@@ -103,7 +97,7 @@ public class EquipementController {
     }
 
     @PostMapping("/{id}/mettre-au-rebut")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> mettreAuRebut(
             @PathVariable Long id,
             @RequestParam String motif,
@@ -116,49 +110,48 @@ public class EquipementController {
     // CONSULTATION
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<EquipementResponse>> listerTous() {
-        List<Equipement> equipements = equipementService.listerParStatut(StatutEquipement.EN_SERVICE);
-        // Tu devrais avoir une méthode listerTous() dans le service, sinon utilise le
-        // repository
-        List<EquipementResponse> responses = equipements.stream()
-                .map(equipementMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        List<Equipement> equipements = equipementService.listerTous();
+        return ResponseEntity.ok(equipements.stream().map(equipementMapper::toResponse).toList());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> getParId(@PathVariable Long id) {
-        // À implémenter dans le service si besoin
-        return ResponseEntity.ok(null);
+        Equipement eq = equipementService.getParId(id);
+        return ResponseEntity.ok(equipementMapper.toResponse(eq));
     }
 
     @GetMapping("/statut/{statut}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<EquipementResponse>> listerParStatut(@PathVariable StatutEquipement statut) {
         List<Equipement> equipements = equipementService.listerParStatut(statut);
-        List<EquipementResponse> responses = equipements.stream()
-                .map(equipementMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(equipements.stream().map(equipementMapper::toResponse).toList());
     }
 
     @GetMapping("/categorie/{idCategorie}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<EquipementResponse>> listerParCategorie(@PathVariable Long idCategorie) {
         List<Equipement> equipements = equipementService.listerParCategorie(idCategorie);
-        List<EquipementResponse> responses = equipements.stream()
-                .map(equipementMapper::toResponse)
-                .toList();
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(equipements.stream().map(equipementMapper::toResponse).toList());
     }
 
     @GetMapping("/code/{codeInventaire}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> getParCodeInventaire(@PathVariable String codeInventaire) {
         Equipement eq = equipementService.getParCodeInventaire(codeInventaire);
         return ResponseEntity.ok(equipementMapper.toResponse(eq));
+    }
+
+    // AGENT - SON PROPRE MATÉRIEL
+    @GetMapping("/mon-materiel")
+    @PreAuthorize("hasRole('AGENT')")
+    public ResponseEntity<List<EquipementResponse>> monMateriel(HttpServletRequest request) {
+        Long idUtilisateur = extraireIdUtilisateur(request);
+        Agent agent = agentService.getParUtilisateur(idUtilisateur);
+        List<Equipement> equipements = equipementService.listerParAgent(agent.getIdAgent());
+        return ResponseEntity.ok(equipements.stream().map(equipementMapper::toResponse).toList());
     }
 
     // UTILITAIRE
