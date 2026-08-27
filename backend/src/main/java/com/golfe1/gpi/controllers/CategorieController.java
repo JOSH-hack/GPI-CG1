@@ -78,7 +78,7 @@ public class CategorieController {
         return ResponseEntity.ok(categorieMapper.toResponse(categorie));
     }
 
-    @GetMapping
+    @GetMapping("/type/{type}")
     @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<CategorieResponse>> listerParType(@PathVariable TypeCategorie type) {
         List<Categorie> categories = categorieService.listerParType(type);

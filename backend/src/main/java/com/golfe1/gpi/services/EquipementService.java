@@ -34,6 +34,7 @@ public class EquipementService {
     private final LocalisationRepository localisationRepository;
     private final HistoriqueMouvementRepository historiqueMouvementRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final AgentRepository agentRepository;
 
     public EquipementService(EquipementRepository equipementRepository,
             EquipementMaterielRepository equipementMaterielRepository,
@@ -42,7 +43,7 @@ public class EquipementService {
             CategorieRepository categorieRepository,
             LocalisationRepository localisationRepository,
             HistoriqueMouvementRepository historiqueMouvementRepository,
-            UtilisateurRepository utilisateurRepository) {
+            UtilisateurRepository utilisateurRepository , AgentRepository agentRepository) {
         this.equipementRepository = equipementRepository;
         this.equipementMaterielRepository = equipementMaterielRepository;
         this.equipementLogicielRepository = equipementLogicielRepository;
@@ -51,6 +52,7 @@ public class EquipementService {
         this.localisationRepository = localisationRepository;
         this.historiqueMouvementRepository = historiqueMouvementRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.agentRepository = agentRepository;
     }
 
     //  CREATION DES SOUS-TYPES 

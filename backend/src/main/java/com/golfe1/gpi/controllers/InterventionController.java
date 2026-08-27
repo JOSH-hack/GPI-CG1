@@ -42,7 +42,7 @@ public class InterventionController {
 
     // CREATION
     @PostMapping
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<InterventionResponse> creer(@Valid @RequestBody InterventionRequest request) {
         Intervention intervention = interventionService.creerIntervention(
                 request.getIdPanne(),
@@ -53,7 +53,7 @@ public class InterventionController {
 
     // DIAGNOSTIC
     @PutMapping("/{id}/diagnostic")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<InterventionResponse> enregistrerDiagnostic(
             @PathVariable Long id,
             @RequestParam String diagnostic,
@@ -66,7 +66,7 @@ public class InterventionController {
 
     // RAPPORT (TECHNICIEN)
     @PostMapping("/{id}/rapport")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO')")
     public ResponseEntity<InterventionResponse> redigerRapport(
             @PathVariable Long id,
             @RequestParam String rapport,
@@ -78,7 +78,7 @@ public class InterventionController {
 
     // VALIDATION DSI
     @PostMapping("/{id}/valider")
-    @PreAuthorize("hasRole('DSI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_INFO')")
     public ResponseEntity<InterventionResponse> validerParDsi(
             @PathVariable Long id,
             HttpServletRequest request) {
@@ -89,21 +89,21 @@ public class InterventionController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<InterventionResponse>> listerToutes() {
         // À adapter selon ta méthode dans le service
         return ResponseEntity.ok(List.of());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<InterventionResponse> getParId(@PathVariable Long id) {
         // À implémenter dans le service si besoin
         return ResponseEntity.ok(null);
     }
 
     @GetMapping("/panne/{idPanne}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<InterventionResponse>> listerParPanne(@PathVariable Long idPanne) {
         List<Intervention> interventions = interventionService.listerParPanne(idPanne);
         List<InterventionResponse> responses = interventions.stream()
@@ -113,7 +113,7 @@ public class InterventionController {
     }
 
     @GetMapping("/en-attente-dsi")
-    @PreAuthorize("hasRole('DSI') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_INFO')")
     public ResponseEntity<List<InterventionResponse>> listerEnAttenteDsi() {
         List<Intervention> interventions = interventionService.listerEnAttenteValidationDsi();
         List<InterventionResponse> responses = interventions.stream()
