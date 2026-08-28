@@ -30,7 +30,7 @@ public class MessageController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('AGENT')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('AGENT') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<MessageResponse> envoyer(@Valid @RequestBody MessageRequest request,
             HttpServletRequest httpRequest) {
         Long idExpediteur = extraireIdUtilisateur(httpRequest);
