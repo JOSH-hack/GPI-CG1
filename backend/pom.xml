@@ -74,13 +74,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Réduction du code répétitif (getters/setters/constructeurs) -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
