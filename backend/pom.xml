@@ -113,6 +113,13 @@
             <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- WebSocket (chat temps reel intervention a distance) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
     </dependencies>
 
     <build>
