@@ -34,6 +34,7 @@ public class EquipementService {
     private final LocalisationRepository localisationRepository;
     private final HistoriqueMouvementRepository historiqueMouvementRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final AgentRepository agentRepository;
 
     public EquipementService(EquipementRepository equipementRepository,
             EquipementMaterielRepository equipementMaterielRepository,
@@ -42,7 +43,7 @@ public class EquipementService {
             CategorieRepository categorieRepository,
             LocalisationRepository localisationRepository,
             HistoriqueMouvementRepository historiqueMouvementRepository,
-            UtilisateurRepository utilisateurRepository) {
+            UtilisateurRepository utilisateurRepository , AgentRepository agentRepository) {
         this.equipementRepository = equipementRepository;
         this.equipementMaterielRepository = equipementMaterielRepository;
         this.equipementLogicielRepository = equipementLogicielRepository;
@@ -51,6 +52,7 @@ public class EquipementService {
         this.localisationRepository = localisationRepository;
         this.historiqueMouvementRepository = historiqueMouvementRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.agentRepository = agentRepository;
     }
 
     //  CREATION DES SOUS-TYPES 
@@ -99,18 +101,18 @@ public class EquipementService {
     }
 
     //  AFFECTATION A UN AGENT 
-
+    
     @Transactional
-    public Equipement affecterAgent(Long idEquipement, Agent nouvelAgent, Long idUtilisateurOperateur) {
+    public Equipement affecterAgent(Long idEquipement, Long idAgent, Long idUtilisateurOperateur) {
         Equipement equipement = getEquipementOuException(idEquipement);
         Utilisateur operateur = getUtilisateurOuException(idUtilisateurOperateur);
+        Agent nouvelAgent = agentRepository.findById(idAgent)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent", idAgent));
 
         String ancienneValeur = equipement.getAgent() != null
                 ? equipement.getAgent().getNom() + " " + equipement.getAgent().getPrenom()
                 : "Non affecte";
-        String nouvelleValeur = nouvelAgent != null
-                ? nouvelAgent.getNom() + " " + nouvelAgent.getPrenom()
-                : "Non affecte";
+        String nouvelleValeur = nouvelAgent.getNom() + " " + nouvelAgent.getPrenom();
 
         equipement.setAgent(nouvelAgent);
         equipementRepository.save(equipement);
@@ -119,6 +121,18 @@ public class EquipementService {
                 ancienneValeur, nouvelleValeur, operateur);
 
         return equipement;
+    }
+
+    public List<Equipement> listerTous() {
+        return equipementRepository.findAll();
+    }
+
+    public Equipement getParId(Long idEquipement) {
+        return getEquipementOuException(idEquipement);
+    }
+
+    public List<Equipement> listerParAgent(Long idAgent) {
+        return equipementRepository.findByAgentIdAgent(idAgent);
     }
 
     //  DEPLACEMENT 

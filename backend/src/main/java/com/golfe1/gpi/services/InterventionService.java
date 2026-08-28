@@ -172,6 +172,21 @@ public class InterventionService {
         return intervention;
     }
 
+    @Transactional
+    public Intervention enregistrerResultat(Long idIntervention, ResultatIntervention resultat, Long idTechnicien) {
+        Intervention intervention = getInterventionOuException(idIntervention);
+
+        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
+            throw new UnauthorizedActionException("Seul le technicien assigné peut renseigner le résultat");
+        }
+        if (intervention.getDateResolution() != null) {
+            throw new BusinessRuleException("L'intervention est déjà clôturée");
+        }
+
+        intervention.setResultat(resultat);
+        return interventionRepository.save(intervention);
+    }
+
     //  CONSULTATION 
 
     public List<Intervention> listerParPanne(Long idPanne) {

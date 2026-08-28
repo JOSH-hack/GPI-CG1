@@ -37,7 +37,7 @@ public class CategorieController {
 
     // CREATION
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<CategorieResponse> creer(@Valid @RequestBody CategorieRequest request) {
         Categorie categorie = categorieService.creerCategorie(request.getLibelle(), request.getType());
         return ResponseEntity.status(HttpStatus.CREATED).body(categorieMapper.toResponse(categorie));
@@ -45,7 +45,7 @@ public class CategorieController {
 
     // MODIFICATION
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<CategorieResponse> modifier(@PathVariable Long id,
             @Valid @RequestBody CategorieRequest request) {
         Categorie categorie = categorieService.modifierCategorie(id, request.getLibelle(), request.getType());
@@ -54,7 +54,7 @@ public class CategorieController {
 
     // SUPPRESSION
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         categorieService.supprimerCategorie(id);
         return ResponseEntity.noContent().build();
@@ -62,7 +62,7 @@ public class CategorieController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<CategorieResponse>> listerToutes() {
         List<Categorie> categories = categorieService.listerToutes();
         List<CategorieResponse> responses = categories.stream()
@@ -72,14 +72,14 @@ public class CategorieController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<CategorieResponse> getParId(@PathVariable Long id) {
         Categorie categorie = categorieService.getParId(id);
         return ResponseEntity.ok(categorieMapper.toResponse(categorie));
     }
 
     @GetMapping("/type/{type}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIEN') or hasRole('DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<CategorieResponse>> listerParType(@PathVariable TypeCategorie type) {
         List<Categorie> categories = categorieService.listerParType(type);
         List<CategorieResponse> responses = categories.stream()

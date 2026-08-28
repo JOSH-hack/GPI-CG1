@@ -134,4 +134,12 @@ public class PanneService {
         return panneRepository.findById(idPanne)
                 .orElseThrow(() -> new ResourceNotFoundException("Panne", idPanne));
     }
+
+    public Panne getParId(Long idPanne) {
+        return getPanneOuException(idPanne);
+    }
+
+    public List<Panne> listerParSignaleur(Long idUtilisateur) {
+        return panneRepository.findByUtilisateurSignaleurIdUtilisateur(idUtilisateur);
+    }
 }

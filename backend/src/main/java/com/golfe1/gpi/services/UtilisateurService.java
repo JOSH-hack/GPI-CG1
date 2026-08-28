@@ -36,6 +36,13 @@ public class UtilisateurService {
     }
 
     @Transactional
+    public Utilisateur changerRole(Long idUtilisateur, RoleUtilisateur nouveauRole) {
+        Utilisateur utilisateur = getUtilisateurOuException(idUtilisateur);
+        utilisateur.setRole(nouveauRole);
+        return utilisateurRepository.save(utilisateur);
+    }
+    
+    @Transactional
     public Utilisateur creerUtilisateur(String nom, String prenom, String email,
             String motDePasse, RoleUtilisateur role) {
         if (utilisateurRepository.existsByEmail(email)) {
