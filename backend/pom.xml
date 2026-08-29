@@ -127,6 +127,11 @@
             <version>1.3.39</version>
         </dependency>
         
+        <!-- Envoi d'emails (verification de compte) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -1,10 +1,18 @@
+/*
+
+Nom du fichier   : eslint.config.js
+Objectif         : Configuration ESLint (règles de qualité de code JS/JSX, React Hooks, compatibilité Vite Fast Refresh)
+Propriétaire     : Josué BEDEL
+Date de création : 27/08/2026
+
+*/
+
 import js from "@eslint/js";
 import globals from "globals";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import prettier from "eslint-plugin-prettier";
-import prettierConfig from "eslint-config-prettier";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
   { ignores: ["dist", "node_modules"] },
@@ -12,9 +20,12 @@ export default [
   {
     files: ["**/*.{js,jsx}"],
     languageOptions: {
-      ecmaVersion: "latest",
+      ecmaVersion: 2022,
       sourceType: "module",
-      globals: { ...globals.browser, ...globals.es2021 },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
       parserOptions: {
         ecmaFeatures: { jsx: true },
       },
@@ -23,7 +34,6 @@ export default [
       react,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      prettier,
     },
     settings: {
       react: { version: "detect" },
@@ -33,12 +43,9 @@ export default [
       ...reactHooks.configs.recommended.rules,
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
-      "prettier/prettier": "warn",
+      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
     },
   },
-  prettierConfig,
+  eslintConfigPrettier,
 ];
