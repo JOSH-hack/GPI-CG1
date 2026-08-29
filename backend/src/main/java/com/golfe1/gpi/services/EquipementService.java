@@ -98,6 +98,11 @@ public class EquipementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Localisation", idLocalisation));
         equipement.setCategorie(categorie);
         equipement.setLocalisation(localisation);
+        // Le QR code est genere 100% cote frontend et encode directement le
+        // code_inventaire (garantit l'unicite). tag_qr stocke cette meme valeur
+        // pour que le backend en ait une trace coherente, sans jamais s'appuyer
+        // sur une saisie manuelle.
+        equipement.setTagQr(equipement.getCodeInventaire());
     }
 
     //  AFFECTATION A UN AGENT 
