@@ -21,6 +21,8 @@ import {
 } from '@mui/material'
 import { keyframes } from '@emotion/react'
 import GlareHover from '../../components/common/GlareHover'
+import SpecularButton from '../../components/common/SpecularButton'
+import backgroundPic from '../../assets/background/backgroundpic.png'
 
 import blobGreen from '../../assets/icons/blob-green.svg'
 import blobTeal from '../../assets/icons/blob-teal.svg'
@@ -28,6 +30,7 @@ import keyboardIcon from '../../assets/icons/keyboard.svg'
 import printerIcon from '../../assets/icons/printer.svg'
 import eyeOffIcon from '../../assets/icons/eye-off.svg'
 import logoMairie from '../../assets/icons/logo.svg'
+
 
 const defilementInfini = keyframes`
   from {
@@ -84,10 +87,9 @@ export default function Register() {
         }))
     }
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault()
-        // La logique d'appel a authApi.register et le passage a l'etape
-        // de verification par code sera branchee ici.
+
     }
 
     return (
@@ -99,11 +101,20 @@ export default function Register() {
                 height: '100vh',
                 placeItems: 'center',
                 overflow: 'hidden',
-                bgcolor: 'rgba(255,255,255,0.89)',
+                backgroundImage: ` linear-gradient(
+                                    rgba(255, 255, 255, 0.69),
+                                    rgba(255, 255, 255, 0.75)
+                                ),
+                                url(${backgroundPic})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
                 boxSizing: 'border-box',
                 px: { xs: 2, sm: 4 },
                 py: { xs: 2, md: 3 },
             }}
+
+
         >
             <Box
                 component="img"
@@ -199,16 +210,16 @@ export default function Register() {
                     aria-hidden="true"
                     sx={{
                         position: 'absolute',
-                        top: 0,
-                        bottom: 0,
+                        top: -15,
+                        bottom: -15,
                         left: '55.8%',
                         transform: 'translateX(-30%)',
-                        width: { xs: 30, md: 70 },
-                        zIndex: 3,
+                        width: { xs: 20, md: 50 },
+                        zIndex: 99,
                         pointerEvents: 'none',
-                        background:
-                            'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, transparent 50%)',
-                        filter: 'blur(18px)',
+                        background: '#d9d9d9',
+                        filter: 'blur(8px)',
+
                     }}
                 />
 
@@ -365,26 +376,27 @@ export default function Register() {
                         </Stack>
 
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: '3%' }}>
-                            <Button
+                            <SpecularButton
                                 type="submit"
-                                variant="contained"
-                                sx={{
-                                    minWidth: '41.5%',
-                                    height: 'clamp(29px, 4.8vw, 49px)',
-                                    borderRadius: '13px',
-                                    bgcolor: '#1b7548',
-                                    color: '#8fffc7',
-                                    fontFamily: 'Quicksand, sans-serif',
-                                    fontSize: 'clamp(7px, 1vw, 15px)',
-                                    fontWeight: 700,
-                                    letterSpacing: '0.22em',
-                                    '&:hover': {
-                                        bgcolor: '#146f42',
-                                    },
-                                }}
+                                size="md"
+                                radius={13}
+                                tint="#1b7548"
+                                tintOpacity={1}
+                                textColor="#8fffc7"
+                                lineColor="#000000"
+                                baseColor="#146f42"
+                                intensity={15}
+                                shineSize={20}
+                                shineFade={40}
+                                thickness={15}
+                                speed={0.8}
+                                followMouse
+                                proximity={250}
+                                autoAnimate
+                                className="register-submit-button"
                             >
                                 SOUMETTRE
-                            </Button>
+                            </SpecularButton>
                         </Box>
                     </Box>
                 </Box>
@@ -475,10 +487,10 @@ export default function Register() {
                                         borderColor="transparent"
                                         borderRadius="12px"
                                         glareColor="#12832b"
-                                        glareOpacity={0.35}
+                                        glareOpacity={0.55}
                                         glareAngle={-30}
                                         glareSize={200}
-                                        transitionDuration={1500}
+                                        transitionDuration={800}
                                         style={{
                                             display: 'flex',
                                             flexDirection: 'column',
