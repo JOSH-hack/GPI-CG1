@@ -20,19 +20,21 @@ import {
     Typography,
 } from '@mui/material'
 import { keyframes } from '@emotion/react'
+import GlareHover from '../../components/common/GlareHover'
 
 import blobGreen from '../../assets/icons/blob-green.svg'
 import blobTeal from '../../assets/icons/blob-teal.svg'
 import keyboardIcon from '../../assets/icons/keyboard.svg'
 import printerIcon from '../../assets/icons/printer.svg'
 import eyeOffIcon from '../../assets/icons/eye-off.svg'
+import logoMairie from '../../assets/icons/logo.svg'
 
 const defilementInfini = keyframes`
   from {
-    transform: translateX(-50%);
+    transform: translateX(0%);
   }
   to {
-    transform: translateX(0%);
+    transform: translateX(-50%);
   }
 `
 const formFields = [
@@ -94,12 +96,13 @@ export default function Register() {
             sx={{
                 position: 'relative',
                 display: 'grid',
-                minHeight: '100vh',
+                height: '100vh',
                 placeItems: 'center',
                 overflow: 'hidden',
                 bgcolor: 'rgba(255,255,255,0.89)',
+                boxSizing: 'border-box',
                 px: { xs: 2, sm: 4 },
-                py: { xs: 6, md: 8 },
+                py: { xs: 2, md: 3 },
             }}
         >
             <Box
@@ -185,8 +188,7 @@ export default function Register() {
                     position: 'relative',
                     zIndex: 1,
                     display: 'flex',
-                    width: 'min(83.6vw, 1204px)',
-                    aspectRatio: '1204 / 668',
+                    width: 'min(92vw, 1400px)',
                     overflow: 'hidden',
                     borderRadius: { xs: 3, md: '45px' },
                     boxShadow: '-20px 13px 8.7px rgba(0,0,0,0.16)',
@@ -194,18 +196,50 @@ export default function Register() {
                 }}
             >
                 <Box
+                    aria-hidden="true"
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        bottom: 0,
+                        left: '55.8%',
+                        transform: 'translateX(-30%)',
+                        width: { xs: 30, md: 70 },
+                        zIndex: 3,
+                        pointerEvents: 'none',
+                        background:
+                            'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, transparent 50%)',
+                        filter: 'blur(18px)',
+                    }}
+                />
+
+                <Box
                     component="section"
                     aria-labelledby="registration-title"
                     sx={{
+                        position: 'relative',
+                        zIndex: 2,
                         display: 'flex',
                         flexDirection: 'column',
                         width: '55.8%',
+                        marginRight: '-3%',
+                        boxShadow: '6px 0 16px rgba(0,0,0,0.2)',
+                        bgcolor: '#d9d9d9',
                         px: '5.8%',
                         pt: '4.3%',
                         pb: '3.5%',
                     }}
                 >
-                    <Stack alignItems="center" spacing={0} sx={{ width: '100%', mb: '4.2%' }}>
+                    <Stack alignItems="left" spacing={0} sx={{ width: '100%', mb: '4.2%' }}>
+                        <Box
+                            component="img"
+                            src={logoMairie}
+                            alt="Logo de la Mairie du Golfe 1"
+                            sx={{
+                                width: 'clamp(32px, 5.2vw, 64px)',
+                                mb: '1.5%',
+                            }}
+
+                        />
                         <Typography
                             id="registration-title"
                             component="h1"
@@ -215,7 +249,7 @@ export default function Register() {
                                 fontSize: 'clamp(15px, 2.8vw, 40px)',
                                 fontWeight: 700,
                                 lineHeight: 1.1,
-                                textAlign: 'center',
+                                textAlign: 'left',
                             }}
                         >
                             Bienvenue sur GPI-CG1
@@ -228,7 +262,7 @@ export default function Register() {
                                 fontSize: 'clamp(8px, 1.55vw, 22px)',
                                 fontWeight: 600,
                                 lineHeight: 1.2,
-                                textAlign: 'center',
+                                textAlign: 'left',
                                 whiteSpace: 'nowrap',
                             }}
                         >
@@ -360,15 +394,17 @@ export default function Register() {
                     aria-labelledby="platform-title"
                     sx={{
                         position: 'relative',
-                        width: '44.2%',
+                        zIndex: 1,
+                        width: '47.2%',
                         px: '4.7%',
                         pt: '6.7%',
                         overflow: 'hidden',
                         bgcolor: '#1b7548',
                         borderRadius: { xs: 0, md: '49px 0 0 49px' },
+                        boxShadow: 'inset 26px 0 28px -16px rgba(0,0,0,0.55)',
                         '&::after': {
                             position: 'absolute',
-                            top: '30%',
+                            top: '15%',
                             right: 0,
                             bottom: 0,
                             left: 0,
@@ -391,6 +427,7 @@ export default function Register() {
                             fontSize: 'clamp(14px, 2.5vw, 36px)',
                             fontWeight: 600,
                             lineHeight: 1.18,
+                            marginTop: '-75px',
                         }}
                     >
                         Plateforme de Gestion Du Parc Informatique de la Commune du Golfe 1
@@ -422,87 +459,109 @@ export default function Register() {
                                     elevation={0}
                                     sx={{
                                         display: 'flex',
-                                        width: 'clamp(140px, 20vw, 220px)',
+                                        width: 'clamp(180px, 40vw, 270px)',
                                         flexShrink: 0,
                                         minHeight: 'clamp(118px, 22.7vw, 229px)',
                                         borderRadius: '12px',
                                         bgcolor: '#d9d9d9',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                        marginTop: 'clamp(20px, 2.5vw, 30px)',
                                     }}
                                 >
-                                    <CardContent
-                                        sx={{
+                                    <GlareHover
+                                        width="100%"
+                                        height="100%"
+                                        background="transparent"
+                                        borderColor="transparent"
+                                        borderRadius="12px"
+                                        glareColor="#12832b"
+                                        glareOpacity={0.35}
+                                        glareAngle={-30}
+                                        glareSize={200}
+                                        transitionDuration={1500}
+                                        style={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            width: '100%',
-                                            p: '13% !important',
+                                            alignItems: 'stretch',
+                                            justifyContent: 'flex-start',
                                         }}
                                     >
-                                        <Typography
+                                        <CardContent
                                             sx={{
-                                                color: '#000',
-                                                fontFamily: 'Quicksand, sans-serif',
-                                                fontSize: 'clamp(8px, 1.18vw, 17px)',
-                                                fontWeight: 700,
-                                                lineHeight: 1.12,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                width: '80%',
+                                                height: '100%',
+                                                p: '13% !important',
                                             }}
                                         >
-                                            {feature.description}
-                                        </Typography>
-                                        <Stack
-                                            direction="row"
-                                            alignItems="center"
-                                            spacing="7%"
-                                            sx={{ mt: 'auto', pt: '7%' }}
-                                        >
-                                            <Box
-                                                aria-hidden="true"
-                                                sx={{
-                                                    display: 'grid',
-                                                    width: 'clamp(23px, 4.1vw, 50px)',
-                                                    height: 'clamp(23px, 4.1vw, 47px)',
-                                                    placeItems: 'center',
-                                                    flexShrink: 0,
-                                                    borderRadius: '50%',
-                                                    bgcolor: '#0f2a14',
-                                                }}
-                                            >
-                                                <Box
-                                                    sx={{
-                                                        width: '68%',
-                                                        height: '72%',
-                                                        borderRadius: '50%',
-                                                        bgcolor: '#1b7548',
-                                                        display: 'grid',
-                                                        placeItems: 'center',
-                                                    }}
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            width: '62%',
-                                                            height: '68%',
-                                                            borderRadius: '50%',
-                                                            bgcolor: '#df0a0d',
-                                                        }}
-                                                    />
-                                                </Box>
-                                            </Box>
                                             <Typography
                                                 sx={{
                                                     color: '#000',
                                                     fontFamily: 'Quicksand, sans-serif',
-                                                    fontSize: 'clamp(6px, 0.84vw, 12px)',
+                                                    fontSize: 'clamp(8px, 1.18vw, 17px)',
                                                     fontWeight: 700,
-                                                    lineHeight: 1.1,
+                                                    lineHeight: 1.12,
                                                 }}
                                             >
-                                                {feature.title}
+                                                {feature.description}
                                             </Typography>
-                                        </Stack>
-                                    </CardContent>
+                                            <Stack
+                                                direction="row"
+                                                alignItems="center"
+                                                spacing="7%"
+                                                sx={{ mt: 'auto', pt: '7%' }}
+                                            >
+                                                <Box
+                                                    aria-hidden="true"
+                                                    sx={{
+                                                        display: 'grid',
+                                                        width: 'clamp(23px, 4.1vw, 50px)',
+                                                        height: 'clamp(23px, 4.1vw, 47px)',
+                                                        placeItems: 'center',
+                                                        flexShrink: 0,
+                                                        borderRadius: '50%',
+                                                        bgcolor: '#0f2a14',
+                                                    }}
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            width: '68%',
+                                                            height: '72%',
+                                                            borderRadius: '50%',
+                                                            bgcolor: '#1b7548',
+                                                            display: 'grid',
+                                                            placeItems: 'center',
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                width: '62%',
+                                                                height: '68%',
+                                                                borderRadius: '50%',
+                                                                bgcolor: '#df0a0d',
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                </Box>
+                                                <Typography
+                                                    sx={{
+                                                        color: '#000',
+                                                        fontFamily: 'Quicksand, sans-serif',
+                                                        fontSize: 'clamp(6px, 0.84vw, 12px)',
+                                                        fontWeight: 700,
+                                                        lineHeight: 1.1,
+                                                    }}
+                                                >
+                                                    {feature.title}
+                                                </Typography>
+                                            </Stack>
+                                        </CardContent>
+                                    </GlareHover>
                                 </Card>
                             ))}
                         </Box>
-                    </Box>   
+                    </Box>
                 </Box>
             </Box>
         </Box>
