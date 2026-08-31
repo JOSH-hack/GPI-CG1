@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,11 +29,14 @@ public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            EmailService emailService) {
         this.utilisateurRepository = utilisateurRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -61,7 +65,15 @@ public class UtilisateurService {
         utilisateur.setActif(true);
         utilisateur.setDateCreation(LocalDateTime.now());
 
-        return utilisateurRepository.save(utilisateur);
+        String code = genererCode();
+        utilisateur.setEmailVerifie(false);
+        utilisateur.setCodeVerification(code);
+        utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(15));
+
+        Utilisateur utilisateurCree = utilisateurRepository.save(utilisateur);
+        emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
+
+        return utilisateurCree;
     }
 
     @Transactional
@@ -140,6 +152,49 @@ public class UtilisateurService {
         return utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", "email", email));
     }
+
+    @Transactional
+public Utilisateur verifierEmail(String email, String code) {
+    Utilisateur utilisateur = getParEmail(email);
+
+    if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
+        throw new BusinessRuleException("Cet email est déjà vérifié");
+    }
+    if (utilisateur.getCodeVerification() == null || !utilisateur.getCodeVerification().equals(code)) {
+        throw new BusinessRuleException("Code de vérification incorrect");
+    }
+    if (LocalDateTime.now().isAfter(utilisateur.getDateExpirationCode())) {
+        throw new BusinessRuleException("Ce code a expiré, demandez-en un nouveau");
+    }
+
+    utilisateur.setEmailVerifie(true);
+    utilisateur.setCodeVerification(null);
+    utilisateur.setDateExpirationCode(null);
+
+    return utilisateurRepository.save(utilisateur);
+}
+
+@Transactional
+public void renvoyerCodeVerification(String email) {
+    Utilisateur utilisateur = getParEmail(email);
+
+    if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
+        throw new BusinessRuleException("Cet email est déjà vérifié");
+    }
+
+    String code = genererCode();
+    utilisateur.setCodeVerification(code);
+    utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(15));
+    utilisateurRepository.save(utilisateur);
+
+    emailService.envoyerCodeVerification(email, code);
+}
+
+private String genererCode() {
+    SecureRandom random = new SecureRandom();
+    int code = 100000 + random.nextInt(900000);
+    return String.valueOf(code);
+}
 
     private Utilisateur getUtilisateurOuException(Long idUtilisateur) {
         return utilisateurRepository.findById(idUtilisateur)

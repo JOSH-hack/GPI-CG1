@@ -45,6 +45,15 @@ public class Utilisateur {
     @Column(nullable = false)
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    @Column(name = "email_verifie", nullable = false)
+    private Boolean emailVerifie = false;
+
+    @Column(name = "code_verification", length = 6)
+    private String codeVerification;
+
+    @Column(name = "date_expiration_code")
+    private LocalDateTime dateExpirationCode;
+
     public Utilisateur() {
     }
 
@@ -120,6 +129,30 @@ public class Utilisateur {
 
     public void setDateCreation(LocalDateTime dateCreation) {
         this.dateCreation = dateCreation;
+    }
+
+    public Boolean getEmailVerifie() {
+        return emailVerifie;
+    }
+
+    public void setEmailVerifie(Boolean emailVerifie) {
+        this.emailVerifie = emailVerifie;
+    }
+
+    public String getCodeVerification() {
+        return codeVerification;
+    }
+
+    public void setCodeVerification(String codeVerification) {
+        this.codeVerification = codeVerification;
+    }
+
+    public LocalDateTime getDateExpirationCode() {
+        return dateExpirationCode;
+    }
+
+    public void setDateExpirationCode(LocalDateTime dateExpirationCode) {
+        this.dateExpirationCode = dateExpirationCode;
     }
 
     @Override
