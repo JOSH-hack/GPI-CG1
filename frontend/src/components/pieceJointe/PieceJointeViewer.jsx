@@ -116,7 +116,7 @@ export default function PieceJointeViewer({ pieceJointe, onDeleted }) {
                 </Box>
 
                 {estIndisponible && (
-                    <Alert severity="info">Cette piece jointe n'est plus disponible.</Alert>
+                    <Alert severity="info">Cette piece jointe n&apos;est plus disponible.</Alert>
                 )}
 
                 {!estIndisponible && !urlLocale && (

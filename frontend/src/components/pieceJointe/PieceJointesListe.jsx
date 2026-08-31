@@ -7,7 +7,7 @@ Date de création : 29/08/2026
 
 */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Box, Typography, CircularProgress, Alert } from '@mui/material'
 import { pieceJointeApi } from '../../api/pieceJointeApi'
 import { useAuth } from '../../hooks/useAuth'
@@ -26,11 +26,7 @@ export default function PieceJointesListe({ idPanne }) {
         user?.role === ROLES.TECHNICIEN ||
         user?.role === ROLES.ADMIN_INFO
 
-    useEffect(() => {
-        chargerPieces()
-    }, [idPanne])
-
-    async function chargerPieces() {
+    const chargerPieces = useCallback(async () => {
         setChargement(true)
         setErreur('')
         try {
@@ -41,7 +37,11 @@ export default function PieceJointesListe({ idPanne }) {
         } finally {
             setChargement(false)
         }
-    }
+    }, [idPanne])
+
+    useEffect(() => {
+        chargerPieces()
+    }, [chargerPieces])
 
     function handleUploadSuccess(nouvellePiece) {
         setPieces((precedent) => [...precedent, nouvellePiece])
