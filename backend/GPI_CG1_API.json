@@ -1,0 +1,156 @@
+{
+  "info": {
+    "name": "GPI-CG1 - Auth Cookie httpOnly",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080/api" },
+    { "key": "test_email", "value": "VOTRE_VRAIE_ADRESSE@gmail.com" },
+    { "key": "test_password", "value": "test1234" }
+  ],
+  "item": [
+    {
+      "name": "1. Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nom\": \"Test\",\n  \"prenom\": \"Cookie\",\n  \"email\": \"{{test_email}}\",\n  \"motDePasse\": \"{{test_password}}\",\n  \"role\": \"AGENT\"\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Login AVANT verification (attendu 400)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"{{test_password}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Verify Email",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/verify-email",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"code\": \"REMPLACER_PAR_LE_CODE_RECU\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Resend Code (si expire)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/resend-code",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Login APRES verification (pose le cookie)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Cookie gpi_token pose', function () {",
+              "    pm.expect(pm.cookies.has('gpi_token')).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{test_email}}\",\n  \"password\": \"{{test_password}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Me (session courante via cookie)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Email correspond', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.email).to.eql(pm.collectionVariables.get('test_email'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/auth/me"
+      }
+    },
+    {
+      "name": "7. Route protegee (exemple dashboard)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/dashboard/stats"
+      }
+    },
+    {
+      "name": "8. Logout (efface le cookie)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 204', function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/auth/logout"
+      }
+    },
+    {
+      "name": "9. Me APRES logout (attendu 401/403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Acces refuse apres logout', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/auth/me"
+      }
+    }
+  ]
+}

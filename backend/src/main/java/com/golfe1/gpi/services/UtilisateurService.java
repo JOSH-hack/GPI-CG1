@@ -49,9 +49,29 @@ public class UtilisateurService {
     @Transactional
     public Utilisateur creerUtilisateur(String nom, String prenom, String email,
             String motDePasse, RoleUtilisateur role) {
-        if (utilisateurRepository.existsByEmail(email)) {
-            throw new BusinessRuleException("Un utilisateur avec cet email existe déjà : " + email);
+
+        Utilisateur utilisateurExistant = utilisateurRepository.findByEmail(email).orElse(null);
+
+        if (utilisateurExistant != null) {
+            if (Boolean.TRUE.equals(utilisateurExistant.getEmailVerifie())) {
+                throw new BusinessRuleException("Un utilisateur avec cet email existe déjà : " + email);
+            }
+            // Compte cree mais jamais verifie (code expire ou jamais saisi) :
+            // on regenere un nouveau code au lieu de bloquer l'email definitivement.
+            String nouveauCode = genererCode();
+            utilisateurExistant.setNom(nom);
+            utilisateurExistant.setPrenom(prenom);
+            utilisateurExistant.setMotDePasse(passwordEncoder.encode(motDePasse));
+            utilisateurExistant.setRole(role);
+            utilisateurExistant.setCodeVerification(nouveauCode);
+            utilisateurExistant.setDateExpirationCode(LocalDateTime.now().plusSeconds(90));
+
+            Utilisateur utilisateurMisAJour = utilisateurRepository.save(utilisateurExistant);
+            emailService.envoyerCodeVerification(utilisateurMisAJour.getEmail(), nouveauCode);
+
+            return utilisateurMisAJour;
         }
+
         if (motDePasse == null || motDePasse.length() < 6) {
             throw new BusinessRuleException("Le mot de passe doit contenir au moins 6 caractères");
         }
@@ -68,7 +88,7 @@ public class UtilisateurService {
         String code = genererCode();
         utilisateur.setEmailVerifie(false);
         utilisateur.setCodeVerification(code);
-        utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(15));
+        utilisateur.setDateExpirationCode(LocalDateTime.now().plusSeconds(90));
 
         Utilisateur utilisateurCree = utilisateurRepository.save(utilisateur);
         emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
