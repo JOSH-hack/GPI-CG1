@@ -1,9 +1,11 @@
 /*
 
 Nom du fichier   : axiosClient.js
-Objectif         : Instance axios centralisée - intercepteur JWT sur chaque requête sortante, gestion automatique de l'expiration/invalidité du token (401) avec redirection vers /login
+Objectif         : Instance axios centralisee - withCredentials pour l'envoi automatique du cookie httpOnly de session, gestion de la deconnexion silencieuse sur 401
 Propriétaire     : Josué BEDEL
 Date de création : 27/08/2026
+Date de mise à jour : 31/08/2026
+Objet de mise à jour : Passage a l'authentification par cookie httpOnly - ajout de withCredentials, suppression de l'intercepteur Authorization Bearer et du nettoyage localStorage (plus de token cote client)
 
 */
 
@@ -11,36 +13,18 @@ import axios from 'axios'
 
 const axiosClient = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
     },
 })
 
-// --- Intercepteur de requete : ajoute le token JWT sur chaque appel -------
-axiosClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token')
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-    },
-    (error) => Promise.reject(error)
-)
-
-// --- Intercepteur de reponse : gere l'expiration/invalidite du token -----
+// --- Intercepteur de reponse : gere l'expiration/invalidite de la session -----
 axiosClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // Token expire ou invalide : on nettoie la session et on redirige
-            // vers la page de connexion, sauf si on y est deja (evite une boucle).
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
-
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login'
-            }
+        if (error.response?.status === 401 && window.location.pathname !== '/login') {
+            window.location.href = '/login'
         }
         return Promise.reject(error)
     }
