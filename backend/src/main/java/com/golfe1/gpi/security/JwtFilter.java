@@ -1,9 +1,12 @@
 /*
 
 Nom du fichier   : JwtFilter.java
-Objectif         : Filtre Spring Security - vérifie le token JWT sur chaque requête
+Objectif         : Filtre Spring Security - verifie le token JWT sur chaque requete.
+                    Lit le token depuis le cookie httpOnly "gpi_token" en priorite,
+                    et retombe sur l'en-tete Authorization (utile pour Postman/tests API)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
+Date de mise à jour : 31/08/2026
 
 */
 
@@ -11,6 +14,7 @@ package com.golfe1.gpi.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +30,8 @@ import java.io.IOException;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
+    public static final String COOKIE_NAME = "gpi_token";
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -39,15 +45,17 @@ public class JwtFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        final String authorizationHeader = request.getHeader("Authorization");
+        String jwt = extraireDuCookie(request);
 
-        String email = null;
-        String jwt = null;
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            email = jwtUtil.extractEmail(jwt);
+        if (jwt == null) {
+            // Retombe sur l'en-tete classique - pratique pour Postman/tests API
+            String authorizationHeader = request.getHeader("Authorization");
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                jwt = authorizationHeader.substring(7);
+            }
         }
+
+        String email = (jwt != null) ? jwtUtil.extractEmail(jwt) : null;
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
@@ -61,5 +69,16 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extraireDuCookie(HttpServletRequest request) {
+        if (request.getCookies() == null)
+            return null;
+        for (Cookie cookie : request.getCookies()) {
+            if (COOKIE_NAME.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

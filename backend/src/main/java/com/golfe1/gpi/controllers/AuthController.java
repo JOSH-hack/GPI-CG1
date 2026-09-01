@@ -1,25 +1,35 @@
 /*
 
 Nom du fichier   : AuthController.java
-Objectif         : Endpoints d'authentification - inscription avec vérification d'email par code à 6 chiffres, connexion bloquée tant que l'email n'est pas vérifié
+Objectif         : Endpoints d'authentification - login (pose un cookie httpOnly, refuse les comptes non verifies), register, verification d'email par code, /me (session courante), /logout (efface le cookie)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
-Date de mise à jour : 28/08/2026
-Objet de mise à jour : Ajout de la vérification d'email obligatoire (register n'émet plus de JWT directement, ajout de /verify-email et /resend-code, login refuse les comptes non vérifiés), correction du bug register qui retournait toujours null
+Date de mise à jour : 31/08/2026
+Objet de mise à jour : Passage au cookie httpOnly + restauration de la verification d'email obligatoire (verify-email, resend-code) qui avait disparu pendant la reecriture
 
 */
 
 package com.golfe1.gpi.controllers;
 
+import com.golfe1.gpi.dto.mapper.UtilisateurMapper;
 import com.golfe1.gpi.dto.request.UtilisateurRequest;
+import com.golfe1.gpi.dto.response.UtilisateurResponse;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
+import com.golfe1.gpi.security.JwtFilter;
 import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.UtilisateurService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,29 +42,39 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UtilisateurService utilisateurService;
+    private final UtilisateurMapper utilisateurMapper;
+
+    @Value("${jwt.expiration}")
+    private Long jwtExpirationMs;
+
+    @Value("${app.cookie-secure:false}")
+    private boolean cookieSecure;
 
     public AuthController(AuthenticationManager authenticationManager,
             JwtUtil jwtUtil,
-            UtilisateurService utilisateurService) {
+            UtilisateurService utilisateurService,
+            UtilisateurMapper utilisateurMapper) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.utilisateurService = utilisateurService;
+        this.utilisateurMapper = utilisateurMapper;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> credentials,
+            HttpServletResponse response) {
         String email = credentials.get("email");
         String password = credentials.get("password");
 
-        Authentication authentication = authenticationManager.authenticate(
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password));
 
         Utilisateur utilisateur = utilisateurService.getParEmail(email);
 
         if (!Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
             throw new BusinessRuleException(
-                    "Veuillez vérifier votre adresse email avant de vous connecter. "
-                            + "Un code vous a été envoyé à l'inscription.");
+                    "Veuillez verifier votre adresse email avant de vous connecter. "
+                            + "Un code vous a ete envoye a l'inscription.");
         }
 
         String token = jwtUtil.generateToken(
@@ -62,16 +82,48 @@ public class AuthController {
                 utilisateur.getIdUtilisateur(),
                 utilisateur.getRole().name());
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        response.put("role", utilisateur.getRole().name());
-        response.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
+        ResponseCookie cookie = ResponseCookie.from(JwtFilter.COOKIE_NAME, token)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(jwtExpirationMs / 1000)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(response);
+        Map<String, String> body = new HashMap<>();
+        body.put("role", utilisateur.getRole().name());
+        body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
+        return ResponseEntity.ok(body);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        ResponseCookie cookie = ResponseCookie.from(JwtFilter.COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, String>> me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Utilisateur utilisateur = utilisateurService.getParEmail(authentication.getName());
+
+        Map<String, String> body = new HashMap<>();
+        body.put("email", utilisateur.getEmail());
+        body.put("role", utilisateur.getRole().name());
+        body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
+        return ResponseEntity.ok(body);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody UtilisateurRequest request) {
+    public ResponseEntity<UtilisateurResponse> register(@Valid @RequestBody UtilisateurRequest request) {
         Utilisateur utilisateur = utilisateurService.creerUtilisateur(
                 request.getNom(),
                 request.getPrenom(),
@@ -79,11 +131,8 @@ public class AuthController {
                 request.getMotDePasse(),
                 request.getRole());
 
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Compte créé. Un code de vérification a été envoyé à votre adresse email.");
-        response.put("email", utilisateur.getEmail());
-
-        return ResponseEntity.ok(response);
+        UtilisateurResponse response = utilisateurMapper.toResponse(utilisateur);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/verify-email")
@@ -94,8 +143,7 @@ public class AuthController {
         utilisateurService.verifierEmail(email, code);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Email vérifié avec succès. Vous pouvez maintenant vous connecter.");
-
+        response.put("message", "Email verifie avec succes. Vous pouvez maintenant vous connecter.");
         return ResponseEntity.ok(response);
     }
 
@@ -106,8 +154,7 @@ public class AuthController {
         utilisateurService.renvoyerCodeVerification(email);
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Un nouveau code a été envoyé.");
-
+        response.put("message", "Un nouveau code a ete envoye.");
         return ResponseEntity.ok(response);
     }
 }
