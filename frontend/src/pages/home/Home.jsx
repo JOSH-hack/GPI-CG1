@@ -26,6 +26,7 @@ import {
 
 import { useAuth } from '../../contexts/AuthContext'
 import SpecularButton from '../../components/common/SpecularButton'
+import { useSlowScroll } from '../../hooks/useSlowScroll'
 
 import backgroundPic from '../../assets/background/backgroundpic.png'
 import logoMairie from '../../assets/icons/logo.svg'
@@ -137,6 +138,7 @@ export default function Home() {
   const { texteAffiche: titreAffiche, termine: titreTermine } = useTypewriter(TITRE_ACCUEIL, {
     vitesse: 35,
   })
+  //useSlowScroll()
   const { texteAffiche: slideAffiche, index: slideIndex, definirIndex: definirSlideIndex } =
     useTypewriterLoop(SOLUTION_SLIDES)
 

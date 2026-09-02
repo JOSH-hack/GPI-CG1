@@ -2,62 +2,37 @@
 
 Nom du fichier   : Liste.jsx
 Objectif         : Page Gestion des utilisateurs - fidele a la maquette Figma (via Anima, nettoye
-                    et branche sur l'API reelle). Contient son propre header + sidebar (le vrai
-                    DashboardLayout partage reste un stub pour le moment, decision prise avec
-                    Josue le 01/09/2026). Liste filtrable/recherchable + modal de modification
-                    (role, statut actif/inactif, fonction si role = Agent).
+                    et branche sur l'API reelle). Sidebar + Navbar desormais fournis par
+                    DashboardLayout (voir components/layout/). Liste filtrable/recherchable +
+                    modal de modification (role, statut actif/inactif, fonction si role = Agent).
 Propriétaire     : Josué BEDEL
 Date de création : 01/09/2026
+Date de mise à jour : 02/09/2026
+Objet de mise à jour : Retrait du sidebar/header duplique (deplace vers DashboardLayout / Sidebar.jsx / Navbar.jsx)
 
 */
 
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import iconMenu from '../../assets/icons/icon-menu.svg'
-import iconParc from '../../assets/icons/icon-parc.svg'
-import iconAssistance from '../../assets/icons/icon-assistance.svg'
-import iconGestion from '../../assets/icons/icon-gestion.svg'
-import iconUtilisateurs from '../../assets/icons/icon-utilisateurs.svg'
-import iconEquipements from '../../assets/icons/icon-equipements.svg'
-import iconSuivi from '../../assets/icons/icon-suivi.svg'
-import iconMouvements from '../../assets/icons/icon-mouvements.svg'
-import iconOutils from '../../assets/icons/icon-outils.svg'
-import iconChevron from '../../assets/icons/chevron.svg'
-import iconAccueil from '../../assets/icons/icon-accueil.svg'
 import iconRecherche from '../../assets/icons/icon-recherche.svg'
 import iconModifier from '../../assets/icons/icon-modifier.svg'
-import iconProfil from '../../assets/icons/icon-profil.svg'
 import CheckIcon from '@mui/icons-material/Check'
 import backgroundPic from '../../assets/background/backgroundpic.png'
-import logoMairie from '../../assets/icons/logo.svg'
 
 import {
   Alert,
-  AppBar,
   Autocomplete,
-  Avatar,
   Box,
-  Breadcrumbs,
   Button,
   Chip,
   CircularProgress,
-  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   FormControlLabel,
-  Link,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   MenuItem,
-  Paper,
   Radio,
   RadioGroup,
   Select,
@@ -72,11 +47,9 @@ import {
   Typography,
 } from '@mui/material'
 
-import { useAuth } from '../../contexts/AuthContext'
 import { utilisateurApi } from '../../api/utilisateurApi'
 import { agentApi } from '../../api/agentApi'
 import { ROLES, ROLE_LABELS, ROLE_COLORS } from '../../utils/constants'
-
 
 function IconImg({ src, size = 18, sx, ...props }) {
   return (
@@ -88,293 +61,6 @@ function IconImg({ src, size = 18, sx, ...props }) {
       sx={{ width: size, height: size, ...sx }}
       {...props}
     />
-  )
-}
-
-//  Sidebar - reproduction fidele de la maquette (menu statique pour le moment) 
-const navigationItems = [
-  { label: 'Parc', icon: <IconImg src={iconParc} />, expandable: true },
-  { label: 'Assistance', icon: <IconImg src={iconAssistance} />, expandable: true },
-  {
-    label: 'Gestion',
-    icon: <IconImg src={iconGestion} />,
-    expandable: true,
-    children: [
-      { label: 'Utilisateurs', icon: <IconImg src={iconUtilisateurs} size={16} />, path: '/gestion/utilisateurs' },
-      { label: 'Equipements', icon: <IconImg src={iconEquipements} size={16} />, path: '/parc/equipements' },
-      { label: 'Suivi', icon: <IconImg src={iconSuivi} size={16} />, path: '/gestion/suivi' },
-      { label: 'Mouvements', icon: <IconImg src={iconMouvements} size={16} />, path: '/gestion/mouvements' },
-    ],
-  },
-  { label: 'Outils', icon: <IconImg src={iconOutils} />, expandable: true },
-]
-function NavigationSidebar() {
-  const navigate = useNavigate()
-  const [expandedItem, setExpandedItem] = useState('Gestion')
-  const [selectedItem, setSelectedItem] = useState('Utilisateurs')
-
-  function handleNavigationClick(item) {
-    setSelectedItem(item.label)
-    if (item.expandable) {
-      setExpandedItem((current) => (current === item.label ? '' : item.label))
-    } else if (item.path) {
-      navigate(item.path)
-    }
-  }
-
-  return (
-    <Paper
-      component="aside"
-      square
-      elevation={0}
-      sx={{
-        width: 248,
-        minWidth: 248,
-        minHeight: '100vh',
-        bgcolor: '#1d7b4e',
-        color: 'common.white',
-        overflow: 'hidden',
-      }}
-    >
-      <Stack component="nav" aria-label="Navigation principale" spacing={0}>
-        <Box component="header" sx={{ px: 1.75, pt: 1.25, pb: 3.5 }}>
-          <Stack direction="row" alignItems="center" spacing={0.75}>
-            <Box
-              component="img"
-              src={logoMairie}
-              alt="Logo de la Mairie du Golfe 1"
-              sx={{
-                width: 48,
-                height: 43,
-                flexShrink: 0,
-                objectFit: 'contain',
-              }}
-            />
-
-            <Typography
-              component="h1"
-              noWrap
-              sx={{
-                color: '#fef7ff',
-                fontFamily: 'Quicksand, sans-serif',
-                fontWeight: 600,
-                fontSize: 31,
-                lineHeight: 1,
-                letterSpacing: 0.7,
-              }}
-            >
-              GPI - CG1
-            </Typography>
-          </Stack>
-        </Box>
-        <List disablePadding>
-          <ListItem disablePadding>
-            <ListItemButton
-              sx={{
-                minHeight: 34,
-                px: 1.5,
-                color: 'common.white',
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>
-                <IconImg src={iconMenu} size={20} />
-              </ListItemIcon>
-              <ListItemText
-                primary="MENU"
-                primaryTypographyProps={{ fontSize: 15, fontWeight: 700, letterSpacing: 1.1 }}
-              />
-            </ListItemButton>
-          </ListItem>
-          <Divider sx={{ mx: 1.5, borderColor: 'rgba(255,255,255,0.12)' }} />
-          {navigationItems.map((item) => {
-            const isExpanded = expandedItem === item.label
-            const isSelected = selectedItem === item.label
-
-            return (
-              <Box key={item.label}>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => handleNavigationClick(item)}
-                    selected={isSelected}
-                    sx={{
-                      minHeight: 33,
-                      px: 1.5,
-                      color: 'common.white',
-                      '&.Mui-selected': { bgcolor: 'rgba(12, 93, 125, 0.72)' },
-                      '&.Mui-selected:hover': { bgcolor: 'rgba(12, 93, 125, 0.72)' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>
-                      <Box sx={{ display: 'grid', placeItems: 'center' }}>{item.icon}</Box>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.label}
-                      primaryTypographyProps={{ fontSize: 15, fontWeight: 700 }}
-                    />
-                    {item.expandable && (
-                      <IconImg
-                        src={iconChevron}
-                        size={19}
-                        sx={{
-                          transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s ease',
-                        }}
-                      />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-                {item.children && (
-                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                    <List disablePadding>
-                      {item.children.map((child) => (
-                        <ListItem key={child.label} disablePadding>
-                          <ListItemButton
-                            onClick={() => {
-                              setSelectedItem(child.label)
-                              if (child.path) navigate(child.path)
-                            }}
-                            selected={selectedItem === child.label}
-                            sx={{
-                              minHeight: 33,
-                              pl: 5,
-                              pr: 1.5,
-                              color: 'rgba(255,255,255,0.88)',
-                              '&.Mui-selected': {
-                                color: '#ff8a91',
-                                bgcolor: 'rgba(12, 93, 125, 0.72)',
-                              },
-                              '&.Mui-selected:hover': {
-                                bgcolor: 'rgba(12, 93, 125, 0.72)',
-                              },
-                            }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 24, color: 'inherit' }}>
-                              <Box sx={{ display: 'grid', placeItems: 'center' }}>
-                                {child.icon}
-                              </Box>
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={child.label}
-                              primaryTypographyProps={{
-                                fontSize: 14,
-                                fontWeight: selectedItem === child.label ? 700 : 400,
-                              }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Collapse>
-                )}
-              </Box>
-            )
-          })}
-        </List>
-      </Stack>
-    </Paper>
-  )
-}
-
-//  Header - reproduction fidele de la maquette, avec le vrai utilisateur connecte 
-function ApplicationHeader() {
-  const { user } = useAuth()
-
-  return (
-    <AppBar
-      component="header"
-      position="relative"
-      elevation={0}
-      sx={{ bgcolor: '#0c5d7d', boxShadow: '0px 4px 6.7px 2px rgba(12, 93, 125, 0.65)' }}
-    >
-      <Stack
-        direction="row"
-        alignItems="center"
-        sx={{ minHeight: { xs: 64, sm: 80 }, px: { xs: 2, sm: 3 }, gap: { xs: 2, md: 4 } }}
-      >
-
-        <Box component="nav" aria-label="Fil d'Ariane" sx={{ flexGrow: 1 }}>
-          <Breadcrumbs
-            separator="/"
-            aria-label="Fil d'Ariane"
-            sx={{
-              color: '#fef7ff',
-              '& .MuiBreadcrumbs-separator': { color: '#fef7ff', mx: { xs: 0.5, sm: 1 } },
-            }}
-          >
-            <Link
-              href="/"
-              underline="none"
-              color="inherit"
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.5,
-                fontFamily: "'Quicksand', sans-serif",
-                fontSize: { xs: '0.7rem', sm: '0.9rem' },
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <IconImg src={iconAccueil} size={16} />
-              ACCUEIL
-            </Link>
-            <Stack
-              direction="row"
-              alignItems="center"
-              spacing={0.5}
-              sx={{ display: 'inline-flex', whiteSpace: 'nowrap' }}
-            >
-              <IconImg src={iconGestion} size={16} />
-              <Typography
-                component="span"
-                sx={{ fontFamily: "'Quicksand', sans-serif", fontSize: { xs: '0.7rem', sm: '0.9rem' }, fontWeight: 600 }}
-              >
-                Gestion
-              </Typography>
-            </Stack>
-            <Stack direction="row" alignItems="center" spacing={0.5} aria-current="page" sx={{ whiteSpace: 'nowrap' }}>
-              <IconImg src={iconUtilisateurs} size={16} />              <Typography
-                component="span"
-                sx={{ fontFamily: "'Quicksand', sans-serif", fontSize: { xs: '0.7rem', sm: '0.9rem' }, fontWeight: 600 }}
-              >
-                Utilisateurs
-              </Typography>
-            </Stack>
-          </Breadcrumbs>
-        </Box>
-        <Button
-          type="button"
-          variant="contained"
-          startIcon={<IconImg src={iconProfil} size={18} />}
-          aria-label={`Profil connecté : ${user?.nom || ''}`}
-          sx={{
-            minWidth: { xs: 0, sm: 153 },
-            px: { xs: 1, sm: 1.5 },
-            py: 0.75,
-            borderRadius: '7px',
-            bgcolor: '#dc5e60',
-            boxShadow: 'none',
-            textTransform: 'none',
-            '&:hover': { bgcolor: '#c95355', boxShadow: 'none' },
-          }}
-        >
-          <Stack alignItems="flex-start" spacing={0}>
-            <Typography
-              component="span"
-              sx={{ color: '#fff', fontFamily: "'Quicksand', sans-serif", fontSize: '0.72rem', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1.1 }}
-            >
-              Profil connecté :
-            </Typography>
-            <Typography
-              component="span"
-              sx={{ color: '#fff', fontFamily: "'Quicksand', sans-serif", fontSize: '0.72rem', fontWeight: 500, letterSpacing: '0.04em', lineHeight: 1.1 }}
-            >
-              {user?.nom || '...'}
-            </Typography>
-          </Stack>
-        </Button>
-      </Stack>
-    </AppBar>
   )
 }
 
@@ -415,7 +101,7 @@ function ModifierUtilisateurModal({ utilisateur, open, onClose, onSaved }) {
   const [role, setRole] = useState(utilisateur?.role)
   const [actif, setActif] = useState(utilisateur?.actif)
   const [fonction, setFonction] = useState('')
-  const [agentExistant, setAgentExistant] = useState(null) // null tant que non charge / non trouve
+  const [agentExistant, setAgentExistant] = useState(null)
   const [chargementAgent, setChargementAgent] = useState(false)
   const [enregistrement, setEnregistrement] = useState(false)
   const [erreur, setErreur] = useState('')
@@ -441,8 +127,6 @@ function ModifierUtilisateurModal({ utilisateur, open, onClose, onSaved }) {
       setAgentExistant(response.data)
       setFonction(response.data.fonction || '')
     } catch {
-      // 404 : aucune fiche agent liee pour le moment - le champ reste vide,
-      // une nouvelle fiche sera creee a l'enregistrement.
       setAgentExistant(null)
       setFonction('')
     } finally {
@@ -706,268 +390,260 @@ export default function Liste() {
   }
 
   return (
-    <Box component="main" sx={{ display: 'flex', minHeight: '100vh', width: '100%', overflow: 'hidden', bgcolor: 'background.default' }}>
-      <Box component="aside" sx={{ flexShrink: 0 }}>
-        <NavigationSidebar />
-      </Box>
-      <Stack component="section" sx={{ flex: 1, minWidth: 0 }}>
-        <Box component="header">
-          <ApplicationHeader />
-        </Box>
-        <Box
-          component="section"
-          aria-labelledby="user-management-title"
-          sx={{
-            width: '100%',
-            backgroundImage: `linear-gradient(
-                        rgba(204, 204, 204, 0.6),
-                        rgba(201, 201, 201, 0.8)
-                    ),
-                    url(${backgroundPic})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            px: { xs: 1.5, sm: 3 },
-            pt: 2.5,
-            pb: 3,
-            fontFamily: 'Quicksand, sans-serif',
-            boxSizing: 'border-box',
-            flex: 1,
-          }}
+    <>
+      <Box
+        component="section"
+        aria-labelledby="user-management-title"
+        sx={{
+          width: '100%',
+          backgroundImage: `linear-gradient(
+                      rgba(204, 204, 204, 0.6),
+                      rgba(201, 201, 201, 0.8)
+                  ),
+                  url(${backgroundPic})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          px: { xs: 1.5, sm: 3 },
+          pt: 2.5,
+          pb: 3,
+          fontFamily: 'Quicksand, sans-serif',
+          boxSizing: 'border-box',
+          flex: 1,
+        }}
+      >
+        <Stack
+          component="header"
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          spacing={1}
+          sx={{ mb: 2 }}
         >
-          <Stack
-            component="header"
-            direction={{ xs: 'column', sm: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            spacing={1}
-            sx={{ mb: 2 }}
+          <Typography
+            id="user-management-title"
+            component="h2"
+            sx={{ color: '#0c5d7d', fontSize: '24px', lineHeight: 1.2, fontWeight: 700 }}
           >
-            <Typography
-              id="user-management-title"
-              component="h2"
-              sx={{ color: '#0c5d7d', fontSize: '24px', lineHeight: 1.2, fontWeight: 700 }}
-            >
-              Liste des utilisateurs
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <FormControl size="small" sx={{ minWidth: 150, ...controlSx }}>
-                <Select
-                  aria-label="Filtrer par rôle"
-                  displayEmpty
-                  value={roleFilter}
-                  onChange={(event) => {
-                    setRoleFilter(event.target.value)
-                    setPage(1)
-                  }}
-                  renderValue={(value) => (value ? ROLE_LABELS[value] : 'Filtrer par rôle')}
-                >
-                  <MenuItem value="">Tous les rôles</MenuItem>
-                  {ROLES_ASSIGNABLES.map((role) => (
-                    <MenuItem key={role} value={role}>
-                      {ROLE_LABELS[role]}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Autocomplete
-                freeSolo
-                disableClearable
-                options={[]}
-                inputValue={searchQuery}
-                onInputChange={(_, value) => {
-                  setSearchQuery(value)
+            Liste des utilisateurs
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            <FormControl size="small" sx={{ minWidth: 150, ...controlSx }}>
+              <Select
+                aria-label="Filtrer par rôle"
+                displayEmpty
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value)
                   setPage(1)
                 }}
-                sx={{ width: { xs: 150, sm: 180 }, ...controlSx }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Rechercher..."
-                    inputProps={{ ...params.inputProps, 'aria-label': 'Rechercher un utilisateur' }}
-                    InputProps={{
-                      ...params.InputProps,
-                      startAdornment: <IconImg src={iconRecherche} size={14} sx={{ mr: 0.5 }} />,
-                    }}
-                  />
-                )}
-              />
-            </Stack>
-          </Stack>
-
-          {erreurChargement && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {erreurChargement}
-            </Alert>
-          )}
-
-          <TableContainer sx={{ border: '2px solid #146f42', borderRadius: '9px', overflowX: 'auto', overflowY: 'hidden' }}>
-            <Table
-              size="small"
-              aria-label="Liste des utilisateurs"
-              sx={{
-                minWidth: 760,
-                tableLayout: 'fixed',
-                '& .MuiTableCell-root': { borderBottom: 'none', color: '#0c5d7d', fontFamily: 'Quicksand, sans-serif', whiteSpace: 'nowrap' },
+                renderValue={(value) => (value ? ROLE_LABELS[value] : 'Filtrer par rôle')}
+              >
+                <MenuItem value="">Tous les rôles</MenuItem>
+                {ROLES_ASSIGNABLES.map((role) => (
+                  <MenuItem key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Autocomplete
+              freeSolo
+              disableClearable
+              options={[]}
+              inputValue={searchQuery}
+              onInputChange={(_, value) => {
+                setSearchQuery(value)
+                setPage(1)
               }}
-            >
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#0c5d7d', height: 38 }}>
-                  {columns.map((column) => (
-                    <TableCell
-                      key={column.label || 'actions'}
-                      sx={{ width: column.width, px: 1.5, py: 0.75, color: '#fff !important', fontSize: '19px', fontWeight: 700, lineHeight: 1 }}
-                    >
-                      {column.label}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} align="center" sx={{ py: 4 }}>
-                      <CircularProgress size={24} />
-                    </TableCell>
-                  </TableRow>
-                ) : utilisateursAffiches.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} align="center" sx={{ py: 4, fontSize: 13 }}>
-                      Aucun utilisateur trouvé.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  utilisateursAffiches.map((utilisateur, index) => (
-                    <TableRow
-                      key={utilisateur.idUtilisateur}
-                      sx={{ height: 42, bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}
-                    >
-                      <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px', fontWeight: 600 }}> {utilisateur.idUtilisateur}</TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>{utilisateur.nom}</TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>{utilisateur.prenom}</TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {utilisateur.email}
-                      </TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75 }}>
-                        <Chip
-                          label={ROLE_LABELS[utilisateur.role]}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            maxWidth: '100%',
-                            bgcolor: ROLE_COLORS[utilisateur.role],
-                            color: '#fff',
-                            borderRadius: '999px',
-                            fontFamily: 'Quicksand, sans-serif',
-                            fontSize: '15px',
-                            fontWeight: 700,
-                            '& .MuiChip-label': { px: 1, overflow: 'hidden', textOverflow: 'ellipsis' },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75 }}>
-                        <Chip
-                          label={utilisateur.actif ? 'Oui' : 'Non'}
-                          size="small"
-                          sx={{
-                            height: 20,
-                            bgcolor: utilisateur.actif ? '#1b7548' : '#9CA3AF',
-                            color: '#fff',
-                            borderRadius: '999px',
-                            fontFamily: 'Quicksand, sans-serif',
-                            fontSize: '15px',
-                            fontWeight: 700,
-                            '& .MuiChip-label': { px: 1 },
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>
-                        {formaterDate(utilisateur.dateCreation)}
-                      </TableCell>
-                      <TableCell align="center" sx={{ px: 0.5, py: 0.75 }}>
-                        <Button
-                          aria-label={`Modifier l'utilisateur ${utilisateur.idUtilisateur}`}
-                          onClick={() => ouvrirModal(utilisateur)}
-                          sx={{ minWidth: 0, p: 0.25, color: '#0c5d7d', '&:hover': { bgcolor: 'transparent' } }}
-                        >
-                          <IconImg src={iconModifier} size={17} />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Stack
-            component="footer"
-            direction={{ xs: 'column', sm: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ xs: 'flex-start', sm: 'center' }}
-            spacing={1}
-            sx={{ mt: 2 }}
-          >
-            <Stack direction="row" alignItems="center" spacing={0.75}>
-              <Typography sx={{ color: '#0c5d7d', fontSize: '14px' }}>Lignes affichées</Typography>
-              <FormControl size="small" sx={{ minWidth: 60, ...controlSx }}>
-                <Select
-                  aria-label="Lignes affichées"
-                  value={rowsPerPage}
-                  onChange={(event) => {
-                    setRowsPerPage(event.target.value)
-                    setPage(1)
+              sx={{ width: { xs: 150, sm: 180 }, ...controlSx }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Rechercher..."
+                  inputProps={{ ...params.inputProps, 'aria-label': 'Rechercher un utilisateur' }}
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: <IconImg src={iconRecherche} size={14} sx={{ mr: 0.5 }} />,
                   }}
-                >
-                  <MenuItem value="10">10</MenuItem>
-                  <MenuItem value="20">20</MenuItem>
-                  <MenuItem value="50">50</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-            <Stack direction="row" alignItems="center" spacing={0.5}>
-              <Button
-                variant="outlined"
-                disabled={pageActuelle === 1}
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                sx={{ minWidth: 75, height: 30, px: 1, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: '18px', fontWeight: 600, textTransform: 'none' }}
-              >
-                Précédent
-              </Button>
-              {Array.from({ length: nombrePages }, (_, i) => i + 1).map((numeroPage) => (
-                <Button
-                  key={numeroPage}
-                  aria-label={`Page ${numeroPage}`}
-                  variant={pageActuelle === numeroPage ? 'contained' : 'outlined'}
-                  onClick={() => setPage(numeroPage)}
-                  sx={{
-                    minWidth: 30,
-                    width: 30,
-                    height: 30,
-                    p: 0,
-                    borderRadius: '5px',
-                    borderColor: 'rgba(13, 93, 125, 0.2)',
-                    bgcolor: pageActuelle === numeroPage ? '#0c5d7d' : '#fff',
-                    color: pageActuelle === numeroPage ? '#fff' : '#0c5d7d',
-                    fontSize: '11px',
-                    fontWeight: pageActuelle === numeroPage ? 700 : 600,
-                  }}
-                >
-                  {numeroPage}
-                </Button>
-              ))}
-              <Button
-                variant="outlined"
-                disabled={pageActuelle === nombrePages}
-                onClick={() => setPage((current) => Math.min(nombrePages, current + 1))}
-                sx={{ minWidth: 65, height: 30, px: 1, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: '11px', fontWeight: 600, textTransform: 'none' }}
-              >
-                Suivant
-              </Button>
-            </Stack>
+                />
+              )}
+            />
           </Stack>
-        </Box>
-      </Stack>
+        </Stack>
+
+        {erreurChargement && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {erreurChargement}
+          </Alert>
+        )}
+
+        <TableContainer sx={{ border: '2px solid #146f42', borderRadius: '9px', overflowX: 'auto', overflowY: 'hidden' }}>
+          <Table
+            size="small"
+            aria-label="Liste des utilisateurs"
+            sx={{
+              minWidth: 760,
+              tableLayout: 'fixed',
+              '& .MuiTableCell-root': { borderBottom: 'none', color: '#0c5d7d', fontFamily: 'Quicksand, sans-serif', whiteSpace: 'nowrap' },
+            }}
+          >
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#0c5d7d', height: 38 }}>
+                {columns.map((column) => (
+                  <TableCell
+                    key={column.label || 'actions'}
+                    sx={{ width: column.width, px: 1.5, py: 0.75, color: '#fff !important', fontSize: '19px', fontWeight: 700, lineHeight: 1 }}
+                  >
+                    {column.label}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} align="center" sx={{ py: 4 }}>
+                    <CircularProgress size={24} />
+                  </TableCell>
+                </TableRow>
+              ) : utilisateursAffiches.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} align="center" sx={{ py: 4, fontSize: 13 }}>
+                    Aucun utilisateur trouvé.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                utilisateursAffiches.map((utilisateur, index) => (
+                  <TableRow
+                    key={utilisateur.idUtilisateur}
+                    sx={{ height: 42, bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}
+                  >
+                    <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px', fontWeight: 600 }}>{utilisateur.idUtilisateur}</TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>{utilisateur.nom}</TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>{utilisateur.prenom}</TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {utilisateur.email}
+                    </TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75 }}>
+                      <Chip
+                        label={ROLE_LABELS[utilisateur.role]}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          maxWidth: '100%',
+                          bgcolor: ROLE_COLORS[utilisateur.role],
+                          color: '#fff',
+                          borderRadius: '999px',
+                          fontFamily: 'Quicksand, sans-serif',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          '& .MuiChip-label': { px: 1, overflow: 'hidden', textOverflow: 'ellipsis' },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75 }}>
+                      <Chip
+                        label={utilisateur.actif ? 'Oui' : 'Non'}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          bgcolor: utilisateur.actif ? '#1b7548' : '#9CA3AF',
+                          color: '#fff',
+                          borderRadius: '999px',
+                          fontFamily: 'Quicksand, sans-serif',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          '& .MuiChip-label': { px: 1 },
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ px: 1.5, py: 0.75, fontSize: '18px' }}>
+                      {formaterDate(utilisateur.dateCreation)}
+                    </TableCell>
+                    <TableCell align="center" sx={{ px: 0.5, py: 0.75 }}>
+                      <Button
+                        aria-label={`Modifier l'utilisateur ${utilisateur.idUtilisateur}`}
+                        onClick={() => ouvrirModal(utilisateur)}
+                        sx={{ minWidth: 0, p: 0.25, color: '#0c5d7d', '&:hover': { bgcolor: 'transparent' } }}
+                      >
+                        <IconImg src={iconModifier} size={17} />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <Stack
+          component="footer"
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          spacing={1}
+          sx={{ mt: 2 }}
+        >
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Typography sx={{ color: '#0c5d7d', fontSize: '14px' }}>Lignes affichées</Typography>
+            <FormControl size="small" sx={{ minWidth: 60, ...controlSx }}>
+              <Select
+                aria-label="Lignes affichées"
+                value={rowsPerPage}
+                onChange={(event) => {
+                  setRowsPerPage(event.target.value)
+                  setPage(1)
+                }}
+              >
+                <MenuItem value="10">10</MenuItem>
+                <MenuItem value="20">20</MenuItem>
+                <MenuItem value="50">50</MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Button
+              variant="outlined"
+              disabled={pageActuelle === 1}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              sx={{ minWidth: 75, height: 30, px: 1, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: '18px', fontWeight: 600, textTransform: 'none' }}
+            >
+              Précédent
+            </Button>
+            {Array.from({ length: nombrePages }, (_, i) => i + 1).map((numeroPage) => (
+              <Button
+                key={numeroPage}
+                aria-label={`Page ${numeroPage}`}
+                variant={pageActuelle === numeroPage ? 'contained' : 'outlined'}
+                onClick={() => setPage(numeroPage)}
+                sx={{
+                  minWidth: 30,
+                  width: 30,
+                  height: 30,
+                  p: 0,
+                  borderRadius: '5px',
+                  borderColor: 'rgba(13, 93, 125, 0.2)',
+                  bgcolor: pageActuelle === numeroPage ? '#0c5d7d' : '#fff',
+                  color: pageActuelle === numeroPage ? '#fff' : '#0c5d7d',
+                  fontSize: '11px',
+                  fontWeight: pageActuelle === numeroPage ? 700 : 600,
+                }}
+              >
+                {numeroPage}
+              </Button>
+            ))}
+            <Button
+              variant="outlined"
+              disabled={pageActuelle === nombrePages}
+              onClick={() => setPage((current) => Math.min(nombrePages, current + 1))}
+              sx={{ minWidth: 65, height: 30, px: 1, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: '11px', fontWeight: 600, textTransform: 'none' }}
+            >
+              Suivant
+            </Button>
+          </Stack>
+        </Stack>
+      </Box>
 
       <ModifierUtilisateurModal
         utilisateur={utilisateurSelectionne}
@@ -975,6 +651,6 @@ export default function Liste() {
         onClose={fermerModal}
         onSaved={handleEnregistre}
       />
-    </Box>
+    </>
   )
 }
