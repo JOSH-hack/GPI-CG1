@@ -8,7 +8,7 @@ Date de création : 29/08/2026
 */
 
 import { Navigate, Outlet } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function RoleRoute({ allowedRoles }) {
     const { user } = useAuth()

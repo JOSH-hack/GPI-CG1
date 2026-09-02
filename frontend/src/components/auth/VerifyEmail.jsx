@@ -2,7 +2,7 @@
 
 Nom du fichier   : VerifyEmail.jsx
 Objectif         : Etape 2 de l'inscription - saisie du code de verification recu par
-                    email (6 chiffres, valable 15 minutes cote backend), avec compte a
+                    email (6 chiffres, valable 2 minutes cote backend), avec compte a
                     rebours avant expiration et renvoi de code. S'affiche a la place du
                     formulaire de Register.jsx via une transition en fondu (voir le Fade
                     controle par le parent), sur le meme panneau visuel.
@@ -25,7 +25,7 @@ import { authApi } from '../../api/authApi'
 
 // Duree de validite du code cote backend (UtilisateurService.renvoyerCodeVerification
 // et l'inscription initiale posent toutes les deux dateExpirationCode = +15 minutes).
-const DUREE_CODE_SECONDES = 15 * 60
+const DUREE_CODE_SECONDES = 2 * 60
 
 function formaterTempsRestant(secondes) {
     const minutes = Math.floor(secondes / 60)

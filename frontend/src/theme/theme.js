@@ -78,8 +78,15 @@ const theme = createTheme({
         },
         MuiPaper: {
             styleOverrides: {
+                root: ({ ownerState }) => ({
+                    borderRadius: ownerState.square ? 0 : 14,
+                }),
+            },
+        },
+        MuiAppBar: {
+            styleOverrides: {
                 root: {
-                    borderRadius: 14,
+                    borderRadius: 0,
                 },
             },
         },

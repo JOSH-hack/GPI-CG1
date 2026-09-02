@@ -24,6 +24,14 @@ export const ROLE_LABELS = {
     [ROLES.AGENT]: 'Agent',
 }
 
+export const ROLE_COLORS = {
+    [ROLES.ADMIN_INFO]: '#0D5D7D',
+    [ROLES.TECHNICIEN]: '#1B7548',
+    [ROLES.RESPONSABLE_DSI]: '#6B4FA0',
+    [ROLES.ADMIN_SYSTEME]: '#DC5E60',
+    [ROLES.AGENT]: '#9CA3AF',
+}
+
 //  Statut équipement -
 export const STATUT_EQUIPEMENT = {
     EN_SERVICE: 'EN_SERVICE',
