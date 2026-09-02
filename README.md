@@ -35,7 +35,7 @@ Ce projet vise à centraliser, tracer et piloter l’ensemble des équipements i
 
 ## 📂 Structure du projet
 
-gpi-golfe1/
+gpi/
 ├── frontend/        → Application React (UI, pages, services)
 ├── backend/         → Application Spring Boot (API REST)
 │    ├── controllers/   → Endpoints REST
@@ -54,7 +54,7 @@ Code
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+./mvn spring-boot:run
 Frontend (React)
 ```
 
@@ -91,12 +91,12 @@ Tableau de bord : KPIs, statistiques, exports.
 
 Administration & sécurité : gestion des utilisateurs, rôles, logs d’audit.
 
-### Planning (Août 2026)
+### Planning (Août 2026 - Septembre 2026)
 
 * [X] Phase 1 (03/08) : Analyse & conception (MCD, MLD, MPD, UML).
-* [ ] Phase 2 (10/08) : Backend & base de données (entités JPA, repositories, services). --> En cours
-* [ ] Phase 3 (17/08) : Endpoints REST (CRUD, tests Postman).
-* [ ] Phase 4 (24/08) : Frontend React + intégration Axios.
+* [X] Phase 2 (10/08) : Backend & base de données (entités JPA, repositories, services). --> En cours
+* [X] Phase 3 (17/08) : Endpoints REST (CRUD, tests Postman).
+* [ ] Phase 4 (24/08) : Frontend React + intégration Axios. - En cours
 * [ ] Phase 5 (31/08) : Recette, documentation & livraison finale.
 
 ### Livrables
