@@ -142,7 +142,7 @@ export default function AppRoutes() {
                     <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLES.ADMIN_INFO]} />}>
                         <Route path="/assistance/interventions" element={<InterventionsListe />} />
                     </Route>
-                    <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLRS.ADMIN_INFO]} />}>
+                    <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLES.ADMIN_INFO]} />}>
                         <Route path="/assistance/interventions/ticket/:idPanne" element={<InterventionSurTicket />} />                    </Route>
                     
                     <Route element={<RoleRoute allowedRoles={[ROLES.RESPONSABLE_DSI, ROLES.ADMIN_INFO, ROLES.ADMIN_SYSTEME]} />}>

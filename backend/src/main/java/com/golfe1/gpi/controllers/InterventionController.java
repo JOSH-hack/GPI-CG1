@@ -44,8 +44,7 @@ public class InterventionController {
 
     // CREATION
     @PostMapping
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
-    public ResponseEntity<InterventionResponse> creer(@Valid @RequestBody InterventionRequest request) {
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")    public ResponseEntity<InterventionResponse> creer(@Valid @RequestBody InterventionRequest request) {
         Intervention intervention = interventionService.creerIntervention(
                 request.getIdPanne(),
                 request.getIdTechnicien(),
@@ -55,7 +54,7 @@ public class InterventionController {
 
     // DIAGNOSTIC
     @PutMapping("/{id}/diagnostic")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<InterventionResponse> enregistrerDiagnostic(
             @PathVariable Long id,
             @RequestParam String diagnostic,
@@ -68,7 +67,7 @@ public class InterventionController {
 
     // RAPPORT (TECHNICIEN)
     @PostMapping("/{id}/rapport")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<InterventionResponse> redigerRapport(
             @PathVariable Long id,
             @RequestParam String rapport,
@@ -80,7 +79,7 @@ public class InterventionController {
 
     // VALIDATION DSI
     @PostMapping("/{id}/valider")
-    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_INFO')")
+    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<InterventionResponse> validerParDsi(
             @PathVariable Long id,
             HttpServletRequest request) {
@@ -100,7 +99,7 @@ public class InterventionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
     public ResponseEntity<InterventionResponse> getParId(@PathVariable Long id, HttpServletRequest request) {
         Intervention intervention = interventionService.getParId(id);
         verifierAccesAgent(intervention, request);
@@ -108,7 +107,7 @@ public class InterventionController {
     }
 
     @GetMapping("/panne/{idPanne}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
     public ResponseEntity<List<InterventionResponse>> listerParPanne(@PathVariable Long idPanne,
             HttpServletRequest request) {
         List<Intervention> interventions = interventionService.listerParPanne(idPanne);
@@ -130,7 +129,7 @@ public class InterventionController {
     }
 
     @GetMapping("/en-attente-dsi")
-    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_INFO')")
+    @PreAuthorize("hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME') or hasRole('ADMIN_INFO')")
     public ResponseEntity<List<InterventionResponse>> listerEnAttenteDsi() {
         List<Intervention> interventions = interventionService.listerEnAttenteValidationDsi();
         List<InterventionResponse> responses = interventions.stream()
@@ -147,7 +146,7 @@ public class InterventionController {
     }
 
     @PutMapping("/{id}/resultat")
-    @PreAuthorize("hasRole('TECHNICIEN')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<InterventionResponse> enregistrerResultat(
             @PathVariable Long id,
             @RequestParam com.golfe1.gpi.entities.enums.ResultatIntervention resultat,
