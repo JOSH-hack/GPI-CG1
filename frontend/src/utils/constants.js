@@ -145,14 +145,23 @@ export const TYPE_CATEGORIE = {
     HARDWARE: 'HARDWARE',
     SOFTWARE: 'SOFTWARE',
     RESEAU: 'RESEAU',
+    AUTRE: 'AUTRE',
 }
 
 export const TYPE_CATEGORIE_LABELS = {
     [TYPE_CATEGORIE.HARDWARE]: 'Matériel',
     [TYPE_CATEGORIE.SOFTWARE]: 'Logiciel',
     [TYPE_CATEGORIE.RESEAU]: 'Réseau',
+    [TYPE_CATEGORIE.AUTRE]: 'Autre',
 }
 
+// Couleurs pour affichage en chip (harmonisees avec le style des autres modules)
+export const TYPE_CATEGORIE_COLORS = {
+    [TYPE_CATEGORIE.HARDWARE]: '#1B7548',
+    [TYPE_CATEGORIE.SOFTWARE]: '#0D5D7D',
+    [TYPE_CATEGORIE.RESEAU]: '#6B4FA0',
+    [TYPE_CATEGORIE.AUTRE]: '#9CA3AF',
+}
 //  Type adresse réseau 
 export const TYPE_ADRESSE_RESEAU = {
     STATIQUE: 'STATIQUE',

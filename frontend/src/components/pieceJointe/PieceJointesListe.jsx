@@ -10,7 +10,7 @@ Date de création : 29/08/2026
 import { useState, useEffect, useCallback } from 'react'
 import { Box, Typography, CircularProgress, Alert } from '@mui/material'
 import { pieceJointeApi } from '../../api/pieceJointeApi'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../contexts/AuthContext'
 import { ROLES } from '../../utils/constants'
 import FileUpload from '../common/FileUpload'
 import PieceJointeViewer from './PieceJointeViewer'

@@ -62,7 +62,7 @@ public class CategorieController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<List<CategorieResponse>> listerToutes() {
         List<Categorie> categories = categorieService.listerToutes();
         List<CategorieResponse> responses = categories.stream()
@@ -72,14 +72,14 @@ public class CategorieController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<CategorieResponse> getParId(@PathVariable Long id) {
         Categorie categorie = categorieService.getParId(id);
         return ResponseEntity.ok(categorieMapper.toResponse(categorie));
     }
 
     @GetMapping("/type/{type}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<List<CategorieResponse>> listerParType(@PathVariable TypeCategorie type) {
         List<Categorie> categories = categorieService.listerParType(type);
         List<CategorieResponse> responses = categories.stream()

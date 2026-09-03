@@ -21,7 +21,7 @@ CREATE TABLE categorie (
     id_categorie        SERIAL PRIMARY KEY,
     libelle             VARCHAR(100) NOT NULL,
     type                VARCHAR(20) NOT NULL
-                         CHECK (type IN ('HARDWARE','SOFTWARE','RESEAU'))
+                         CHECK (type IN ('HARDWARE','SOFTWARE','RESEAU','AUTRE'))
 );
 
 -- LOCALISATION

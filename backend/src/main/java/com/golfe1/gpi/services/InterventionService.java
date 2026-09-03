@@ -193,6 +193,15 @@ public class InterventionService {
         return interventionRepository.findByPanneIdPanne(idPanne);
     }
 
+    public List<Intervention> listerToutes() {
+        return interventionRepository.findAll();
+    }
+
+    public Intervention getParId(Long idIntervention) {
+        return interventionRepository.findById(idIntervention)
+                .orElseThrow(() -> new ResourceNotFoundException("Intervention", idIntervention));
+    }
+
     public List<Intervention> listerEnAttenteValidationDsi() {
         return interventionRepository.findEnAttenteValidationDsi();
     }

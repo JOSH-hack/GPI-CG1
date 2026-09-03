@@ -5,14 +5,14 @@ import com.golfe1.gpi.dto.request.*;
 import com.golfe1.gpi.dto.response.*;
 import com.golfe1.gpi.entities.*;
 import com.golfe1.gpi.entities.enums.StatutEquipement;
-import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.AgentService;
 import com.golfe1.gpi.services.EquipementService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.golfe1.gpi.services.UtilisateurService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,16 +24,16 @@ public class EquipementController {
     private final EquipementService equipementService;
     private final EquipementMapper equipementMapper;
     private final AgentService agentService;
-    private final JwtUtil jwtUtil;
+    private final UtilisateurService utilisateurService;
 
     public EquipementController(EquipementService equipementService,
             EquipementMapper equipementMapper,
             AgentService agentService,
-            JwtUtil jwtUtil) {
+            UtilisateurService utilisateurService) {
         this.equipementService = equipementService;
         this.equipementMapper = equipementMapper;
         this.agentService = agentService;
-        this.jwtUtil = jwtUtil;
+        this.utilisateurService = utilisateurService;
     }
 
     // CREATION SOUS-TYPES
@@ -77,9 +77,8 @@ public class EquipementController {
     @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> affecterAgent(
             @PathVariable Long id,
-            @RequestParam Long idAgent,
-            HttpServletRequest request) {
-        Long idOperateur = extraireIdUtilisateur(request);
+            @RequestParam Long idAgent) {
+        Long idOperateur = extraireIdUtilisateur();
         Equipement eq = equipementService.affecterAgent(id, idAgent, idOperateur);
         return ResponseEntity.ok(equipementMapper.toResponse(eq));
     }
@@ -89,9 +88,8 @@ public class EquipementController {
     public ResponseEntity<EquipementResponse> deplacer(
             @PathVariable Long id,
             @RequestParam Long idNouvelleLocalisation,
-            @RequestParam String motif,
-            HttpServletRequest request) {
-        Long idOperateur = extraireIdUtilisateur(request);
+            @RequestParam String motif) {
+        Long idOperateur = extraireIdUtilisateur();
         Equipement eq = equipementService.deplacer(id, idNouvelleLocalisation, motif, idOperateur);
         return ResponseEntity.ok(equipementMapper.toResponse(eq));
     }
@@ -100,9 +98,8 @@ public class EquipementController {
     @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> mettreAuRebut(
             @PathVariable Long id,
-            @RequestParam String motif,
-            HttpServletRequest request) {
-        Long idOperateur = extraireIdUtilisateur(request);
+            @RequestParam String motif) {
+        Long idOperateur = extraireIdUtilisateur();
         Equipement eq = equipementService.mettreAuRebut(id, motif, idOperateur);
         return ResponseEntity.ok(equipementMapper.toResponse(eq));
     }
@@ -147,8 +144,8 @@ public class EquipementController {
     // AGENT - SON PROPRE MATÉRIEL
     @GetMapping("/mon-materiel")
     @PreAuthorize("hasRole('AGENT')")
-    public ResponseEntity<List<EquipementResponse>> monMateriel(HttpServletRequest request) {
-        Long idUtilisateur = extraireIdUtilisateur(request);
+    public ResponseEntity<List<EquipementResponse>> monMateriel() {
+        Long idUtilisateur = extraireIdUtilisateur();
         Agent agent = agentService.getParUtilisateur(idUtilisateur);
         List<Equipement> equipements = equipementService.listerParAgent(agent.getIdAgent());
         return ResponseEntity.ok(equipements.stream().map(equipementMapper::toResponse).toList());
@@ -156,9 +153,12 @@ public class EquipementController {
 
     // UTILITAIRE
 
-    private Long extraireIdUtilisateur(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader.substring(7);
-        return jwtUtil.extractUserId(token);
+    // Le token JWT voyage desormais dans un cookie httpOnly, lu par JwtFilter qui
+    // peuple le SecurityContext - on ne doit plus jamais lire l'en-tete
+    // Authorization ici (il n'est plus envoye par le navigateur, ce qui causait un
+    // NullPointerException sur authHeader.substring(7)).
+    private Long extraireIdUtilisateur() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return utilisateurService.getParEmail(email).getIdUtilisateur();
     }
 }

@@ -26,7 +26,7 @@ import VideocamIcon from '@mui/icons-material/Videocam'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import axiosClient from '../../api/axiosClient'
 import { pieceJointeApi } from '../../api/pieceJointeApi'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../contexts/AuthContext'
 import { TYPE_PIECE_JOINTE, ROLES } from '../../utils/constants'
 import ConfirmDialog from '../common/ConfirmDialog'
 

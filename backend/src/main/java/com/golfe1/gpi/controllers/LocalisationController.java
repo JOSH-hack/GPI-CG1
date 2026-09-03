@@ -36,7 +36,7 @@ public class LocalisationController {
 
     // CREATION
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<LocalisationResponse> creer(@Valid @RequestBody LocalisationRequest request) {
         Localisation localisation = localisationService.creerLocalisation(
                 request.getAnnexe(),
@@ -48,7 +48,7 @@ public class LocalisationController {
 
     // MODIFICATION
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<LocalisationResponse> modifier(@PathVariable Long id,
             @Valid @RequestBody LocalisationRequest request) {
         Localisation localisation = localisationService.modifierLocalisation(
@@ -62,7 +62,7 @@ public class LocalisationController {
 
     // SUPPRESSION
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN')")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         localisationService.supprimerLocalisation(id);
         return ResponseEntity.noContent().build();
@@ -70,7 +70,7 @@ public class LocalisationController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<List<LocalisationResponse>> listerToutes() {
         List<Localisation> localisations = localisationService.listerToutes();
         List<LocalisationResponse> responses = localisations.stream()
@@ -80,14 +80,14 @@ public class LocalisationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<LocalisationResponse> getParId(@PathVariable Long id) {
         Localisation localisation = localisationService.getParId(id);
         return ResponseEntity.ok(localisationMapper.toResponse(localisation));
     }
 
     @GetMapping("/recherche")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
     public ResponseEntity<List<LocalisationResponse>> rechercher(
             @RequestParam(required = false) String annexe,
             @RequestParam(required = false) String service) {

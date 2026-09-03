@@ -9,10 +9,12 @@ Date de création : 25/08/2026
 
 package com.golfe1.gpi.controllers;
 
+
 import com.golfe1.gpi.dto.mapper.InterventionMapper;
 import com.golfe1.gpi.dto.request.InterventionRequest;
 import com.golfe1.gpi.dto.response.InterventionResponse;
 import com.golfe1.gpi.entities.Intervention;
+import com.golfe1.gpi.exceptions.UnauthorizedActionException;
 import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.InterventionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,23 +91,38 @@ public class InterventionController {
 
     // CONSULTATION
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<InterventionResponse>> listerToutes() {
-        // À adapter selon ta méthode dans le service
-        return ResponseEntity.ok(List.of());
+        List<Intervention> interventions = interventionService.listerToutes();
+        List<InterventionResponse> responses = interventions.stream()
+                .map(interventionMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
-    public ResponseEntity<InterventionResponse> getParId(@PathVariable Long id) {
-        // À implémenter dans le service si besoin
-        return ResponseEntity.ok(null);
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
+    public ResponseEntity<InterventionResponse> getParId(@PathVariable Long id, HttpServletRequest request) {
+        Intervention intervention = interventionService.getParId(id);
+        verifierAccesAgent(intervention, request);
+        return ResponseEntity.ok(interventionMapper.toResponse(intervention));
     }
 
     @GetMapping("/panne/{idPanne}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
-    public ResponseEntity<List<InterventionResponse>> listerParPanne(@PathVariable Long idPanne) {
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
+    public ResponseEntity<List<InterventionResponse>> listerParPanne(@PathVariable Long idPanne,
+            HttpServletRequest request) {
         List<Intervention> interventions = interventionService.listerParPanne(idPanne);
+
+        String role = extraireRole(request);
+        if ("AGENT".equals(role)) {
+            Long idUtilisateur = extraireIdUtilisateur(request);
+            boolean toutesLuiAppartiennent = interventions.stream()
+                    .allMatch(i -> i.getPanne().getUtilisateurSignaleur().getIdUtilisateur().equals(idUtilisateur));
+            if (!toutesLuiAppartiennent) {
+                throw new UnauthorizedActionException("Vous ne pouvez consulter que vos propres signalements");
+            }
+        }
+
         List<InterventionResponse> responses = interventions.stream()
                 .map(interventionMapper::toResponse)
                 .toList();
@@ -138,5 +155,23 @@ public class InterventionController {
         Long idTechnicien = extraireIdUtilisateur(request);
         Intervention intervention = interventionService.enregistrerResultat(id, resultat, idTechnicien);
         return ResponseEntity.ok(interventionMapper.toResponse(intervention));
+    }
+
+    private void verifierAccesAgent(Intervention intervention, HttpServletRequest request) {
+        String role = extraireRole(request);
+        if ("AGENT".equals(role)) {
+            Long idUtilisateur = extraireIdUtilisateur(request);
+            boolean estSonSignalement = intervention.getPanne().getUtilisateurSignaleur()
+                    .getIdUtilisateur().equals(idUtilisateur);
+            if (!estSonSignalement) {
+                throw new UnauthorizedActionException("Vous ne pouvez consulter que vos propres signalements");
+            }
+        }
+    }
+
+    private String extraireRole(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        String token = authHeader.substring(7);
+        return jwtUtil.extractRole(token);
     }
 }
