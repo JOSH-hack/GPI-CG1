@@ -79,12 +79,12 @@ function statutChip(statut) {
     return { label: 'Réformée', bgcolor: '#9CA3AF' }
 }
 
-const cardSx = { p: 2.5, borderRadius: '12px', bgcolor: '#fff', border: '2px solid #146f42' }
-const fieldSx = { '& .MuiOutlinedInput-root': { borderRadius: '8px', fontFamily: 'Quicksand, sans-serif' } }
+const cardSx = { p: 2.5, borderRadius: '8px', bgcolor: '#fff', border: '4px solid #146f42' }
+const fieldSx = { '& .MuiOutlinedInput-root': { borderRadius: '4px', fontFamily: 'Quicksand, sans-serif' } }
 
 const CARTES_TYPE = [
-    { valeur: TYPE_INTERVENTION.A_DISTANCE, icon: <WifiIcon sx={{ fontSize: 28 }} />, titre: 'À DISTANCE', description: 'Assistance via chat ou prise en main à distance' },
-    { valeur: TYPE_INTERVENTION.EN_PRESENTIEL, icon: <BuildIcon sx={{ fontSize: 28 }} />, titre: 'SUR SITE', description: "Déplacement physique pour intervention sur l'équipement" },
+    { valeur: TYPE_INTERVENTION.A_DISTANCE, icon: <WifiIcon sx={{ fontSize: 36 }} />, titre: 'À DISTANCE', description: 'Assistance via chat ou prise en main à distance' },
+    { valeur: TYPE_INTERVENTION.EN_PRESENTIEL, icon: <BuildIcon sx={{ fontSize: 36 }} />, titre: 'SUR SITE', description: "Déplacement physique pour intervention sur l'équipement" },
 ]
 
 export default function SurTicket() {
@@ -283,7 +283,7 @@ export default function SurTicket() {
                 {/* Carte ticket */}
                 <Paper elevation={0} sx={cardSx}>
                     <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" spacing={1}>
-                        <Typography sx={{ color: '#0c5d7d', fontSize: 20, fontWeight: 700 }}>
+                        <Typography sx={{ color: '#0c5d7d', fontSize: 25, fontWeight: 700 }}>
                             Ticket {numeroTicket(panne)}
                         </Typography>
                         <Stack direction="row" spacing={1}>
@@ -294,26 +294,26 @@ export default function SurTicket() {
                         </Stack>
                     </Stack>
                     <Stack spacing={0.5} sx={{ mt: 1 }}>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Équipement :</strong> {panne.equipement?.codeInventaire} — {panne.equipement?.marque} {panne.equipement?.modele}
                         </Typography>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Problème :</strong> {panne.description}
                         </Typography>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Priorité :</strong> {PRIORITE_PANNE_LABELS[panne.priorite]}
                         </Typography>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Signalé par :</strong> {panne.utilisateurSignaleur?.nom} {panne.utilisateurSignaleur?.prenom}
                         </Typography>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Date :</strong> {formaterDate(panne.dateSurvenance)}
                         </Typography>
-                        <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                             <strong>Localisation :</strong> {libelleLocalisation(panne.equipement?.localisation)}
                         </Typography>
                         {intervention && (
-                            <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                            <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
                                 <strong>Technicien :</strong> {intervention.technicien?.nom} {intervention.technicien?.prenom}
                             </Typography>
                         )}
@@ -323,8 +323,8 @@ export default function SurTicket() {
                 {/* Choix du type - seulement si aucune intervention n'existe encore */}
                 {!intervention && (
                     <Paper elevation={0} sx={cardSx}>
-                        <Typography sx={{ color: '#0c5d7d', fontSize: 16, fontWeight: 700, mb: 1.5 }}>
-                            Choisissez le type d'intervention
+                        <Typography sx={{ color: '#0c5d7d', fontSize: 28, fontWeight: 700, mb: 1.5 }}>
+                            Choisissez le type d&apos;intervention
                         </Typography>
                         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                             {CARTES_TYPE.map((carte) => {
@@ -337,17 +337,18 @@ export default function SurTicket() {
                                             flex: 1,
                                             p: 2,
                                             borderRadius: '10px',
-                                            border: '2px solid',
+                                            border: '3px solid',
                                             borderColor: isSelected ? '#146f42' : 'rgba(13, 93, 125, 0.2)',
                                             bgcolor: isSelected ? 'rgba(20, 111, 66, 0.06)' : '#fff',
                                             cursor: 'pointer',
                                             transition: 'all 0.15s ease',
                                             textAlign: 'center',
+                                            
                                         }}
                                     >
                                         <Box sx={{ color: isSelected ? '#146f42' : '#0c5d7d', mb: 1 }}>{carte.icon}</Box>
-                                        <Typography sx={{ fontWeight: 700, color: '#0c5d7d', fontSize: 14 }}>{carte.titre}</Typography>
-                                        <Typography sx={{ fontSize: 12, color: 'text.secondary', mt: 0.5 }}>{carte.description}</Typography>
+                                        <Typography sx={{ fontWeight: 700, color: '#0c5d7d', fontSize: 20 }}>{carte.titre}</Typography>
+                                        <Typography sx={{ fontSize: 16, color: 'text.secondary', mt: 0.5 }}>{carte.description}</Typography>
                                     </Box>
                                 )
                             })}
@@ -373,11 +374,11 @@ export default function SurTicket() {
                                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         <ChatIcon sx={{ color: '#0c5d7d' }} />
-                                        <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16 }}>
+                                        <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18 }}>
                                             Chat — intervention à distance
                                         </Typography>
                                     </Stack>
-                                    <Link component={RouterLink} to={`/assistance/messages/${intervention.idIntervention}`} sx={{ color: '#146f42', fontWeight: 700, fontSize: 13 }}>
+                                    <Link component={RouterLink} to={`/assistance/messages/${intervention.idIntervention}`} sx={{ color: '#146f42', fontWeight: 700, fontSize: 16 }}>
                                         Ouvrir le chat →
                                     </Link>
                                 </Stack>
@@ -385,7 +386,7 @@ export default function SurTicket() {
                         )}
 
                         <Paper elevation={0} sx={cardSx}>
-                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16, mb: 1.5 }}>Diagnostic</Typography>
+                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Diagnostic</Typography>
                             <TextField
                                 fullWidth
                                 multiline
@@ -399,7 +400,7 @@ export default function SurTicket() {
                         </Paper>
 
                         <Paper elevation={0} sx={cardSx}>
-                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16, mb: 1.5 }}>
+                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
                                 Solution / Pièces remplacées
                             </Typography>
                             <TextField
@@ -441,8 +442,8 @@ export default function SurTicket() {
 
                         {(interventionEnCours || intervention.resultat) && (
                             <Paper elevation={0} sx={cardSx}>
-                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16, mb: 1 }}>
-                                    Résultat de l'intervention
+                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1 }}>
+                                    Résultat de l&apos;intervention
                                 </Typography>
                                 <RadioGroup value={resultat} onChange={(event) => setResultat(event.target.value)}>
                                     <FormControlLabel
@@ -472,8 +473,8 @@ export default function SurTicket() {
 
                         {(peutRedigerRapport || intervention.rapport) && (
                             <Paper elevation={0} sx={cardSx}>
-                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16, mb: 1.5 }}>
-                                    Rapport d'intervention
+                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
+                                    Rapport d&apos;intervention
                                 </Typography>
                                 {peutRedigerRapport ? (
                                     <>
@@ -498,7 +499,7 @@ export default function SurTicket() {
                                         </Stack>
                                     </>
                                 ) : (
-                                    <Typography sx={{ fontSize: 14, color: '#0c5d7d', whiteSpace: 'pre-wrap' }}>{intervention.rapport}</Typography>
+                                    <Typography sx={{ fontSize: 16, color: '#0c5d7d', whiteSpace: 'pre-wrap' }}>{intervention.rapport}</Typography>
                                 )}
                             </Paper>
                         )}
@@ -506,7 +507,7 @@ export default function SurTicket() {
                         {peutValider && (
                             <Paper elevation={0} sx={cardSx}>
                                 <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" spacing={1}>
-                                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16 }}>
+                                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18 }}>
                                         Ce rapport est en attente de votre validation
                                     </Typography>
                                     <Button
@@ -532,14 +533,14 @@ export default function SurTicket() {
 
                 {/* Historique - toujours visible, meme avant creation de l'intervention */}
                 <Paper elevation={0} sx={cardSx}>
-                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16, mb: 1.5 }}>Historique du ticket</Typography>
+                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Historique du ticket</Typography>
                     <Stack spacing={1.5}>
                         {historique.map((evenement, index) => (
                             <Stack key={index} direction="row" spacing={1.5} alignItems="flex-start">
                                 <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#146f42', mt: 0.6, flexShrink: 0 }} />
                                 <Box>
-                                    <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>{formaterDateHeure(evenement.date)}</Typography>
-                                    <Typography sx={{ fontSize: 14, color: '#0c5d7d' }}>{evenement.label}</Typography>
+                                    <Typography sx={{ fontSize: 16, color: 'text.secondary' }}>{formaterDateHeure(evenement.date)}</Typography>
+                                    <Typography sx={{ fontSize: 16, color: '#0c5d7d' }}>{evenement.label}</Typography>
                                 </Box>
                             </Stack>
                         ))}
