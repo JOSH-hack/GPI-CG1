@@ -24,6 +24,7 @@ import com.golfe1.gpi.repositories.MessageRepository;
 import com.golfe1.gpi.repositories.UtilisateurRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.golfe1.gpi.entities.enums.RoleUtilisateur;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,6 +50,20 @@ public class MessageService {
 
     @Transactional
     public Message envoyerMessage(Long idIntervention, Long idExpediteur, String contenu) {
+        // Vérifier que l'expéditeur est bien un participant de l'intervention (les
+        // admins outrepassent)
+        Panne panne = intervention.getPanne();
+        boolean estTechnicien = intervention.getTechnicien().getIdUtilisateur().equals(idExpediteur);
+        boolean estSignaleur = panne.getUtilisateurSignaleur().getIdUtilisateur().equals(idExpediteur);
+        RoleUtilisateur roleExpediteur = expediteur.getRole();
+        boolean estAdmin = roleExpediteur == RoleUtilisateur.ADMIN_INFO
+                || roleExpediteur == RoleUtilisateur.ADMIN_SYSTEME;
+
+        if (!estTechnicien && !estSignaleur && !estAdmin) {
+            throw new UnauthorizedActionException(
+                    "Vous n'êtes pas autorisé à envoyer un message dans cette intervention");
+        }
+        
         if (contenu == null || contenu.isBlank()) {
             throw new BusinessRuleException("Le message ne peut pas être vide");
         }

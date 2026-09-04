@@ -45,8 +45,7 @@ export default function PieceJointeViewer({ pieceJointe, onDeleted }) {
     const urlRef = useRef(null)
 
     const peutSupprimer =
-        user?.role === ROLES.TECHNICIEN || user?.role === ROLES.ADMIN_INFO
-
+        user?.role === ROLES.TECHNICIEN || user?.role === ROLES.ADMIN_INFO || user?.role === ROLES.ADMIN_SYSTEME
     const estIndisponible =
         pieceJointe.supprimee || pieceJointe.supprimeeParTechnicien || pieceJointe.vuesRestantes <= 0
 

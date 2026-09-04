@@ -160,13 +160,12 @@ function fusionnerMenus(menus) {
     }))
 }
 
+const MENU_SUPER_ADMIN = fusionnerMenus(Object.values(MENUS_PAR_ROLE_SAUF_SUPER_ADMIN))
+
 export const MENU_PAR_ROLE = {
     ...MENUS_PAR_ROLE_SAUF_SUPER_ADMIN,
-    // ADMIN_SYSTEME = super admin : voit et peut naviguer vers absolument tout ce
-    // que n'importe quel autre role peut voir, sans exception et sans maintenance
-    // manuelle a chaque nouvelle page (voir RoleRoute.jsx pour le pendant "acces
-    // reellement autorise", et SecurityConfig.java cote backend).
-    [ROLES.ADMIN_SYSTEME]: fusionnerMenus(Object.values(MENUS_PAR_ROLE_SAUF_SUPER_ADMIN)),
+    [ROLES.ADMIN_SYSTEME]: MENU_SUPER_ADMIN,
+    [ROLES.ADMIN_INFO]: MENU_SUPER_ADMIN,
 }
 
 export { iconProfil }

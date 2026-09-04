@@ -233,9 +233,19 @@ export default function SurTicket() {
     }
 
     const badge = statutChip(panne.statut)
-    const estTechnicien = user?.role === ROLES.TECHNICIEN
-    const estDsi = user?.role === ROLES.RESPONSABLE_DSI
-    const estSonIntervention = estTechnicien && intervention?.technicien?.idUtilisateur === user?.idUtilisateur
+
+    const estTechnicien =
+        user?.role === ROLES.TECHNICIEN ||
+        user?.role === ROLES.ADMIN_INFO ||
+        user?.role === ROLES.ADMIN_SYSTEME
+        
+    const estDsi =
+        user?.role === ROLES.RESPONSABLE_DSI ||
+        user?.role === ROLES.ADMIN_INFO ||
+        user?.role === ROLES.ADMIN_SYSTEME
+
+    const estAdmin = user?.role === ROLES.ADMIN_INFO || user?.role === ROLES.ADMIN_SYSTEME
+    const estSonIntervention = (estTechnicien && intervention?.technicien?.idUtilisateur === user?.idUtilisateur) || estAdmin
 
     const interventionEnCours = intervention && !intervention.dateResolution
     const resultatEnAttente = intervention && Boolean(intervention.dateResolution) && !intervention.rapport
@@ -343,7 +353,7 @@ export default function SurTicket() {
                                             cursor: 'pointer',
                                             transition: 'all 0.15s ease',
                                             textAlign: 'center',
-                                            
+
                                         }}
                                     >
                                         <Box sx={{ color: isSelected ? '#146f42' : '#0c5d7d', mb: 1 }}>{carte.icon}</Box>

@@ -20,9 +20,9 @@ import { ROLES } from '../utils/constants'
 export default function RoleRoute({ allowedRoles }) {
     const { user } = useAuth()
 
-    const estSuperAdmin = user?.role === ROLES.ADMIN_SYSTEME
+    const estSuperAdmin = user?.role === ROLES.ADMIN_SYSTEME || user?.role === ROLES.ADMIN_INFO
     const estAutorise = estSuperAdmin || (user && allowedRoles.includes(user.role))
-
+    
     if (!estAutorise) {
         // Rappel : ceci est un controle cote UI pour l'experience utilisateur
         // (cacher/rediriger). La vraie securite reste le backend (@PreAuthorize),

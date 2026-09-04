@@ -24,8 +24,9 @@ export default function PieceJointesListe({ idPanne }) {
     const peutUploader =
         user?.role === ROLES.AGENT ||
         user?.role === ROLES.TECHNICIEN ||
-        user?.role === ROLES.ADMIN_INFO
-
+        user?.role === ROLES.ADMIN_INFO ||
+        user?.role === ROLES.ADMIN_SYSTEME
+        
     const chargerPieces = useCallback(async () => {
         setChargement(true)
         setErreur('')

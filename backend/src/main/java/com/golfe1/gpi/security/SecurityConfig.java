@@ -97,6 +97,9 @@ public class SecurityConfig {
                 ROLE_ADMIN_SYSTEME > ROLE_RESPONSABLE_DSI
                 ROLE_ADMIN_SYSTEME > ROLE_TECHNICIEN
                 ROLE_ADMIN_SYSTEME > ROLE_AGENT
+                ROLE_ADMIN_INFO > ROLE_RESPONSABLE_DSI
+                ROLE_ADMIN_INFO > ROLE_TECHNICIEN
+                ROLE_ADMIN_INFO > ROLE_AGENT
                 """);
     }
 
