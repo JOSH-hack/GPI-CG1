@@ -14,6 +14,8 @@ package com.golfe1.gpi.entities;
 import jakarta.persistence.*;
 import java.util.Objects;
 
+import com.golfe1.gpi.entities.enums.TypeAnnexe;
+
 @Entity
 @Table(name = "localisation")
 public class Localisation {
@@ -22,11 +24,13 @@ public class Localisation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idLocalisation;
 
-    @Column(nullable = false, length = 100)
-    private String annexe;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "annexe", nullable = false, length = 20)
+    private TypeAnnexe annexe;
 
     @Column(nullable = false, length = 100)
     private String service;
+
 
     private String bureau;
     private String poste;

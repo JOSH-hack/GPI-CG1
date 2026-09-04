@@ -185,3 +185,19 @@ export const TYPE_PIECE_JOINTE_LABELS = {
     [TYPE_PIECE_JOINTE.VIDEO]: 'Vidéo',
     [TYPE_PIECE_JOINTE.PDF]: 'PDF',
 }
+
+export const ANNEXES = {
+    AFEDOME: 'AFEDOME',
+    AKODESSEWA: 'AKODESSEWA',
+    ABLOGAME: 'ABLOGAME',
+    ADAKPAME: 'ADAKPAME',
+    KLOBATEME: 'KLOBATEME',
+}
+
+export const ANNEXE_LABELS = {
+    [ANNEXES.AFEDOME]: 'Afédomé',
+    [ANNEXES.AKODESSEWA]: 'Akodessewa',
+    [ANNEXES.ABLOGAME]: 'Ablogamé',
+    [ANNEXES.ADAKPAME]: 'Adakpamé',
+    [ANNEXES.KLOBATEME]: 'Klobatémé',
+}
