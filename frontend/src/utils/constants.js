@@ -24,6 +24,14 @@ export const ROLE_LABELS = {
     [ROLES.AGENT]: 'Agent',
 }
 
+export const ROLE_COLORS = {
+    [ROLES.ADMIN_INFO]: '#0D5D7D',
+    [ROLES.TECHNICIEN]: '#1B7548',
+    [ROLES.RESPONSABLE_DSI]: '#6B4FA0',
+    [ROLES.ADMIN_SYSTEME]: '#DC5E60',
+    [ROLES.AGENT]: '#9CA3AF',
+}
+
 //  Statut équipement -
 export const STATUT_EQUIPEMENT = {
     EN_SERVICE: 'EN_SERVICE',
@@ -137,14 +145,23 @@ export const TYPE_CATEGORIE = {
     HARDWARE: 'HARDWARE',
     SOFTWARE: 'SOFTWARE',
     RESEAU: 'RESEAU',
+    AUTRE: 'AUTRE',
 }
 
 export const TYPE_CATEGORIE_LABELS = {
     [TYPE_CATEGORIE.HARDWARE]: 'Matériel',
     [TYPE_CATEGORIE.SOFTWARE]: 'Logiciel',
     [TYPE_CATEGORIE.RESEAU]: 'Réseau',
+    [TYPE_CATEGORIE.AUTRE]: 'Autre',
 }
 
+// Couleurs pour affichage en chip (harmonisees avec le style des autres modules)
+export const TYPE_CATEGORIE_COLORS = {
+    [TYPE_CATEGORIE.HARDWARE]: '#1B7548',
+    [TYPE_CATEGORIE.SOFTWARE]: '#0D5D7D',
+    [TYPE_CATEGORIE.RESEAU]: '#6B4FA0',
+    [TYPE_CATEGORIE.AUTRE]: '#9CA3AF',
+}
 //  Type adresse réseau 
 export const TYPE_ADRESSE_RESEAU = {
     STATIQUE: 'STATIQUE',
@@ -167,4 +184,20 @@ export const TYPE_PIECE_JOINTE_LABELS = {
     [TYPE_PIECE_JOINTE.IMAGE]: 'Image',
     [TYPE_PIECE_JOINTE.VIDEO]: 'Vidéo',
     [TYPE_PIECE_JOINTE.PDF]: 'PDF',
+}
+
+export const ANNEXES = {
+    AFEDOME: 'AFEDOME',
+    AKODESSEWA: 'AKODESSEWA',
+    ABLOGAME: 'ABLOGAME',
+    ADAKPAME: 'ADAKPAME',
+    KLOBATEME: 'KLOBATEME',
+}
+
+export const ANNEXE_LABELS = {
+    [ANNEXES.AFEDOME]: 'Afédomé',
+    [ANNEXES.AKODESSEWA]: 'Akodessewa',
+    [ANNEXES.ABLOGAME]: 'Ablogamé',
+    [ANNEXES.ADAKPAME]: 'Adakpamé',
+    [ANNEXES.KLOBATEME]: 'Klobatémé',
 }

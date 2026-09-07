@@ -238,8 +238,12 @@ export default function Register() {
             setRegisteredEmail(formValues.email)
             setShowForm(false) // declenche le fondu de sortie ; VerifyEmail prend le relais dans onExited
         } catch (error) {
-            if (error.response?.status === 401 || error.response?.status === 403) {
-                setServerError('Email ou mot de passe incorrect')
+            const messageServeur = error.response?.data?.message
+
+            if (error.response?.status === 400 && messageServeur) {
+                // Erreur métier explicite du backend (ex: email déjà utilisé,
+                // mot de passe trop court) - on affiche le vrai message.
+                setServerError(messageServeur)
             } else {
                 setServerError('Une erreur est survenue, veuillez réessayer')
             }
@@ -259,8 +263,8 @@ export default function Register() {
                 overflow: 'hidden',
                 overflowY: { xs: 'visible', md: 'hidden' },
                 backgroundImage: ` linear-gradient(
-                                    rgba(255, 255, 255, 0.69),
-                                    rgba(255, 255, 255, 0.75)
+                                      rgba(204, 204, 204, 0.6),
+                                      rgba(201, 201, 201, 0.8)
                                 ),
                                 url(${backgroundPic})`,
                 backgroundSize: 'cover',

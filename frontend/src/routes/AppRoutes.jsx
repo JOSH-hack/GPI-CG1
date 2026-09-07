@@ -7,13 +7,16 @@ Date de création : 29/08/2026
 
 */
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { ROLES } from '../utils/constants'
 
 import PrivateRoute from './PrivateRoute'
 import RoleRoute from './RoleRoute'
 
 import DashboardLayout from '../components/layout/DashboardLayout'
+
+//  Accueil (publique) 
+import Home from '../pages/home/Home'
 
 //  Auth (publiques) 
 import Login from '../pages/auth/Login'
@@ -24,7 +27,6 @@ import Dashboard from '../pages/dashboard/Dashboard'
 
 //  Parc : Categories 
 import CategoriesListe from '../pages/categories/Liste'
-import CategorieForm from '../pages/categories/Form'
 
 //  Parc : Equipements 
 import EquipementsListe from '../pages/equipements/Liste'
@@ -44,9 +46,8 @@ import MesSignalements from '../pages/pannes/MesSignalements'
 
 //  Assistance : Interventions 
 import InterventionsListe from '../pages/interventions/Liste'
-import InterventionCreer from '../pages/interventions/Creer'
-import InterventionDetail from '../pages/interventions/Detail'
 import InterventionsEnAttenteDsi from '../pages/interventions/EnAttenteDsi'
+import InterventionSurTicket from '../pages/interventions/SurTicket'
 
 //  Assistance : Messages (chat) 
 import ChatIntervention from '../pages/messages/ChatIntervention'
@@ -73,6 +74,7 @@ export default function AppRoutes() {
     return (
         <Routes>
             {/*  ROUTES PUBLIQUES  */}
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             {/* Register gere l'inscription ET la saisie du code de verification
           en un seul ecran en 2 etapes (pas de route separee) */}
@@ -81,7 +83,6 @@ export default function AppRoutes() {
             {/*  ROUTES PRIVEES  */}
             <Route element={<PrivateRoute />}>
                 <Route element={<DashboardLayout />}>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
 
                     {/*  Parc : Categories (Admin/DSI/Systeme)  */}
@@ -93,7 +94,6 @@ export default function AppRoutes() {
                         }
                     >
                         <Route path="/parc/categories" element={<CategoriesListe />} />
-                        <Route path="/parc/categories/nouveau" element={<CategorieForm />} />
                     </Route>
 
                     {/*  Parc : Equipements  */}
@@ -118,10 +118,11 @@ export default function AppRoutes() {
                     </Route>
 
                     {/*  Assistance : Pannes  */}
+                    {/* Assistance : Pannes - ajout de ADMIN_SYSTEME */}
                     <Route
                         element={
                             <RoleRoute
-                                allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_INFO, ROLES.RESPONSABLE_DSI]}
+                                allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_INFO, ROLES.RESPONSABLE_DSI, ROLES.ADMIN_SYSTEME]}
                             />
                         }
                     >
@@ -138,31 +139,34 @@ export default function AppRoutes() {
                     </Route>
 
                     {/*  Assistance : Interventions  */}
-                    <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN]} />}>
+                    <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLES.ADMIN_INFO]} />}>
                         <Route path="/assistance/interventions" element={<InterventionsListe />} />
-                        <Route path="/assistance/interventions/creer/:idPanne" element={<InterventionCreer />} />
                     </Route>
-                    <Route path="/assistance/interventions/:id" element={<InterventionDetail />} />
-
-                    <Route element={<RoleRoute allowedRoles={[ROLES.RESPONSABLE_DSI]} />}>
+                    <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLES.ADMIN_INFO]} />}>
+                        <Route path="/assistance/interventions/ticket/:idPanne" element={<InterventionSurTicket />} />                    </Route>
+                    
+                    <Route element={<RoleRoute allowedRoles={[ROLES.RESPONSABLE_DSI, ROLES.ADMIN_INFO, ROLES.ADMIN_SYSTEME]} />}>
                         <Route path="/assistance/interventions/en-attente-dsi" element={<InterventionsEnAttenteDsi />} />
                     </Route>
 
                     {/*  Assistance : Chat (participants verifies cote backend)  */}
                     <Route path="/assistance/messages/:idIntervention" element={<ChatIntervention />} />
 
-                    {/*  Gestion : Utilisateurs (Admin/DSI)  */}
+                    {/*  Gestion : Utilisateurs (Admin/DSI/Systeme)  */}
                     <Route
-                        element={<RoleRoute allowedRoles={[ROLES.ADMIN_INFO, ROLES.RESPONSABLE_DSI]} />}
+                        element={
+                            <RoleRoute allowedRoles={[ROLES.ADMIN_INFO, ROLES.RESPONSABLE_DSI, ROLES.ADMIN_SYSTEME]} />
+                        }
                     >
                         <Route path="/gestion/utilisateurs" element={<UtilisateursListe />} />
                         <Route path="/gestion/utilisateurs/:id" element={<UtilisateurDetail />} />
                     </Route>
 
-                    {/*  Gestion : Agents (Admin Info)  */}
-                    <Route element={<RoleRoute allowedRoles={[ROLES.ADMIN_INFO]} />}>
+                    {/* Gestion : Agents - ajout de ADMIN_SYSTEME */}
+                    <Route element={<RoleRoute allowedRoles={[ROLES.ADMIN_INFO, ROLES.ADMIN_SYSTEME]} />}>
                         <Route path="/gestion/agents" element={<AgentsListe />} />
                         <Route path="/gestion/agents/nouveau" element={<AgentForm />} />
+                        <Route path="/gestion/agents/:id" element={<AgentForm />} />
                     </Route>
 
                     {/*  Gestion : Localisations (Admin/DSI/Systeme)  */}

@@ -10,7 +10,7 @@ Date de création : 31/08/2026
 */
 
 import { useState } from 'react'
-import { useNavigate, Link as RouterLink } from 'react-router-dom'
+import { useNavigate, useLocation, Link as RouterLink } from 'react-router-dom'
 import {
   Box,
   Card,
@@ -70,7 +70,7 @@ function FeatureCard({ feature }) {
       elevation={0}
       sx={{
         display: 'flex',
-        width: { xs: '100%', sm: 'clamp(180px, 40vw, 270px)' },
+        width: { xs: '100%', sm: 'clamp(200px, 60vw, 270px)' },
         minWidth: 0,
         flexShrink: 0,
         minHeight: { xs: 'auto', sm: 'clamp(118px, 22.7vw, 229px)' },
@@ -78,6 +78,7 @@ function FeatureCard({ feature }) {
         bgcolor: '#d9d9d9',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
         marginTop: { xs: 0, sm: 'clamp(20px, 2.5vw, 30px)' },
+        marginBottom: { xs: 0, sm: 'clamp(20px, 2.5vw, 30px)' },
       }}
     >
       <GlareHover
@@ -167,6 +168,8 @@ function FeatureCard({ feature }) {
 export default function Login() {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const location = useLocation()
+  const destinationApresConnexion = location.state?.from?.pathname || '/dashboard'
 
   const [formValues, setFormValues] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -190,10 +193,16 @@ export default function Login() {
       // login() appelle authApi.login (le backend pose le cookie httpOnly via
       // Set-Cookie) puis met a jour l'etat React avec role/nom.
       await login(formValues.email, formValues.password)
-      navigate('/dashboard')
+      navigate(destinationApresConnexion, { replace: true })
     } catch (error) {
-      if (error.response?.status === 401 || error.response?.status === 403) {
+      const status = error.response?.status
+      const messageServeur = error.response?.data?.message
+
+      if (status === 401 || status === 403) {
         setServerError('Email ou mot de passe incorrect')
+      } else if (status === 400 && messageServeur) {
+        // Erreur métier explicite (ex: email non vérifié) - on affiche le vrai message.
+        setServerError(messageServeur)
       } else {
         setServerError('Une erreur est survenue, veuillez réessayer')
       }
@@ -360,11 +369,17 @@ export default function Login() {
         >
           <Stack alignItems="left" spacing={0} sx={{ width: '100%', mb: '4.2%' }}>
             <Box
-              component="img"
-              src={logoMairie}
-              alt="Logo de la Mairie du Golfe 1"
-              sx={{ width: 'clamp(32px, 5.2vw, 64px)', mb: '1.5%' }}
-            />
+              component={RouterLink}
+              to="/"
+              sx={{ display: 'inline-block', mb: '1.5%' }}
+            >
+              <Box
+                component="img"
+                src={logoMairie}
+                alt="Retour à l'accueil - Logo de la Mairie du Golfe 1"
+                sx={{ width: 'clamp(32px, 5.2vw, 64px)', display: 'block' }}
+              />
+            </Box>
             <Typography
               id="login-title"
               component="h1"
@@ -619,6 +634,7 @@ export default function Login() {
               fontWeight: 600,
               lineHeight: 1.18,
               marginTop: { xs: 0, md: '-75px' },
+              marginLeft: { xs: 0, md: '5%' },
             }}
           >
             Plateforme de Gestion Du Parc Informatique de la Commune du Golfe 1
@@ -647,7 +663,7 @@ export default function Login() {
               sx={{
                 display: 'flex',
                 width: 'max-content',
-                gap: '4%',
+                gap: '3%',
                 animation: `${defilementInfini} 20s linear infinite`,
                 '&:hover': { animationPlayState: 'paused' },
               }}

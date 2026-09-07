@@ -12,5 +12,6 @@ package com.golfe1.gpi.entities.enums;
 public enum TypeCategorie {
     HARDWARE,
     SOFTWARE,
-    RESEAU
+    RESEAU,
+    AUTRE
 }

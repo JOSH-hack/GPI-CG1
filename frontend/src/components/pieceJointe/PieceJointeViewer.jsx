@@ -26,7 +26,7 @@ import VideocamIcon from '@mui/icons-material/Videocam'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import axiosClient from '../../api/axiosClient'
 import { pieceJointeApi } from '../../api/pieceJointeApi'
-import { useAuth } from '../../hooks/useAuth'
+import { useAuth } from '../../contexts/AuthContext'
 import { TYPE_PIECE_JOINTE, ROLES } from '../../utils/constants'
 import ConfirmDialog from '../common/ConfirmDialog'
 
@@ -45,8 +45,7 @@ export default function PieceJointeViewer({ pieceJointe, onDeleted }) {
     const urlRef = useRef(null)
 
     const peutSupprimer =
-        user?.role === ROLES.TECHNICIEN || user?.role === ROLES.ADMIN_INFO
-
+        user?.role === ROLES.TECHNICIEN || user?.role === ROLES.ADMIN_INFO || user?.role === ROLES.ADMIN_SYSTEME
     const estIndisponible =
         pieceJointe.supprimee || pieceJointe.supprimeeParTechnicien || pieceJointe.vuesRestantes <= 0
 

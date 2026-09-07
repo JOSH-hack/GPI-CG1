@@ -85,10 +85,13 @@ public class InterventionService {
     public Intervention redigerRapport(Long idIntervention, String rapport, Long idTechnicien) {
         Intervention intervention = getInterventionOuException(idIntervention);
 
-        // Vérifier que c'est bien le technicien assigné qui rédige
-        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
+        // Vérifier que c'est bien le technicien assigné qui rédige (les admins
+        // outrepassent)
+        boolean estAdmin = estUnAdmin(idTechnicien);
+        if (!estAdmin && !intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
             throw new UnauthorizedActionException("Seul le technicien assigné peut rédiger le rapport");
         }
+      
 
         if (intervention.getDateResolution() != null) {
             throw new BusinessRuleException("L'intervention est déjà clôturée");
@@ -111,9 +114,7 @@ public class InterventionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Validateur DSI", idValidateurDsi));
 
         // Vérifier le rôle DSI
-        if (validateur.getRole() != RoleUtilisateur.RESPONSABLE_DSI ) {
-            throw new UnauthorizedActionException("Seul le DSI peut valider une intervention");
-        }
+       
 
         // Vérifier que le rapport a été rédigé
         if (intervention.getRapport() == null || intervention.getRapport().isBlank()) {
@@ -123,6 +124,15 @@ public class InterventionService {
         // Vérifier que ce n'est pas déjà validé
         if (intervention.getDateValidationDsi() != null) {
             throw new BusinessRuleException("Cette intervention est déjà validée");
+        }
+
+        // VÃ©rifier le rÃ´le DSI (les deux super-admins peuvent aussi valider)
+        RoleUtilisateur roleValidateur = validateur.getRole();
+        boolean estAutorise = roleValidateur == RoleUtilisateur.RESPONSABLE_DSI
+                || roleValidateur == RoleUtilisateur.ADMIN_INFO
+                || roleValidateur == RoleUtilisateur.ADMIN_SYSTEME;
+        if (!estAutorise) {
+            throw new UnauthorizedActionException("Seul le DSI ou un administrateur peut valider une intervention");
         }
 
         Panne panne = intervention.getPanne();
@@ -175,10 +185,11 @@ public class InterventionService {
     @Transactional
     public Intervention enregistrerResultat(Long idIntervention, ResultatIntervention resultat, Long idTechnicien) {
         Intervention intervention = getInterventionOuException(idIntervention);
-
-        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
+        boolean estAdmin = estUnAdmin(idTechnicien);
+        if (!estAdmin && !intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
             throw new UnauthorizedActionException("Seul le technicien assigné peut renseigner le résultat");
         }
+      
         if (intervention.getDateResolution() != null) {
             throw new BusinessRuleException("L'intervention est déjà clôturée");
         }
@@ -193,6 +204,15 @@ public class InterventionService {
         return interventionRepository.findByPanneIdPanne(idPanne);
     }
 
+    public List<Intervention> listerToutes() {
+        return interventionRepository.findAll();
+    }
+
+    public Intervention getParId(Long idIntervention) {
+        return interventionRepository.findById(idIntervention)
+                .orElseThrow(() -> new ResourceNotFoundException("Intervention", idIntervention));
+    }
+
     public List<Intervention> listerEnAttenteValidationDsi() {
         return interventionRepository.findEnAttenteValidationDsi();
     }
@@ -200,5 +220,14 @@ public class InterventionService {
     private Intervention getInterventionOuException(Long idIntervention) {
         return interventionRepository.findById(idIntervention)
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention", idIntervention));
+    }
+    
+    // Les admins (ADMIN_INFO, ADMIN_SYSTEME) outrepassent les regles de
+    // propriete (ex: "seul le technicien assigne peut...") sur les interventions.
+    private boolean estUnAdmin(Long idUtilisateur) {
+        Utilisateur utilisateur = utilisateurRepository.findById(idUtilisateur)
+                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", idUtilisateur));
+        RoleUtilisateur role = utilisateur.getRole();
+        return role == RoleUtilisateur.ADMIN_INFO || role == RoleUtilisateur.ADMIN_SYSTEME;
     }
 }

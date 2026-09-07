@@ -110,17 +110,18 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<Map<String, String>> me() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Utilisateur utilisateur = utilisateurService.getParEmail(authentication.getName());
+ @GetMapping("/me")
+public ResponseEntity<Map<String, Object>> me() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Utilisateur utilisateur = utilisateurService.getParEmail(authentication.getName());
 
-        Map<String, String> body = new HashMap<>();
-        body.put("email", utilisateur.getEmail());
-        body.put("role", utilisateur.getRole().name());
-        body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
-        return ResponseEntity.ok(body);
-    }
+    Map<String, Object> body = new HashMap<>();
+    body.put("idUtilisateur", utilisateur.getIdUtilisateur());
+    body.put("email", utilisateur.getEmail());
+    body.put("role", utilisateur.getRole().name());
+    body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
+    return ResponseEntity.ok(body);
+}
 
     @PostMapping("/register")
     public ResponseEntity<UtilisateurResponse> register(@Valid @RequestBody UtilisateurRequest request) {

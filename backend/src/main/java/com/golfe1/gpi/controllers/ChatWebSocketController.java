@@ -15,11 +15,14 @@ import com.golfe1.gpi.entities.Message;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.services.MessageService;
 import com.golfe1.gpi.services.UtilisateurService;
+
+import java.security.Principal;
+
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+
 
 @Controller
 public class ChatWebSocketController {
@@ -44,20 +47,16 @@ public class ChatWebSocketController {
     @MessageMapping("/intervention/{idIntervention}/chat")
     public void envoyerMessage(@DestinationVariable Long idIntervention,
             ChatPayload payload,
-            Authentication authentication) {
+            Principal principal) {
 
-        // L'identite de l'expediteur vient du token JWT valide au CONNECT,
-        // jamais du payload envoye par le client - meme principe que pour idSignaleur.
-        String email = authentication.getName();
+        String email = principal.getName();
         Utilisateur expediteur = utilisateurService.getParEmail(email);
 
         Message message = messageService.envoyerMessage(idIntervention, expediteur.getIdUtilisateur(),
                 payload.getContenu());
 
-        // ADAPTER ICI si votre MessageMapper utilise un autre nom de methode
         MessageResponse response = messageMapper.toResponse(message);
 
-        // Diffuse a tous les abonnes de ce topic (technicien + agent signaleur)
         messagingTemplate.convertAndSend("/topic/intervention/" + idIntervention, response);
     }
 

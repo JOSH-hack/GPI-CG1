@@ -50,6 +50,10 @@ public class UtilisateurService {
     public Utilisateur creerUtilisateur(String nom, String prenom, String email,
             String motDePasse, RoleUtilisateur role) {
 
+        if (motDePasse == null || motDePasse.length() < 6) {
+            throw new BusinessRuleException("Le mot de passe doit contenir au moins 6 caractères");
+        }
+
         Utilisateur utilisateurExistant = utilisateurRepository.findByEmail(email).orElse(null);
 
         if (utilisateurExistant != null) {
@@ -64,19 +68,15 @@ public class UtilisateurService {
             utilisateurExistant.setMotDePasse(passwordEncoder.encode(motDePasse));
             utilisateurExistant.setRole(role);
             utilisateurExistant.setCodeVerification(nouveauCode);
-            utilisateurExistant.setDateExpirationCode(LocalDateTime.now().plusSeconds(90));
-
+            utilisateurExistant.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));
             Utilisateur utilisateurMisAJour = utilisateurRepository.save(utilisateurExistant);
             emailService.envoyerCodeVerification(utilisateurMisAJour.getEmail(), nouveauCode);
 
             return utilisateurMisAJour;
         }
 
-        if (motDePasse == null || motDePasse.length() < 6) {
-            throw new BusinessRuleException("Le mot de passe doit contenir au moins 6 caractères");
-        }
-
         Utilisateur utilisateur = new Utilisateur();
+
         utilisateur.setNom(nom);
         utilisateur.setPrenom(prenom);
         utilisateur.setEmail(email);
@@ -88,7 +88,7 @@ public class UtilisateurService {
         String code = genererCode();
         utilisateur.setEmailVerifie(false);
         utilisateur.setCodeVerification(code);
-        utilisateur.setDateExpirationCode(LocalDateTime.now().plusSeconds(90));
+        utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));
 
         Utilisateur utilisateurCree = utilisateurRepository.save(utilisateur);
         emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
@@ -204,8 +204,7 @@ public void renvoyerCodeVerification(String email) {
 
     String code = genererCode();
     utilisateur.setCodeVerification(code);
-    utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(15));
-    utilisateurRepository.save(utilisateur);
+    utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));    utilisateurRepository.save(utilisateur);
 
     emailService.envoyerCodeVerification(email, code);
 }
