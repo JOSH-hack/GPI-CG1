@@ -41,6 +41,7 @@ import {
     Chip,
     CircularProgress,
     Divider,
+    MenuItem,
     Link,
     Paper,
     Radio,
@@ -100,6 +101,9 @@ export default function SurTicket() {
     // Etape "choix du type" (avant creation de l'intervention)
     const [typeChoisi, setTypeChoisi] = useState(null)
     const [creation, setCreation] = useState(false)
+    const [techniciens, setTechniciens] = useState([])
+    const [technicienSelectionne, setTechnicienSelectionne] = useState('')
+    const [chargementTechniciens, setChargementTechniciens] = useState(false)
 
     // Champs d'edition une fois l'intervention creee
     const [diagnostic, setDiagnostic] = useState('')
@@ -138,22 +142,60 @@ export default function SurTicket() {
 
     useEffect(() => {
         chargerTout()
+
+        if (
+            user?.role === ROLES.ADMIN_INFO ||
+            user?.role === ROLES.ADMIN_SYSTEME
+        ) {
+            chargerTechniciens()
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [idPanne])
+    }, [idPanne, user?.role])
 
     async function handleCreerIntervention() {
         if (!typeChoisi) return
+
+        const estTechnicienConnecte =
+            user?.role === ROLES.TECHNICIEN
+
+        const estAdmin =
+            user?.role === ROLES.ADMIN_INFO ||
+            user?.role === ROLES.ADMIN_SYSTEME
+
+        let idTechnicien
+
+        if (estTechnicienConnecte) {
+            idTechnicien = user?.idUtilisateur
+        } else if (estAdmin) {
+            idTechnicien = technicienSelectionne
+        }
+
+        if (!idTechnicien) {
+            setErreurAction(
+                estTechnicienConnecte
+                    ? "Impossible de récupérer votre ID utilisateur."
+                    : "Veuillez sélectionner un technicien."
+            )
+            return
+        }
+
         setCreation(true)
         setErreurAction('')
+
         try {
             const response = await interventionApi.creer({
                 idPanne: Number(idPanne),
-                idTechnicien: user.idUtilisateur,
+                idTechnicien: Number(idTechnicien),
                 typeIntervention: typeChoisi,
             })
+
             setIntervention(response.data)
         } catch (error) {
-            setErreurAction(error.response?.data?.message || "Impossible de créer l'intervention.")
+            setErreurAction(
+                error.response?.data?.message ||
+                "Impossible de créer l'intervention."
+            )
         } finally {
             setCreation(false)
         }
@@ -203,6 +245,31 @@ export default function SurTicket() {
         }
     }
 
+    async function chargerTechniciens() {
+        setChargementTechniciens(true)
+
+        try {
+            const response = await interventionApi.listerUtilisateurs()
+
+            const utilisateurs = Array.isArray(response.data)
+                ? response.data
+                : []
+
+            const listeTechniciens = utilisateurs.filter(
+                (utilisateur) => utilisateur.role === ROLES.TECHNICIEN
+            )
+
+            setTechniciens(listeTechniciens)
+        } catch (error) {
+            setErreurAction(
+                error.response?.data?.message ||
+                'Impossible de charger la liste des techniciens.'
+            )
+        } finally {
+            setChargementTechniciens(false)
+        }
+    }
+
     async function handleValider() {
         setValidation(true)
         setErreurAction('')
@@ -234,18 +301,17 @@ export default function SurTicket() {
 
     const badge = statutChip(panne.statut)
 
-    const estTechnicien =
-        user?.role === ROLES.TECHNICIEN ||
-        user?.role === ROLES.ADMIN_INFO ||
-        user?.role === ROLES.ADMIN_SYSTEME
-        
+    const estTechnicien = user?.role === ROLES.TECHNICIEN
+
     const estDsi =
         user?.role === ROLES.RESPONSABLE_DSI ||
         user?.role === ROLES.ADMIN_INFO ||
         user?.role === ROLES.ADMIN_SYSTEME
 
     const estAdmin = user?.role === ROLES.ADMIN_INFO || user?.role === ROLES.ADMIN_SYSTEME
-    const estSonIntervention = (estTechnicien && intervention?.technicien?.idUtilisateur === user?.idUtilisateur) || estAdmin
+
+    const estSonIntervention =
+        (estTechnicien && intervention?.technicien?.idUtilisateur === user?.idUtilisateur) || estAdmin
 
     const interventionEnCours = intervention && !intervention.dateResolution
     const resultatEnAttente = intervention && Boolean(intervention.dateResolution) && !intervention.rapport
@@ -255,7 +321,7 @@ export default function SurTicket() {
     const peutModifierDiagnostic = estSonIntervention && interventionEnCours
     const peutRedigerRapport = estSonIntervention && resultatEnAttente
     const peutValider = estDsi && enAttenteValidation
-
+    
     const historique = intervention
         ? [
             panne.dateSurvenance && { date: panne.dateSurvenance, label: `Ticket créé par ${panne.utilisateurSignaleur?.nom || ''} ${panne.utilisateurSignaleur?.prenom || ''}` },
@@ -283,7 +349,7 @@ export default function SurTicket() {
                 flex: 1,
             }}
         >
-            <Stack spacing={2.5} sx={{ maxWidth: 900 }}>
+            
                 {erreurAction && (
                     <Alert severity="error" onClose={() => setErreurAction('')}>
                         {erreurAction}
@@ -364,12 +430,56 @@ export default function SurTicket() {
                             })}
                         </Stack>
                         <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+                            {(user?.role === ROLES.ADMIN_INFO ||
+    user?.role === ROLES.ADMIN_SYSTEME) && (
+    <TextField
+        select
+        fullWidth
+        label="Technicien assigné"
+        value={technicienSelectionne}
+        onChange={(event) =>
+            setTechnicienSelectionne(event.target.value)
+        }
+        disabled={chargementTechniciens || creation}
+        sx={{ ...fieldSx, mt: 2 }}
+        helperText={
+            chargementTechniciens
+                ? 'Chargement des techniciens...'
+                : 'Sélectionnez le technicien qui prendra en charge cette intervention'
+        }
+    >
+        {techniciens.length === 0 ? (
+            <MenuItem disabled>
+                Aucun technicien disponible
+            </MenuItem>
+        ) : (
+            techniciens.map((technicien) => (
+                <MenuItem
+                    key={technicien.idUtilisateur}
+                    value={technicien.idUtilisateur}
+                >
+                    {technicien.nom} {technicien.prenom}
+                </MenuItem>
+            ))
+        )}
+    </TextField>
+)}
+                            
                             <Button
                                 variant="contained"
-                                disabled={!typeChoisi || creation}
+                                disabled={
+                                    !typeChoisi ||
+                                    creation ||
+                                    (
+                                        (user?.role === ROLES.ADMIN_INFO ||
+                                            user?.role === ROLES.ADMIN_SYSTEME) &&
+                                        !technicienSelectionne
+                                    )
+                                }
                                 onClick={handleCreerIntervention}
                                 sx={{ bgcolor: '#0c5d7d', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#094a63' } }}
                             >
+                                
                                 {creation ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Suivant'}
                             </Button>
                         </Stack>
@@ -556,7 +666,7 @@ export default function SurTicket() {
                         ))}
                     </Stack>
                 </Paper>
-            </Stack>
+            
         </Box>
     )
 }

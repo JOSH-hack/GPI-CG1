@@ -1,5 +1,5 @@
 /*
-
+ 
 Nom du fichier   : LocalisationService.java
 Objectif         : Logique métier des localisations (annexes, services, bureaux) - CRUD complet
 Propriétaire     : Josué BEDEL
@@ -10,12 +10,14 @@ Date de création : 25/08/2026
 package com.golfe1.gpi.services;
 
 import com.golfe1.gpi.entities.Localisation;
+import com.golfe1.gpi.entities.enums.TypeAnnexe;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
 import com.golfe1.gpi.exceptions.ResourceNotFoundException;
 import com.golfe1.gpi.repositories.EquipementRepository;
 import com.golfe1.gpi.repositories.LocalisationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.golfe1.gpi.entities.enums.TypeAnnexe;
 
 import java.util.List;
 
@@ -38,7 +40,7 @@ public class LocalisationService {
         }
 
         Localisation localisation = new Localisation();
-        localisation.setAnnexe(annexe);
+        localisation.setAnnexe(convertirTypeAnnexe(annexe));
         localisation.setService(service);
         localisation.setBureau(bureau);
         localisation.setPoste(poste);
@@ -49,13 +51,14 @@ public class LocalisationService {
     @Transactional
     public Localisation modifierLocalisation(Long idLocalisation, String annexe, String service,
             String bureau, String poste) {
+
         Localisation localisation = getLocalisationOuException(idLocalisation);
 
         if (annexe == null || annexe.isBlank()) {
             throw new BusinessRuleException("L'annexe est obligatoire");
         }
 
-        localisation.setAnnexe(annexe);
+        localisation.setAnnexe(convertirTypeAnnexe(annexe));
         localisation.setService(service);
         localisation.setBureau(bureau);
         localisation.setPoste(poste);
@@ -81,7 +84,20 @@ public class LocalisationService {
     }
 
     public List<Localisation> rechercherParAnnexe(String annexe) {
-        return localisationRepository.findByAnnexeContainingIgnoreCase(annexe);
+        if (annexe == null || annexe.isBlank()) {
+            return localisationRepository.findAll();
+        }
+
+        try {
+            TypeAnnexe typeAnnexe = TypeAnnexe.valueOf(
+                    annexe.trim().toUpperCase());
+
+            return localisationRepository.findByAnnexe(typeAnnexe);
+
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException(
+                    "Type d'annexe invalide : " + annexe);
+        }
     }
 
     public List<Localisation> rechercherParService(String service) {
@@ -95,5 +111,13 @@ public class LocalisationService {
     private Localisation getLocalisationOuException(Long idLocalisation) {
         return localisationRepository.findById(idLocalisation)
                 .orElseThrow(() -> new ResourceNotFoundException("Localisation", idLocalisation));
+    }
+
+    private TypeAnnexe convertirTypeAnnexe(String annexe) {
+        try {
+            return TypeAnnexe.valueOf(annexe.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("Type d'annexe invalide : " + annexe);
+        }
     }
 }

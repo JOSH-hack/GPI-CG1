@@ -7,12 +7,17 @@ import com.golfe1.gpi.entities.Panne;
 import com.golfe1.gpi.entities.enums.StatutPanne;
 import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.PanneService;
+import com.golfe1.gpi.services.UtilisateurService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.golfe1.gpi.services.UtilisateurService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -22,13 +27,13 @@ public class PanneController {
 
     private final PanneService panneService;
     private final PanneMapper panneMapper;
-    private final JwtUtil jwtUtil;
+private final UtilisateurService utilisateurService;
 
-    public PanneController(PanneService panneService, PanneMapper panneMapper, JwtUtil jwtUtil) {
-        this.panneService = panneService;
-        this.panneMapper = panneMapper;
-        this.jwtUtil = jwtUtil;
-    }
+public PanneController(PanneService panneService, PanneMapper panneMapper, UtilisateurService utilisateurService) {
+    this.panneService = panneService;
+    this.panneMapper = panneMapper;
+    this.utilisateurService = utilisateurService;
+}
 
     // SIGNALEMENT
     @PostMapping("/signaler")
@@ -120,8 +125,7 @@ public class PanneController {
 
     // UTILITAIRE
     private Long extraireIdUtilisateur(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader.substring(7);
-        return jwtUtil.extractUserId(token);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return utilisateurService.getParEmail(authentication.getName()).getIdUtilisateur();
     }
 }

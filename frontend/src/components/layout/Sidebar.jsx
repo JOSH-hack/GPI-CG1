@@ -101,11 +101,11 @@ export default function Sidebar() {
               noWrap
               sx={{
                 color: '#fef7ff',
-                fontFamily: 'Quicksand, sans-serif',
+                fontFamily: 'Iceland, sans-serif',
                 fontWeight: 600,
-                fontSize: 31,
+                fontSize: 42,
                 lineHeight: 1,
-                letterSpacing: 0.7,
+                letterSpacing: 0.9,
               }}
             >
               GPI - CG1

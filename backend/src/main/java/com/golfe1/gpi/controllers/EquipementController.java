@@ -117,9 +117,18 @@ public class EquipementController {
     @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<EquipementResponse> getParId(@PathVariable Long id) {
         Equipement eq = equipementService.getParId(id);
-        return ResponseEntity.ok(equipementMapper.toResponse(eq));
+        EquipementResponse response;
+        if (eq instanceof EquipementMateriel materiel) {
+            response = equipementMapper.toResponse(materiel);
+        } else if (eq instanceof EquipementLogiciel logiciel) {
+            response = equipementMapper.toResponse(logiciel);
+        } else if (eq instanceof EquipementReseau reseau) {
+            response = equipementMapper.toResponse(reseau);
+        } else {
+            response = equipementMapper.toResponse(eq);
+        }
+        return ResponseEntity.ok(response);
     }
-
     @GetMapping("/statut/{statut}")
     @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<EquipementResponse>> listerParStatut(@PathVariable StatutEquipement statut) {

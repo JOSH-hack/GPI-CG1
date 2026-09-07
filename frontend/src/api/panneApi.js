@@ -17,4 +17,7 @@ export const panneApi = {
     listerActives: () => axiosClient.get('/pannes'),
     listerParStatut: (statut) => axiosClient.get(`/pannes/statut/${statut}`),
     compterCritiques: () => axiosClient.get('/pannes/critiques'),
+    parEquipement: (idEquipement) => axiosClient.get(`/pannes/equipement/${idEquipement}`),
+    listerParEquipement: (idEquipement) => axiosClient.get(`/pannes/equipement/${idEquipement}`),
+    noter: (id, note) => axiosClient.post(`/pannes/${id}/noter`, null, { params: { note } }),
 }

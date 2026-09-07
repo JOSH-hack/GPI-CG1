@@ -87,7 +87,7 @@ const controlSx = {
     height: 34,
     borderRadius: '5px',
     color: '#0c5d7d',
-    fontSize: '13px',
+    fontSize: '16px',
     fontWeight: 500,
     fontFamily: 'Quicksand, sans-serif',
   },
@@ -117,8 +117,8 @@ function KpiCard({ icon, valeur, label, color }) {
     >
       <Box sx={{ color, display: 'grid', placeItems: 'center' }}>{icon}</Box>
       <Box>
-        <Typography sx={{ color: '#0c5d7d', fontSize: 22, fontWeight: 700, lineHeight: 1 }}>{valeur}</Typography>
-        <Typography sx={{ color: 'text.secondary', fontSize: 11, fontWeight: 600, mt: 0.25 }}>{label}</Typography>
+        <Typography sx={{ color: '#0c5d7d', fontSize: 32, fontWeight: 700, lineHeight: 1 }}>{valeur}</Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: 16, fontWeight: 600, mt: 0.25 }}>{label}</Typography>
       </Box>
     </Stack>
   )
@@ -256,7 +256,7 @@ export default function Liste() {
         flex: 1,
       }}
     >
-      <Typography sx={{ color: '#0c5d7d', fontSize: 22, fontWeight: 700, mb: 2, borderBottom: '3px solid #146f42', display: 'inline-block', pb: 0.5 }}>
+      <Typography sx={{ color: '#0c5d7d', fontSize: 36, fontWeight: 700, mb: 2, borderBottom: '3px solid #146f42', display: 'inline-block', pb: 0.5 }}>
         Tickets - Assistance
       </Typography>
 
@@ -322,7 +322,7 @@ export default function Liste() {
             placeholder="Rechercher..."
             value={searchQuery}
             onChange={(event) => { setSearchQuery(event.target.value); setPage(1) }}
-            InputProps={{ startAdornment: <SearchIcon sx={{ fontSize: 16, color: '#0c5d7d', mr: 0.5 }} /> }}
+            InputProps={{ startAdornment: <SearchIcon sx={{ fontSize: 18, color: '#0c5d7d', mr: 0.5 }} /> }}
             sx={{ width: 180, ...controlSx }}
           />
 
@@ -367,9 +367,9 @@ export default function Liste() {
           <TableHead>
             <TableRow sx={{ bgcolor: '#0c5d7d', height: 38 }}>
               <TableCell sx={{ color: '#fff !important', width: 40 }} />
-              <TableCell sx={{ color: '#fff !important', fontSize: 13, fontWeight: 700 }}>ID</TableCell>
+              <TableCell sx={{ color: '#fff !important', fontSize: 16, fontWeight: 700 }}>ID</TableCell>
               {TOUTES_COLONNES.filter((c) => colonnesVisibles.includes(c.id)).map((colonne) => (
-                <TableCell key={colonne.id} sx={{ color: '#fff !important', fontSize: 13, fontWeight: 700 }}>
+                <TableCell key={colonne.id} sx={{ color: '#fff !important', fontSize: 16, fontWeight: 700 }}>
                   {colonne.label}
                 </TableCell>
               ))}
@@ -401,10 +401,10 @@ export default function Liste() {
                     <TableCell onClick={(event) => event.stopPropagation()}>
                       <Checkbox size="small" />
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: 13 }}>TK-{String(panne.idPanne).padStart(3, '0')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 16 }}>TK-{String(panne.idPanne).padStart(3, '0')}</TableCell>
 
                     {colonnesVisibles.includes('description') && (
-                      <TableCell sx={{ fontSize: 13, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <TableCell sx={{ fontSize: 16, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {panne.description}
                       </TableCell>
                     )}
@@ -419,18 +419,18 @@ export default function Liste() {
                       </TableCell>
                     )}
                     {colonnesVisibles.includes('date') && (
-                      <TableCell sx={{ fontSize: 13 }}>{formaterDate(panne.dateSurvenance)}</TableCell>
+                      <TableCell sx={{ fontSize: 16 }}>{formaterDate(panne.dateSurvenance)}</TableCell>
                     )}
                     {colonnesVisibles.includes('equipement') && (
-                      <TableCell sx={{ fontSize: 13 }}>{panne.equipement?.codeInventaire || '—'}</TableCell>
+                      <TableCell sx={{ fontSize: 16 }}>{panne.equipement?.codeInventaire || '—'}</TableCell>
                     )}
                     {colonnesVisibles.includes('agent') && (
-                      <TableCell sx={{ fontSize: 13 }}>
+                      <TableCell sx={{ fontSize: 16 }}>
                         {panne.utilisateurSignaleur ? `${panne.utilisateurSignaleur.nom} ${panne.utilisateurSignaleur.prenom?.charAt(0) || ''}.` : '—'}
                       </TableCell>
                     )}
                     {colonnesVisibles.includes('technicien') && (
-                      <TableCell sx={{ fontSize: 13 }}>
+                      <TableCell sx={{ fontSize: 16 }}>
                         {technicien ? `${technicien.nom} ${technicien.prenom?.charAt(0) || ''}.` : '—'}
                       </TableCell>
                     )}
@@ -445,7 +445,7 @@ export default function Liste() {
       {/* Pagination */}
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={1} sx={{ mt: 2 }}>
         <Stack direction="row" alignItems="center" spacing={0.75}>
-          <Typography sx={{ color: '#0c5d7d', fontSize: 13 }}>Lignes par page</Typography>
+          <Typography sx={{ color: '#0c5d7d', fontSize: 15, fontweight: 800, }}>Lignes par page</Typography>
           <FormControl size="small" sx={{ minWidth: 60, ...controlSx }}>
             <Select value={rowsPerPage} onChange={(event) => { setRowsPerPage(event.target.value); setPage(1) }}>
               <MenuItem value="10">10</MenuItem>
@@ -459,7 +459,7 @@ export default function Liste() {
             variant="outlined"
             disabled={pageActuelle === 1}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
-            sx={{ height: 30, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: 13, fontWeight: 600, textTransform: 'none' }}
+            sx={{ height: 30, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: 16, fontWeight: 600, textTransform: 'none' }}
           >
             Précédent
           </Button>
@@ -473,7 +473,7 @@ export default function Liste() {
                 borderColor: 'rgba(13, 93, 125, 0.2)',
                 bgcolor: pageActuelle === numeroPage ? '#0c5d7d' : '#fff',
                 color: pageActuelle === numeroPage ? '#fff' : '#0c5d7d',
-                fontSize: 13, fontWeight: pageActuelle === numeroPage ? 700 : 600,
+                fontSize: 16, fontWeight: pageActuelle === numeroPage ? 700 : 600,
               }}
             >
               {numeroPage}
@@ -483,7 +483,7 @@ export default function Liste() {
             variant="outlined"
             disabled={pageActuelle === nombrePages}
             onClick={() => setPage((current) => Math.min(nombrePages, current + 1))}
-            sx={{ height: 30, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: 13, fontWeight: 600, textTransform: 'none' }}
+            sx={{ height: 30, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: 16, fontWeight: 600, textTransform: 'none' }}
           >
             Suivant
           </Button>

@@ -48,46 +48,54 @@ public class MessageService {
     // idExpediteur provient du JWT côté contrôleur, jamais d'un champ saisi.
     // Vérification que l'expéditeur est bien le technicien ou l'agent signaleur.
 
+
     @Transactional
     public Message envoyerMessage(Long idIntervention, Long idExpediteur, String contenu) {
-        // Vérifier que l'expéditeur est bien un participant de l'intervention (les
-        // admins outrepassent)
-        Panne panne = intervention.getPanne();
-        boolean estTechnicien = intervention.getTechnicien().getIdUtilisateur().equals(idExpediteur);
-        boolean estSignaleur = panne.getUtilisateurSignaleur().getIdUtilisateur().equals(idExpediteur);
-        RoleUtilisateur roleExpediteur = expediteur.getRole();
-        boolean estAdmin = roleExpediteur == RoleUtilisateur.ADMIN_INFO
-                || roleExpediteur == RoleUtilisateur.ADMIN_SYSTEME;
 
-        if (!estTechnicien && !estSignaleur && !estAdmin) {
-            throw new UnauthorizedActionException(
-                    "Vous n'êtes pas autorisé à envoyer un message dans cette intervention");
-        }
-        
+        // Vérifier que le contenu n'est pas vide
         if (contenu == null || contenu.isBlank()) {
             throw new BusinessRuleException("Le message ne peut pas être vide");
         }
 
+        // Récupérer l'intervention
         Intervention intervention = interventionRepository.findById(idIntervention)
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention", idIntervention));
 
+        // Le chat est disponible uniquement pour les interventions à distance
         if (intervention.getTypeIntervention() != TypeIntervention.A_DISTANCE) {
-            throw new BusinessRuleException("Le chat n'est disponible que pour une intervention à distance");
+            throw new BusinessRuleException(
+                    "Le chat n'est disponible que pour une intervention à distance");
         }
 
+        // Récupérer l'expéditeur
         Utilisateur expediteur = utilisateurRepository.findById(idExpediteur)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur", idExpediteur));
 
-        // Vérifier que l'expéditeur est bien un participant de l'intervention
+        // Récupérer la panne liée à l'intervention
         Panne panne = intervention.getPanne();
-        boolean estTechnicien = intervention.getTechnicien().getIdUtilisateur().equals(idExpediteur);
-        boolean estSignaleur = panne.getUtilisateurSignaleur().getIdUtilisateur().equals(idExpediteur);
 
-        if (!estTechnicien && !estSignaleur) {
+        // Vérifier si l'expéditeur est le technicien assigné
+        boolean estTechnicien = intervention.getTechnicien() != null
+                && intervention.getTechnicien().getIdUtilisateur().equals(idExpediteur);
+
+        // Vérifier si l'expéditeur est l'agent qui a signalé la panne
+        boolean estSignaleur = panne != null
+                && panne.getUtilisateurSignaleur() != null
+                && panne.getUtilisateurSignaleur().getIdUtilisateur().equals(idExpediteur);
+
+        // Vérifier si l'expéditeur est un administrateur autorisé
+        RoleUtilisateur roleExpediteur = expediteur.getRole();
+
+        boolean estAdmin = roleExpediteur == RoleUtilisateur.ADMIN_INFO
+                || roleExpediteur == RoleUtilisateur.ADMIN_SYSTEME;
+
+        // Vérifier l'autorisation
+        if (!estTechnicien && !estSignaleur && !estAdmin) {
             throw new UnauthorizedActionException(
                     "Vous n'êtes pas autorisé à envoyer un message dans cette intervention");
         }
 
+        // Créer le message
         Message message = new Message();
         message.setIntervention(intervention);
         message.setExpediteur(expediteur);
@@ -96,7 +104,6 @@ public class MessageService {
 
         return messageRepository.save(message);
     }
-
     //  CONSULTATION 
 
     public List<Message> listerParIntervention(Long idIntervention) {

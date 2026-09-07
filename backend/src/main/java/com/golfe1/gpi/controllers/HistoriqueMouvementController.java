@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/historique-mouvements")
-@PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
+@PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI') or hasRole('TECHNICIEN')")
 public class HistoriqueMouvementController {
 
     private final HistoriqueMouvementService historiqueMouvementService;

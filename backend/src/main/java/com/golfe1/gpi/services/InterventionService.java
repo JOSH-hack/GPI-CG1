@@ -91,10 +91,7 @@ public class InterventionService {
         if (!estAdmin && !intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
             throw new UnauthorizedActionException("Seul le technicien assigné peut rédiger le rapport");
         }
-        // Vérifier que c'est bien le technicien assigné qui rédige
-        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
-            throw new UnauthorizedActionException("Seul le technicien assigné peut rédiger le rapport");
-        }
+      
 
         if (intervention.getDateResolution() != null) {
             throw new BusinessRuleException("L'intervention est déjà clôturée");
@@ -117,9 +114,7 @@ public class InterventionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Validateur DSI", idValidateurDsi));
 
         // Vérifier le rôle DSI
-        if (validateur.getRole() != RoleUtilisateur.RESPONSABLE_DSI ) {
-            throw new UnauthorizedActionException("Seul le DSI peut valider une intervention");
-        }
+       
 
         // Vérifier que le rapport a été rédigé
         if (intervention.getRapport() == null || intervention.getRapport().isBlank()) {
@@ -194,9 +189,7 @@ public class InterventionService {
         if (!estAdmin && !intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
             throw new UnauthorizedActionException("Seul le technicien assigné peut renseigner le résultat");
         }
-        if (!intervention.getTechnicien().getIdUtilisateur().equals(idTechnicien)) {
-            throw new UnauthorizedActionException("Seul le technicien assigné peut renseigner le résultat");
-        }
+      
         if (intervention.getDateResolution() != null) {
             throw new BusinessRuleException("L'intervention est déjà clôturée");
         }

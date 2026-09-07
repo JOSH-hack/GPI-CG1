@@ -30,6 +30,7 @@ import {
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import AjouterEquipementWizard from '../../components/equipements/AjouterEquipementWizard'
 
 import { equipementApi } from '../../api/equipementApi'
 import { categorieApi } from '../../api/categorieApi'
@@ -42,9 +43,10 @@ const controlSx = {
     height: 34,
     borderRadius: '5px',
     fontFamily: 'Quicksand, sans-serif',
-    fontSize: '13px',
+    fontSize: '16px',
   },
 }
+
 
 function libelleLocalisation(loc) {
   if (!loc) return '—'
@@ -64,6 +66,7 @@ export default function Liste() {
   const [filtreStatut, setFiltreStatut] = useState('')
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState('10')
+  const [wizardOuvert, setWizardOuvert] = useState(false)
 
   async function chargerDonnees() {
     setLoading(true)
@@ -71,7 +74,7 @@ export default function Liste() {
     try {
       const [resEquipements, resCategories] = await Promise.all([
         equipementApi.listerTous(),
-        categorieApi.listerTous(),
+        categorieApi.listerToutes(),
       ])
       setEquipements(resEquipements.data)
       setCategories(resCategories.data)
@@ -149,7 +152,7 @@ export default function Liste() {
           spacing={1}
           sx={{ mb: 2 }}
         >
-          <Typography sx={{ color: '#0c5d7d', fontSize: '24px', fontWeight: 700 }}>
+          <Typography sx={{ color: '#0c5d7d', fontSize: '36px', fontWeight: 700 }}>
             Vue Globale de tous les équipements du parc
           </Typography>
 
@@ -208,7 +211,7 @@ export default function Liste() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => navigate('/parc/equipements/nouveau')}
+              onClick={() => setWizardOuvert(true)}
               sx={{ bgcolor: '#1b7548', textTransform: 'none', '&:hover': { bgcolor: '#145d39' } }}
             >
               Ajouter
@@ -234,7 +237,7 @@ export default function Liste() {
               <TableRow sx={{ bgcolor: '#0c5d7d', height: 46 }}>
                 {['Code Inventaire', 'Nom', 'Catégorie', 'Localisation', 'Statut', 'Agent Affecté', "Date d'acquisition"].map(
                   (label) => (
-                    <TableCell key={label} sx={{ px: 1.5, color: '#fff !important', fontSize: '15px', fontWeight: 700 }}>
+                    <TableCell key={label} sx={{ px: 1.5, color: '#fff !important', fontSize: '17px', fontWeight: 700 }}>
                       {label}
                     </TableCell>
                   )
@@ -250,7 +253,7 @@ export default function Liste() {
                 </TableRow>
               ) : equipementsAffiches.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4, fontSize: 15 }}>
+                  <TableCell colSpan={7} align="center" sx={{ py: 4, fontSize: 18 }}>
                     Aucun équipement trouvé.
                   </TableCell>
                 </TableRow>
@@ -266,19 +269,19 @@ export default function Liste() {
                       bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6',
                     }}
                   >
-                    <TableCell sx={{ px: 1.5, fontSize: '15px', fontWeight: 600 }}>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px', fontWeight: 600 }}>
                       {equipement.codeInventaire}
                     </TableCell>
-                    <TableCell sx={{ px: 1.5, fontSize: '15px' }}>{equipement.nom}</TableCell>
-                    <TableCell sx={{ px: 1.5, fontSize: '15px' }}>{equipement.categorie?.libelle || '—'}</TableCell>
-                    <TableCell sx={{ px: 1.5, fontSize: '15px' }}>{libelleLocalisation(equipement.localisation)}</TableCell>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px' }}>{equipement.nom}</TableCell>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px' }}>{equipement.categorie?.libelle || '—'}</TableCell>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px' }}>{libelleLocalisation(equipement.localisation)}</TableCell>
                     <TableCell sx={{ px: 1.5 }}>
                       <StatusChip type="statutEquipement" value={equipement.statut} />
                     </TableCell>
-                    <TableCell sx={{ px: 1.5, fontSize: '15px' }}>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px' }}>
                       {equipement.agent ? `${equipement.agent.nom} ${equipement.agent.prenom}` : 'Non affecté'}
                     </TableCell>
-                    <TableCell sx={{ px: 1.5, fontSize: '15px' }}>{formaterDate(equipement.dateAcquisition)}</TableCell>
+                    <TableCell sx={{ px: 1.5, fontSize: '18px' }}>{formaterDate(equipement.dateAcquisition)}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -294,7 +297,7 @@ export default function Liste() {
           sx={{ mt: 2 }}
         >
           <Stack direction="row" alignItems="center" spacing={0.75}>
-            <Typography sx={{ color: '#0c5d7d', fontSize: '14px' }}>Lignes affichées</Typography>
+            <Typography sx={{ color: '#0c5d7d', fontSize: '18px' }}>Lignes affichées</Typography>
             <FormControl size="small" sx={{ minWidth: 60, ...controlSx }}>
               <Select
                 value={rowsPerPage}
@@ -315,7 +318,7 @@ export default function Liste() {
               variant="outlined"
               disabled={pageActuelle === 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
-              sx={{ fontSize: '12px', textTransform: 'none' }}
+              sx={{ fontSize: '16px', textTransform: 'none' }}
             >
               Précédent
             </Button>
@@ -328,7 +331,7 @@ export default function Liste() {
                   minWidth: 32,
                   bgcolor: pageActuelle === numeroPage ? '#0c5d7d' : '#fff',
                   color: pageActuelle === numeroPage ? '#fff' : '#0c5d7d',
-                  fontSize: '12px',
+                  fontSize: '16px',
                 }}
               >
                 {numeroPage}
@@ -338,13 +341,19 @@ export default function Liste() {
               variant="outlined"
               disabled={pageActuelle === nombrePages}
               onClick={() => setPage((current) => Math.min(nombrePages, current + 1))}
-              sx={{ fontSize: '12px', textTransform: 'none' }}
+              sx={{ fontSize: '16px', textTransform: 'none' }}
             >
               Suivant
             </Button>
           </Stack>
         </Stack>
+        
       </Box>
+      <AjouterEquipementWizard
+        open={wizardOuvert}
+        onClose={() => setWizardOuvert(false)}
+        onCree={() => chargerDonnees()}
+      />
     </Box>
   )
 }

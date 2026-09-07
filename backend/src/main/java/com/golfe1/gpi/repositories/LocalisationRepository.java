@@ -10,17 +10,14 @@ Date de création : 24/08/2026
 package com.golfe1.gpi.repositories;
 
 import com.golfe1.gpi.entities.Localisation;
+import com.golfe1.gpi.entities.enums.TypeAnnexe;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
 public interface LocalisationRepository extends JpaRepository<Localisation, Long> {
 
-    List<Localisation> findByAnnexeContainingIgnoreCase(String annexe);
+    List<Localisation> findByAnnexe(TypeAnnexe annexe);
 
     List<Localisation> findByServiceContainingIgnoreCase(String service);
-
-    List<Localisation> findByAnnexeAndService(String annexe, String service);
 }

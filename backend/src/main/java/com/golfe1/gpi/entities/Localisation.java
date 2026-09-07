@@ -1,5 +1,5 @@
 /*
-
+ 
 Nom du fichier   : Localisation.java
 Objectif         : Entité JPA représentant les localisations géographiques et administratives
 Propriétaire     : Josué BEDEL
@@ -31,14 +31,13 @@ public class Localisation {
     @Column(nullable = false, length = 100)
     private String service;
 
-
     private String bureau;
     private String poste;
 
     public Localisation() {
     }
 
-    public Localisation(String annexe, String service) {
+    public Localisation(TypeAnnexe annexe, String service) {
         this.annexe = annexe;
         this.service = service;
     }
@@ -51,11 +50,11 @@ public class Localisation {
         this.idLocalisation = idLocalisation;
     }
 
-    public String getAnnexe() {
+    public TypeAnnexe getAnnexe() {
         return annexe;
     }
 
-    public void setAnnexe(String annexe) {
+    public void setAnnexe(TypeAnnexe annexe) {
         this.annexe = annexe;
     }
 
@@ -87,9 +86,12 @@ public class Localisation {
     public boolean equals(Object o) {
         if (this == o)
             return true;
+
         if (!(o instanceof Localisation))
             return false;
+
         Localisation that = (Localisation) o;
+
         return Objects.equals(idLocalisation, that.idLocalisation);
     }
 
@@ -102,7 +104,7 @@ public class Localisation {
     public String toString() {
         return "Localisation{" +
                 "idLocalisation=" + idLocalisation +
-                ", annexe='" + annexe + '\'' +
+                ", annexe=" + annexe +
                 ", service='" + service + '\'' +
                 ", bureau='" + bureau + '\'' +
                 ", poste='" + poste + '\'' +

@@ -10,7 +10,7 @@ Date de mise à jour : 02/09/2026
 Objet de mise à jour : Retrait du sidebar/header duplique (deplace vers DashboardLayout / Sidebar.jsx / Navbar.jsx)
 
 */
-
+import EspaceAdminContent from './EspaceAdminContent'
 import { useEffect, useMemo, useState } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { keyframes } from '@emotion/react'
@@ -138,7 +138,7 @@ function KpiCard({ valeur, label }) {
       <Typography sx={{ color: '#0c5d7d', fontSize: 36, fontWeight: 700, lineHeight: 1, fontFamily: 'Quicksand, sans-serif' }}>
         {valeur}
       </Typography>
-      <Typography sx={{ color: '#5C6B64', fontSize: 14, fontWeight: 600, mt: 0.75, fontFamily: 'Quicksand, sans-serif' }}>
+      <Typography sx={{ color: '#5C6B64', fontSize: 16, fontWeight: 600, mt: 0.75, fontFamily: 'Quicksand, sans-serif' }}>
         {label}
       </Typography>
     </Paper>
@@ -166,14 +166,14 @@ function MetricCard({ value, label, Icon, backgroundColor, iconBackgroundColor, 
     <Paper elevation={0} sx={{ ...cardSxTechnicien, bgcolor: backgroundColor, minWidth: 0, p: compact ? 1.25 : 1.5, flex: 1 }}>
       <Stack spacing={compact ? 0.5 : 0.75}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: compact ? 23 : 27, fontWeight: 700, lineHeight: 1 }}>
+          <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: compact ? 25 : 27, fontWeight: 700, lineHeight: 1 }}>
             {value}
           </Typography>
           <Box sx={{ alignItems: 'center', bgcolor: iconBackgroundColor, borderRadius: '50%', display: 'flex', height: compact ? 27 : 31, justifyContent: 'center', width: compact ? 27 : 31 }}>
-            <Icon sx={{ color: iconColor, fontSize: compact ? 16 : 18 }} />
+            <Icon sx={{ color: iconColor, fontSize: compact ? 19 : 21 }} />
           </Box>
         </Stack>
-        <Typography sx={{ color: '#6b7280', fontFamily: 'Quicksand, sans-serif', fontSize: compact ? 9 : 10, fontWeight: 600, lineHeight: 1.2 }}>
+        <Typography sx={{ color: '#6b7280', fontFamily: 'Quicksand, sans-serif', fontSize: compact ? 13 : 14, fontWeight: 600, lineHeight: 1.2 }}>
           {label}
         </Typography>
       </Stack>
@@ -198,10 +198,10 @@ function DonutChart({ total, gradient, anime }) {
       }}
     >
       <Stack alignItems="center" spacing={0} sx={{ bgcolor: '#f9fafb', borderRadius: '50%', height: 48, width: 48, justifyContent: 'center' }}>
-        <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>
+        <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 16, fontWeight: 700, lineHeight: 1 }}>
           {total}
         </Typography>
-        <Typography sx={{ color: '#6b7280', fontFamily: 'Quicksand, sans-serif', fontSize: 7, fontWeight: 500, lineHeight: 1.2 }}>
+        <Typography sx={{ color: '#6b7280', fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 500, lineHeight: 1.2 }}>
           Total
         </Typography>
       </Stack>
@@ -213,7 +213,7 @@ function BreakdownCard({ title, total, gradient, items, anime }) {
   return (
     <Paper elevation={0} sx={{ ...cardSxTechnicien, bgcolor: '#f9fafb', flex: '1 1 0', minWidth: 220, p: 1.5 }}>
       <Stack spacing={1.5}>
-        <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>
+        <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
           {title}
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -223,10 +223,10 @@ function BreakdownCard({ title, total, gradient, items, anime }) {
           {items.map((item) => (
             <Stack key={item.label} direction="row" alignItems="center" spacing={0.75}>
               <Box sx={{ bgcolor: item.color, borderRadius: '50%', height: 7, width: 7 }} />
-              <Typography sx={{ color: '#374151', flex: 1, fontFamily: 'Quicksand, sans-serif', fontSize: 9, fontWeight: 500, lineHeight: 1.1 }}>
+              <Typography sx={{ color: '#374151', flex: 1, fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 500, lineHeight: 1.1 }}>
                 {item.label}
               </Typography>
-              <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 9, fontWeight: 700, lineHeight: 1.1 }}>
+              <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 700, lineHeight: 1.1 }}>
                 {item.value}
               </Typography>
             </Stack>
@@ -357,12 +357,11 @@ function EspaceTechnicienContent() {
     <Box
       component="section"
       aria-labelledby="assistance-dashboard-title"
-      sx={{ boxSizing: 'border-box', maxWidth: 1500, p: { xs: 2, sm: 2.5 }, width: '100%', maxheight: 100, }}
-    >
+      sx={{ boxSizing: 'border-box', p: { xs: 2, sm: 2.5 }, width: '100%' }}    >
       {erreur && <Alert severity="error" sx={{ mb: 2 }}>{erreur}</Alert>}
       <Stack spacing={1.75}>
         <Box component="header">
-          <Typography id="assistance-dashboard-title" sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: { xs: 21, sm: 24 }, fontWeight: 700, lineHeight: 1.2 }}>
+          <Typography id="assistance-dashboard-title" sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: { xs: 36, sm: 32 }, fontWeight: 700, lineHeight: 1.2 }}>
             Tableau de bord - Assistance
           </Typography>
           <Box sx={{ bgcolor: '#1b7548', height: 3, mt: 0.5, width: 242 }} />
@@ -377,7 +376,7 @@ function EspaceTechnicienContent() {
 
           <Paper elevation={0} sx={{ ...cardSxTechnicien, bgcolor: '#f9fafb', flex: 1, minHeight: 240, p: 1.5 }}>
             <Stack spacing={1} sx={{ height: '100%' }}>
-              <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 700, lineHeight: 1.2 }}>
+              <Typography sx={{ color: '#1f2937', fontFamily: 'Quicksand, sans-serif', fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}>
                 Évolution des pannes signalées
               </Typography>
               <Stack direction="row" flexWrap="wrap" gap={1.5}>
@@ -389,7 +388,7 @@ function EspaceTechnicienContent() {
                 ].map((item) => (
                   <Stack key={item.label} direction="row" alignItems="center" spacing={0.5}>
                     <Box sx={{ bgcolor: item.color, borderRadius: '50%', height: 6, width: 6 }} />
-                    <Typography sx={{ color: '#4b5563', fontFamily: 'Quicksand, sans-serif', fontSize: 8, fontWeight: 500 }}>
+                    <Typography sx={{ color: '#4b5563', fontFamily: 'Quicksand, sans-serif', fontSize: 12, fontWeight: 500 }}>
                       {item.label}
                     </Typography>
                   </Stack>
@@ -398,7 +397,7 @@ function EspaceTechnicienContent() {
               <Stack direction="row" spacing={0.75} sx={{ flex: 1, minHeight: 160 }}>
                 <Stack justifyContent="space-between" sx={{ height: 145, pb: 1.5 }}>
                   {echelleY.map((valeur, i) => (
-                    <Typography key={i} sx={{ color: '#9ca3af', fontFamily: 'Quicksand, sans-serif', fontSize: 7, lineHeight: 1 }}>
+                    <Typography key={i} sx={{ color: '#9ca3af', fontFamily: 'Quicksand, sans-serif', fontSize: 10, lineHeight: 1 }}>
                       {valeur}
                     </Typography>
                   ))}
@@ -434,7 +433,7 @@ function EspaceTechnicienContent() {
                   </Box>
                   <Stack direction="row" justifyContent="space-between" sx={{ pt: 0.25 }}>
                     {chartMonths.map((mois, index) => (
-                      <Typography key={`${mois.label}-label-${index}`} sx={{ color: '#9ca3af', fontFamily: 'Quicksand, sans-serif', fontSize: 7, lineHeight: 1 }}>
+                      <Typography key={`${mois.label}-label-${index}`} sx={{ color: '#9ca3af', fontFamily: 'Quicksand, sans-serif', fontSize: 11, lineHeight: 1 }}>
                         {mois.label}
                       </Typography>
                     ))}
@@ -577,10 +576,10 @@ function EspaceAgentContent() {
         flex: 1,
       }}
     >
-      <Typography sx={{ color: '#0c5d7d', fontSize: { xs: 22, md: 28 }, fontWeight: 700, lineHeight: 1.2 }}>
+      <Typography sx={{ color: '#0c5d7d', fontSize: { xs: 26, md: 32 }, fontWeight: 700, lineHeight: 1.2 }}>
         Espace Agent — Bienvenue, {user?.nom || '…'}
       </Typography>
-      <Typography sx={{ color: '#5C6B64', fontSize: 15, fontWeight: 500, mt: 0.5, mb: 2.5 }}>
+      <Typography sx={{ color: '#5C6B64', fontSize: 18, fontWeight: 500, mt: 0.5, mb: 2.5 }}>
         Votre espace personnel de gestion et de suivi du matériel informatique.
       </Typography>
 
@@ -620,7 +619,7 @@ function EspaceAgentContent() {
                 minWidth: 0,
               }}
             >
-              <Typography sx={{ color: '#0c5d7d', fontSize: 20, fontWeight: 700, mb: 1.5 }}>
+              <Typography sx={{ color: '#0c5d7d', fontSize: 26, fontWeight: 700, mb: 1.5 }}>
                 Mon Matériel Attribué
               </Typography>
               <TableContainer sx={{ border: '2px solid #146f42', borderRadius: '9px', overflowX: 'auto' }}>
@@ -641,7 +640,7 @@ function EspaceAgentContent() {
                       {['Équipement', 'Marque / Modèle', 'N° Série', 'État', "Date d'attribution"].map((colonne) => (
                         <TableCell
                           key={colonne}
-                          sx={{ px: 1.5, py: 0.75, color: '#fff !important', fontSize: 15, fontWeight: 700 }}
+                          sx={{ px: 1.5, py: 0.75, color: '#fff !important', fontSize: 18, fontWeight: 700 }}
                         >
                           {colonne}
                         </TableCell>
@@ -713,12 +712,12 @@ function EspaceAgentContent() {
                 minWidth: { lg: 320 },
               }}
             >
-              <Typography sx={{ color: '#0c5d7d', fontSize: 20, fontWeight: 700, mb: 1.5 }}>
+              <Typography sx={{ color: '#0c5d7d', fontSize: 26, fontWeight: 700, mb: 1.5 }}>
                 Signaler une Panne
               </Typography>
 
               <FormControl fullWidth size="small" sx={{ mb: 1.5, ...fieldSx }}>
-                <Typography sx={{ color: '#0c5d7d', fontSize: 13, fontWeight: 700, mb: 0.5 }}>
+                <Typography sx={{ color: '#0c5d7d', fontSize: 16, fontWeight: 700, mb: 0.5 }}>
                   Équipement concerné
                 </Typography>
                 <Select
@@ -754,7 +753,7 @@ function EspaceAgentContent() {
                 sx={{ mb: 1.5, ...fieldSx }}
               />
 
-              <Typography sx={{ color: '#0c5d7d', fontSize: 13, fontWeight: 700, mb: 0.75 }}>
+              <Typography sx={{ color: '#0c5d7d', fontSize: 16, fontWeight: 700, mb: 0.75 }}>
                 Niveau de priorité
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
@@ -814,14 +813,14 @@ function EspaceAgentContent() {
             }}
           >
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-              <Typography sx={{ color: '#0c5d7d', fontSize: 20, fontWeight: 700 }}>
+              <Typography sx={{ color: '#0c5d7d', fontSize: 25, fontWeight: 700 }}>
                 Mes Signalements Récents
               </Typography>
               <Link
                 component={RouterLink}
                 to="/assistance/mes-signalements"
                 underline="none"
-                sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 14 }}
+                sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16 }}
               >
                 Voir tous mes tickets →
               </Link>
@@ -844,7 +843,7 @@ function EspaceAgentContent() {
                     {['N° Ticket', 'Équipement', 'Date', 'Statut'].map((colonne) => (
                       <TableCell
                         key={colonne}
-                        sx={{ px: 1.5, py: 0.75, color: '#fff !important', fontSize: 15, fontWeight: 700 }}
+                        sx={{ px: 1.5, py: 0.75, color: '#fff !important', fontSize: 19, fontWeight: 700 }}
                       >
                         {colonne}
                       </TableCell>
@@ -898,10 +897,17 @@ export default function Dashboard() {
 
   if (user?.role === ROLES.AGENT) return <EspaceAgentContent />
   if (user?.role === ROLES.TECHNICIEN) return <EspaceTechnicienContent />
+  if (
+    user?.role === ROLES.ADMIN_INFO ||
+    user?.role === ROLES.ADMIN_SYSTEME ||
+    user?.role === ROLES.RESPONSABLE_DSI
+  ) {
+    return <EspaceAdminContent />
+  }
 
   return (
     <Box sx={{ p: 4 }}>
-      <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 22 }}>Tableau de bord</Typography>
+      <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 28 }}>Tableau de bord</Typography>
       <Typography sx={{ color: '#5C6B64', mt: 1 }}>
         Votre rôle actuel : {user?.role || 'inconnu'}.
       </Typography>

@@ -15,7 +15,6 @@ import com.golfe1.gpi.dto.request.InterventionRequest;
 import com.golfe1.gpi.dto.response.InterventionResponse;
 import com.golfe1.gpi.entities.Intervention;
 import com.golfe1.gpi.exceptions.UnauthorizedActionException;
-import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.InterventionService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -23,6 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.golfe1.gpi.entities.Utilisateur;
+import com.golfe1.gpi.services.UtilisateurService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -32,15 +35,15 @@ public class InterventionController {
 
     private final InterventionService interventionService;
     private final InterventionMapper interventionMapper;
-    private final JwtUtil jwtUtil;
+    private final UtilisateurService utilisateurService;
 
-    public InterventionController(InterventionService interventionService,
-            InterventionMapper interventionMapper,
-            JwtUtil jwtUtil) {
-        this.interventionService = interventionService;
-        this.interventionMapper = interventionMapper;
-        this.jwtUtil = jwtUtil;
-    }
+   public InterventionController(InterventionService interventionService,
+        InterventionMapper interventionMapper,
+        UtilisateurService utilisateurService) {
+    this.interventionService = interventionService;
+    this.interventionMapper = interventionMapper;
+    this.utilisateurService = utilisateurService;
+}
 
     // CREATION
     @PostMapping
@@ -53,27 +56,21 @@ public class InterventionController {
     }
 
     // DIAGNOSTIC
+    // DIAGNOSTIC
     @PutMapping("/{id}/diagnostic")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('TECHNICIEN')")
     public ResponseEntity<InterventionResponse> enregistrerDiagnostic(
             @PathVariable Long id,
             @RequestParam String diagnostic,
             @RequestParam(required = false) String solution,
             @RequestParam(required = false) String piecesRemplacees) {
-        Intervention intervention = interventionService.enregistrerDiagnostic(id, diagnostic, solution,
-                piecesRemplacees);
-        return ResponseEntity.ok(interventionMapper.toResponse(intervention));
-    }
 
-    // RAPPORT (TECHNICIEN)
-    @PostMapping("/{id}/rapport")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME')")
-    public ResponseEntity<InterventionResponse> redigerRapport(
-            @PathVariable Long id,
-            @RequestParam String rapport,
-            HttpServletRequest request) {
-        Long idTechnicien = extraireIdUtilisateur(request);
-        Intervention intervention = interventionService.redigerRapport(id, rapport, idTechnicien);
+        Intervention intervention = interventionService.enregistrerDiagnostic(
+                id,
+                diagnostic,
+                solution,
+                piecesRemplacees);
+
         return ResponseEntity.ok(interventionMapper.toResponse(intervention));
     }
 
@@ -139,20 +136,27 @@ public class InterventionController {
     }
 
     // UTILITAIRE
-    private Long extraireIdUtilisateur(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader.substring(7);
-        return jwtUtil.extractUserId(token);
-    }
+    private Utilisateur utilisateurConnecte() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return utilisateurService.getParEmail(authentication.getName());
+}
+
+ private Long extraireIdUtilisateur(HttpServletRequest request) {
+    return utilisateurConnecte().getIdUtilisateur();
+}
+
 
     @PutMapping("/{id}/resultat")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_SYSTEME')")
+    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_SYSTEME') or hasRole('ADMIN_INFO')")
     public ResponseEntity<InterventionResponse> enregistrerResultat(
             @PathVariable Long id,
             @RequestParam com.golfe1.gpi.entities.enums.ResultatIntervention resultat,
             HttpServletRequest request) {
+
         Long idTechnicien = extraireIdUtilisateur(request);
+
         Intervention intervention = interventionService.enregistrerResultat(id, resultat, idTechnicien);
+
         return ResponseEntity.ok(interventionMapper.toResponse(intervention));
     }
 
@@ -168,9 +172,7 @@ public class InterventionController {
         }
     }
 
-    private String extraireRole(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader.substring(7);
-        return jwtUtil.extractRole(token);
-    }
+   private String extraireRole(HttpServletRequest request) {
+    return utilisateurConnecte().getRole().name();
+}
 }
