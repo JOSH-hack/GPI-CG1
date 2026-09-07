@@ -18,7 +18,17 @@ import iconAccueil from '../../assets/icons/icon-accueil.svg'
 
 function IconImg({ src, size = 16 }) {
   return (
-    <Box component="img" src={src} alt="" aria-hidden="true" sx={{ width: size, height: size }} />
+    <Box
+      component="img"
+      src={src}
+      alt=""
+      aria-hidden="true"
+      sx={{
+        width: size,
+        height: size,
+        filter: 'brightness(0) invert(1)',
+      }}
+    />
   )
 }
 

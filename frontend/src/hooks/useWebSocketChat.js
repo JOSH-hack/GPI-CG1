@@ -13,7 +13,7 @@ Date de création : 05/09/2026
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Client } from '@stomp/stompjs'
-import SockJS from 'sockjs-client'
+import SockJS from 'sockjs-client/dist/sockjs.js'
 
 export function useWebSocketChat(idIntervention) {
     const [messages, setMessages] = useState([])

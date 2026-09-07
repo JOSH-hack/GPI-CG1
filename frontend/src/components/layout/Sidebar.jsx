@@ -38,7 +38,12 @@ function IconImg({ src, size = 18, sx, ...props }) {
       src={src}
       alt=""
       aria-hidden="true"
-      sx={{ width: size, height: size, ...sx }}
+      sx={{
+        width: size,
+        height: size,
+        filter: 'brightness(0) invert(1)',
+        ...sx,
+      }}
       {...props}
     />
   )
@@ -81,7 +86,7 @@ export default function Sidebar() {
       sx={{
         width: 248,
         minWidth: 248,
-        minHeight: '100vh',
+        minHeight: '300vh',
         bgcolor: '#1d7b4e',
         color: 'common.white',
         overflow: 'hidden',
@@ -121,7 +126,7 @@ export default function Sidebar() {
               </ListItemIcon>
               <ListItemText
                 primary="MENU"
-                primaryTypographyProps={{ fontSize: 15, fontWeight: 700, letterSpacing: 1.1 }}
+                primaryTypographyProps={{ fontSize: 18, fontWeight: 700, letterSpacing: 1.1 }}
               />
             </ListItemButton>
           </ListItem>
@@ -150,15 +155,15 @@ export default function Sidebar() {
                     </ListItemIcon>
                     <ListItemText
                       primary={item.label}
-                      primaryTypographyProps={{ fontSize: 15, fontWeight: 700 }}
+                      primaryTypographyProps={{ fontSize: 18, fontWeight: 700 }}
                     />
                     {item.children && (
                       <IconImg
                         src={iconChevron}
-                        size={19}
+                        size={12}
                         sx={{
                           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                          transition: 'transform 0.2s ease',
+                          transition: 'transform 0.5s ease',
                         }}
                       />
                     )}
@@ -196,7 +201,7 @@ export default function Sidebar() {
                                 primary={child.label}
                                 primaryTypographyProps={{
                                   fontSize: 14,
-                                  fontWeight: isSelected ? 700 : 400,
+                                  fontWeight: isSelected ? 800 : 500,
                                 }}
                               />
                             </ListItemButton>
