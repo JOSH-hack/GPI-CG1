@@ -1,9 +1,10 @@
 /*
 
 Nom du fichier   : ChatIntervention.jsx
-Objectif         : Chat temps reel d'une intervention a distance - historique
-                    charge via REST, messages live via WebSocket (voir
-                    useWebSocketChat)
+Objectif         : Chat temps reel d'une intervention a distance - fidele a la
+                    maquette (carte a bordure verte, bulles alignees par role -
+                    Technicien a gauche, Agent a droite). Historique charge via
+                    REST, messages live via WebSocket (voir useWebSocketChat)
 Propriétaire     : Josué BEDEL
 Date de création : 05/09/2026
 
@@ -12,6 +13,7 @@ Date de création : 05/09/2026
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import SendIcon from '@mui/icons-material/Send'
 import {
   Alert,
@@ -19,8 +21,6 @@ import {
   Box,
   CircularProgress,
   IconButton,
-  Link,
-  Paper,
   Stack,
   TextField,
   Typography,
@@ -29,7 +29,6 @@ import {
 import { messageApi } from '../../api/messageApi'
 import { interventionApi } from '../../api/interventionApi'
 import { useWebSocketChat } from '../../hooks/useWebSocketChat'
-import { useAuth } from '../../contexts/AuthContext'
 
 function formaterHeure(valeur) {
   if (!valeur) return ''
@@ -38,7 +37,6 @@ function formaterHeure(valeur) {
 
 export default function ChatIntervention() {
   const { idIntervention } = useParams()
-  const { user } = useAuth()
   const [intervention, setIntervention] = useState(null)
   const [historique, setHistorique] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -107,96 +105,154 @@ export default function ChatIntervention() {
     )
   }
 
-  const interlocuteur =
-    user?.idUtilisateur === intervention.technicien?.idUtilisateur
-      ? intervention.panne?.utilisateurSignaleur
-      : intervention.technicien
+  const idTechnicien = intervention.technicien?.idUtilisateur
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        minHeight: '80vh',
-        width: '100%',
-        maxWidth: 700,
-        mx: 'auto',
-        fontFamily: 'Quicksand, sans-serif',
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 2, borderBottom: '2px solid #146f42' }}>
-        <IconButton component={RouterLink} to={`/assistance/interventions/ticket/${intervention.panne?.idPanne}`} size="small">
-          <ArrowBackIcon sx={{ color: '#0c5d7d' }} />
-        </IconButton>
-        <Avatar sx={{ bgcolor: '#0c5d7d', width: 36, height: 36 }}>
-          {interlocuteur?.nom?.[0] || '?'}
-        </Avatar>
-        <Box>
-          <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 16 }}>
-            {interlocuteur ? `${interlocuteur.nom} ${interlocuteur.prenom}` : 'Interlocuteur'}
-          </Typography>
-          <Typography sx={{ color: connecte ? '#1b7548' : '#9CA3AF', fontSize: 12, fontWeight: 600 }}>
-            {connecte ? 'En ligne' : 'Connexion...'}
-          </Typography>
-        </Box>
-      </Stack>
+    <Box sx={{ p: { xs: 1.5, sm: 3 }, width: '100%', boxSizing: 'border-box', fontFamily: 'Quicksand, sans-serif' }}>
+      <IconButton
+        component={RouterLink}
+        to={`/assistance/interventions/ticket/${intervention.panne?.idPanne}`}
+        size="small"
+        sx={{ mb: 1 }}
+      >
+        <ArrowBackIcon sx={{ color: '#0c5d7d' }} />
+      </IconButton>
 
-      {erreurWs && <Alert severity="warning" sx={{ mx: 2, mt: 1 }}>{erreurWs}</Alert>}
-
-      <Stack spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-        {tousLesMessages.length === 0 ? (
-          <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-            Aucun message pour l&apos;instant.
-          </Typography>
-        ) : (
-          tousLesMessages.map((message) => {
-            const estMoi = message.expediteur?.idUtilisateur === user?.idUtilisateur
-            return (
-              <Stack key={message.idMessage} alignItems={estMoi ? 'flex-end' : 'flex-start'}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    px: 1.5,
-                    py: 1,
-                    maxWidth: '75%',
-                    borderRadius: 2,
-                    bgcolor: estMoi ? '#0c5d7d' : '#f3f4f6',
-                    color: estMoi ? '#fff' : '#1f2937',
-                  }}
-                >
-                  <Typography sx={{ fontSize: 14, whiteSpace: 'pre-wrap' }}>{message.contenu}</Typography>
-                </Paper>
-                <Typography sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25 }}>
-                  {formaterHeure(message.dateEnvoi)}
-                </Typography>
-              </Stack>
-            )
-          })
-        )}
-        <div ref={finDeListeRef} />
-      </Stack>
-
-      <Stack direction="row" spacing={1} sx={{ p: 2, borderTop: '2px solid #146f42' }}>
-        <TextField
-          fullWidth
-          size="small"
-          placeholder="Écrivez votre message..."
-          value={saisie}
-          onChange={(e) => setSaisie(e.target.value)}
-          onKeyDown={handleKeyDown}
-          multiline
-          maxRows={4}
-          disabled={!connecte}
-        />
-        <IconButton
-          onClick={handleEnvoyer}
-          disabled={!connecte || !saisie.trim()}
-          sx={{ bgcolor: '#146f42', color: '#fff', '&:hover': { bgcolor: '#0f5a35' }, '&.Mui-disabled': { bgcolor: '#d1d5db' } }}
+      <Box
+        sx={{
+          maxWidth: 640,
+          mx: 'auto',
+          border: '2px solid #146f42',
+          borderRadius: '14px',
+          overflow: 'hidden',
+          bgcolor: '#fff',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '75vh',
+        }}
+      >
+        {/* En-tete */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ px: 2, py: 1.5, borderBottom: '2px solid #146f42' }}
         >
-          <SendIcon />
-        </IconButton>
-      </Stack>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <ChatBubbleOutlineIcon sx={{ color: '#0c5d7d' }} />
+            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 17 }}>
+              Chat - Intervention à distance
+            </Typography>
+          </Stack>
+          <Stack direction="row" alignItems="center" spacing={0.6}>
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: connecte ? '#1b7548' : '#9CA3AF',
+              }}
+            />
+            <Typography sx={{ color: connecte ? '#1b7548' : '#9CA3AF', fontSize: 13, fontWeight: 600 }}>
+              {connecte ? 'En ligne' : 'Connexion...'}
+            </Typography>
+          </Stack>
+        </Stack>
+
+        {erreurWs && <Alert severity="warning" sx={{ mx: 2, mt: 1 }}>{erreurWs}</Alert>}
+
+        {/* Messages */}
+        <Stack spacing={1.75} sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: '#fafafa' }}>
+          {tousLesMessages.length === 0 ? (
+            <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
+              Aucun message pour l&apos;instant.
+            </Typography>
+          ) : (
+            tousLesMessages.map((message) => {
+              const estTechnicien = message.expediteur?.idUtilisateur === idTechnicien
+              const role = estTechnicien ? 'Technicien' : 'Agent'
+              const initiale = estTechnicien ? 'T' : 'A'
+
+              return (
+                <Stack
+                  key={message.idMessage}
+                  direction="row"
+                  justifyContent={estTechnicien ? 'flex-start' : 'flex-end'}
+                  spacing={1}
+                  alignItems="flex-end"
+                >
+                  {estTechnicien && (
+                    <Avatar sx={{ bgcolor: '#0c5d7d', width: 30, height: 30, fontSize: 14 }}>{initiale}</Avatar>
+                  )}
+                  <Box sx={{ maxWidth: '70%' }}>
+                    <Typography
+                      sx={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#0c5d7d',
+                        textAlign: estTechnicien ? 'left' : 'right',
+                        mb: 0.25,
+                      }}
+                    >
+                      {role}
+                    </Typography>
+                    <Box
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        borderRadius: 2,
+                        bgcolor: estTechnicien ? '#fff' : '#e6f4ea',
+                        border: estTechnicien ? '1px solid #e5e7eb' : 'none',
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 14, color: '#1f2937', whiteSpace: 'pre-wrap' }}>
+                        {message.contenu}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25, textAlign: estTechnicien ? 'left' : 'right' }}
+                    >
+                      {formaterHeure(message.dateEnvoi)}
+                    </Typography>
+                  </Box>
+                  {!estTechnicien && (
+                    <Avatar sx={{ bgcolor: '#1b7548', width: 30, height: 30, fontSize: 14 }}>{initiale}</Avatar>
+                  )}
+                </Stack>
+              )
+            })
+          )}
+          <div ref={finDeListeRef} />
+        </Stack>
+
+        {/* Saisie */}
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ p: 1.5, borderTop: '2px solid #146f42' }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Écrire un message..."
+            value={saisie}
+            onChange={(e) => setSaisie(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={!connecte}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '999px', bgcolor: '#f3f4f6' } }}
+          />
+          <IconButton
+            onClick={handleEnvoyer}
+            disabled={!connecte || !saisie.trim()}
+            sx={{
+              bgcolor: '#1b7548',
+              color: '#fff',
+              width: 40,
+              height: 40,
+              '&:hover': { bgcolor: '#145d39' },
+              '&.Mui-disabled': { bgcolor: '#d1d5db' },
+            }}
+          >
+            <SendIcon sx={{ fontSize: 20 }} />
+          </IconButton>
+        </Stack>
+      </Box>
     </Box>
   )
 }

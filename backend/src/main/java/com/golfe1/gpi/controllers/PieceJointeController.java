@@ -102,8 +102,7 @@ public class PieceJointeController {
 
     // STREAMING (decompte une vue via PieceJointeService.consulter)
     @GetMapping("/{id}/stream")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
-    public ResponseEntity<Resource> stream(@PathVariable Long id) {
+    @PreAuthorize("hasRole('AGENT') or hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")    public ResponseEntity<Resource> stream(@PathVariable Long id) {
         PieceJointe pieceJointe = pieceJointeService.consulter(id);
 
         try {
@@ -149,9 +148,8 @@ public class PieceJointeController {
         return ResponseEntity.ok(responses);
     }
 
-    private Long extraireIdUtilisateur(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        String token = authHeader.substring(7);
-        return jwtUtil.extractUserId(token);
+     private Long extraireIdUtilisateur(HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return utilisateurService.getParEmail(authentication.getName()).getIdUtilisateur();
     }
 }

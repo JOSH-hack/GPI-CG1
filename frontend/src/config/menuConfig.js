@@ -27,6 +27,7 @@ import iconMouvements from '../assets/icons/icon-mouvements.svg'
 import iconProfil from '../assets/icons/icon-profil.svg'
 import pannesIcon from '../assets/icons/pannes-icon.svg'
 import dashboardIcon from '../assets/icons/dashboard-icon.svg'
+import iconOutils from '../assets/icons/bd.svg'
 
 // Chaque item : { label, icon, path?, children?: [...] }
 // "path" absent => l'item n'est qu'un groupe deroulant (pas de navigation directe)
@@ -43,6 +44,7 @@ const ITEM_SUIVI = { label: 'Suivi', icon: iconSuivi, path: '/gestion/suivi' }
 const ITEM_MOUVEMENTS = { label: 'Mouvements', icon: iconMouvements, path: '/gestion/mouvements' }
 const ITEM_PANNES = { label: 'Pannes', icon: pannesIcon, path: '/assistance/pannes' }
 const ITEM_INTERVENTIONS = { label: 'Interventions', icon: iconSuivi, path: '/assistance/interventions' }
+const ITEM_BASES_DE_DONNEES = { label: 'Bases de données', icon: iconOutils, path: '/outils/bases-de-donnees' }
 const ITEM_INTERVENTIONS_EN_ATTENTE = {
     label: 'Interventions en attente',
     icon: iconSuivi,
@@ -53,6 +55,9 @@ const ITEM_SIGNALER_PANNE = {
     icon: pannesIcon,
     path: '/assistance/pannes/signaler',
 }
+
+const ITEM_STATISTIQUES = { label: 'Statistiques', icon: dashboardIcon, path: '/assistance/statistiques' }
+
 const ITEM_TABLEAU_DE_BORD = { label: 'Tableau de Bord', icon: dashboardIcon, path: '/dashboard' }
 
 // Menus des 4 roles "normaux". ADMIN_SYSTEME (super admin) n'est PAS defini ici :
@@ -106,6 +111,7 @@ const MENUS_PAR_ROLE_SAUF_SUPER_ADMIN = {
             icon: iconGestion,
             children: [ITEM_UTILISATEURS, ITEM_AGENTS, ITEM_LOCALISATIONS, ITEM_SUIVI, ITEM_MOUVEMENTS],
         },
+        { label: 'Outils', icon: iconOutils, children: [ITEM_BASES_DE_DONNEES] },
     ],
 
     // RoleRoute reelles : categories (inclus), pannes liste (inclus),
@@ -116,13 +122,13 @@ const MENUS_PAR_ROLE_SAUF_SUPER_ADMIN = {
         {
             label: 'Assistance',
             icon: iconAssistance,
-            children: [ITEM_PANNES, ITEM_INTERVENTIONS, ITEM_INTERVENTIONS_EN_ATTENTE],
-        },
+            children: [ITEM_PANNES, ITEM_INTERVENTIONS, ITEM_INTERVENTIONS_EN_ATTENTE, ITEM_STATISTIQUES],        },
         {
             label: 'Gestion',
             icon: iconGestion,
             children: [ITEM_UTILISATEURS, ITEM_LOCALISATIONS, ITEM_SUIVI, ITEM_MOUVEMENTS],
         },
+        { label: 'Outils', icon: iconOutils, children: [ITEM_BASES_DE_DONNEES] },
     ],
 }
 

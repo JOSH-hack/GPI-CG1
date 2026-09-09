@@ -12,8 +12,6 @@ Date de création : 01/09/2026
 
 import { useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
-import { useTypewriter, useTypewriterLoop } from '../../hooks/useTypewriter'
-import { keyframes } from '@emotion/react'
 import {
   Box,
   Button,
@@ -26,7 +24,6 @@ import {
 
 import { useAuth } from '../../contexts/AuthContext'
 import SpecularButton from '../../components/common/SpecularButton'
-import { useSlowScroll } from '../../hooks/useSlowScroll'
 
 import backgroundPic from '../../assets/background/backgroundpic.png'
 import logoMairie from '../../assets/icons/logo.svg'
@@ -51,10 +48,6 @@ import footerShape from '../../assets/icons/footer-shape.svg'
 const TITRE_ACCUEIL =
   'LA GESTION DU PARC INFORMATIQUE DE LA COMMUNE DU GOLFE 1 CENTRALISEE ET SIMPLIFIEE'
 
-const clignotementCurseur = keyframes`
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-`
 const NAV_ITEMS = [
   { id: 'accueil', label: 'ACCUEIL', to: '/' },
   { id: 'rapports', label: 'RAPPORTS', to: '/dashboard' },
@@ -135,12 +128,8 @@ export default function Home() {
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
   const [activeNavigation, setActiveNavigation] = useState('accueil')
-  const { texteAffiche: titreAffiche, termine: titreTermine } = useTypewriter(TITRE_ACCUEIL, {
-    vitesse: 35,
-  })
-  //useSlowScroll()
-  const { texteAffiche: slideAffiche, index: slideIndex, definirIndex: definirSlideIndex } =
-    useTypewriterLoop(SOLUTION_SLIDES)
+  const [slideIndex, setSlideIndex] = useState(0)
+
 
   function allerVersConnexionOuEspace() {
     navigate(isAuthenticated ? '/dashboard' : '/login')
@@ -163,14 +152,19 @@ export default function Home() {
       return
     }
     navigate(feature.to)
+
   }
 
   function slidePrecedent() {
-    definirSlideIndex(slideIndex === 0 ? SOLUTION_SLIDES.length - 1 : slideIndex - 1)
+    setSlideIndex(
+      slideIndex === 0 ? SOLUTION_SLIDES.length - 1 : slideIndex - 1
+    )
   }
 
   function slideSuivant() {
-    definirSlideIndex(slideIndex === SOLUTION_SLIDES.length - 1 ? 0 : slideIndex + 1)
+    setSlideIndex(
+      slideIndex === SOLUTION_SLIDES.length - 1 ? 0 : slideIndex + 1
+    )
   }
   return (
     <Box
@@ -232,9 +226,10 @@ export default function Home() {
             <Typography
               sx={{
                 color: '#fef7ff',
-                fontWeight: 700,
-                fontSize: { xs: '1.25rem', md: '2.5rem' },
+                fontWeight: 900,
+                fontSize: { xs: '1.75rem', md: '3.5rem' },
                 whiteSpace: 'nowrap',
+                fontFamily: 'Iceland'
               }}
             >
               GPI - CG1
@@ -261,7 +256,7 @@ export default function Home() {
                   borderRadius: 0,
                   color: activeNavigation === item.id ? '#a8ff94' : '#fef7ff',
                   fontSize: item.id === 'accueil' ? '1.35rem' : '1rem',
-                  fontWeight: 700,
+                  fontWeight: 900,
                   borderBottom:
                     activeNavigation === item.id
                       ? '3px solid #a8ff94'
@@ -282,7 +277,7 @@ export default function Home() {
               onClick={allerVersConnexionOuEspace}
               sx={{
                 color: '#fef7ff',
-                fontWeight: 700,
+                fontWeight: 900,
                 fontSize: '1rem',
                 whiteSpace: 'nowrap',
                 borderRadius: 0,
@@ -329,62 +324,30 @@ export default function Home() {
         }}
       >
         <Box sx={{ position: 'relative', width: '100%' }}>
-          {/* Version invisible, texte complet - reserve l'espace final sans jamais etre visible */}
-          <Typography
-            component="h1"
-            aria-hidden="true"
-            sx={{
-              visibility: 'hidden',
-              color: '#08060d',
-              fontFamily: '"Quicksand", "Helvetica", sans-serif',
-              fontSize: { xs: '1.65rem', md: '3.8rem' },
-              fontWeight: 700,
-              letterSpacing: { xs: '0.08em', md: '0.10em' },
-              lineHeight: 1.15,
-              margin: 0,
-              textAlign: 'center',
-            }}
-          >
-            {TITRE_ACCUEIL}
-          </Typography>
-
-          {/* Version animee, superposee exactement au meme endroit */}
-          <Typography
-            component="h1"
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              color: '#08060d',
-              fontFamily: '"Quicksand", "Helvetica", sans-serif',
-              fontSize: { xs: '1.65rem', md: '3.8rem' },
-              fontWeight: 700,
-              letterSpacing: { xs: '0.08em', md: '0.10em' },
-              lineHeight: 1.15,
-              margin: 0,
-              textAlign: 'center',
-            }}
-          >
-            {titreAffiche}
-            {!titreTermine && (
-              <Box
-                component="span"
-                sx={{ animation: `${clignotementCurseur} 0.8s step-end infinite` }}
-              >
-                |
-              </Box>
-            )}
-          </Typography>
         </Box>
+        <Typography
+          component="h1"
+          sx={{
+            color: '#08060d',
+            fontFamily: '"Quicksand", "Helvetica", sans-serif',
+            fontSize: { xs: '1.65rem', md: '3.8rem' },
+            fontWeight: 700,
+            letterSpacing: { xs: '0.08em', md: '0.10em' },
+            lineHeight: 1.15,
+            margin: 0,
+            textAlign: 'center',
+          }}
+        >
+          {TITRE_ACCUEIL}
+        </Typography>
         <Typography
           sx={{
             mt: 1,
             color: 'rgba(63, 60, 60, 0.76)',
-            fontSize: { xs: '0.85rem', md: '1.875rem' },
-            fontWeight: 600,
+            fontSize: { xs: '0.85rem', md: '2rem' },
+            fontWeight: 900,
             letterSpacing: { xs: '-0.04em', md: '-0.065em' },
-            textAlign: 'left',
+            textAlign: 'center',
           }}
         >
           Un outil unique pour suivre et tracer les équipements informatiques de la
@@ -454,7 +417,7 @@ export default function Home() {
                   color: '#08060d',
                   fontSize: { xs: '0.78rem', md: '1.125rem' },
                   lineHeight: 1.12,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   letterSpacing: { xs: '0.18em', md: '0.29em' },
                 }}
               >
@@ -557,13 +520,7 @@ export default function Home() {
                   minHeight: { md: 126 },
                 }}
               >
-                {slideAffiche}
-                <Box
-                  component="span"
-                  sx={{ animation: `${clignotementCurseur} 0.8s step-end infinite` }}
-                >
-                  |
-                </Box>
+                {SOLUTION_SLIDES[slideIndex]}
               </Typography>
             </Typography>
             <IconButton onClick={slideSuivant} aria-label="Solution suivante">

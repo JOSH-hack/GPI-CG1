@@ -37,6 +37,7 @@ import EquipementFormReseau from '../pages/equipements/FormReseau'
 import EquipementAffecter from '../pages/equipements/Affecter'
 import EquipementDeplacer from '../pages/equipements/Deplacer'
 import MonMateriel from '../pages/equipements/MonMateriel'
+import BasesDeDonnees from '../pages/outils/BasesDeDonnees'
 
 //  Assistance : Pannes 
 import PannesListe from '../pages/pannes/Liste'
@@ -48,6 +49,9 @@ import MesSignalements from '../pages/pannes/MesSignalements'
 import InterventionsListe from '../pages/interventions/Liste'
 import InterventionsEnAttenteDsi from '../pages/interventions/EnAttenteDsi'
 import InterventionSurTicket from '../pages/interventions/SurTicket'
+
+
+import Statistiques from '../pages/assistance/Statistiques'
 
 //  Assistance : Messages (chat) 
 import ChatIntervention from '../pages/messages/ChatIntervention'
@@ -144,13 +148,38 @@ export default function AppRoutes() {
                     </Route>
                     <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIEN, ROLES.ADMIN_SYSTEME, ROLES.ADMIN_INFO]} />}>
                         <Route path="/assistance/interventions/ticket/:idPanne" element={<InterventionSurTicket />} />                    </Route>
-                    
+
                     <Route element={<RoleRoute allowedRoles={[ROLES.RESPONSABLE_DSI, ROLES.ADMIN_INFO, ROLES.ADMIN_SYSTEME]} />}>
                         <Route path="/assistance/interventions/en-attente-dsi" element={<InterventionsEnAttenteDsi />} />
                     </Route>
 
                     {/*  Assistance : Chat (participants verifies cote backend)  */}
                     <Route path="/assistance/messages/:idIntervention" element={<ChatIntervention />} />
+
+                    {/*  Assistance : Statistiques (Admin/DSI/Systeme)  */}
+                    <Route
+                        element={
+                            <RoleRoute
+                                allowedRoles={[ROLES.ADMIN_INFO, ROLES.RESPONSABLE_DSI, ROLES.ADMIN_SYSTEME]}
+                            />
+                        }
+                    >
+                        <Route path="/assistance/statistiques" element={<Statistiques />} />
+                    </Route>
+
+                    {/*Outils : Bases de Données */}
+                    <Route
+                        element={
+                            <RoleRoute
+                                allowedRoles={[ROLES.ADMIN_INFO, ROLES.ADMIN_SYSTEME]}
+                            />
+                        }
+                    >
+                        <Route path="/outils/bases-de-donnees" element={<BasesDeDonnees />} />
+                    </Route>
+
+
+
 
                     {/*  Gestion : Utilisateurs (Admin/DSI/Systeme)  */}
                     <Route
