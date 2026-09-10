@@ -4,8 +4,8 @@ Nom du fichier   : AuthController.java
 Objectif         : Endpoints d'authentification - login (pose un cookie httpOnly, refuse les comptes non verifies), register, verification d'email par code, /me (session courante), /logout (efface le cookie)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
-Date de mise à jour : 31/08/2026
-Objet de mise à jour : Passage au cookie httpOnly + restauration de la verification d'email obligatoire (verify-email, resend-code) qui avait disparu pendant la reecriture
+Date de mise à jour : 05/09/2026
+Objet de mise à jour : Journalisation des connexions reussies/echouees dans log_systeme (module Outils - Bases de donnees)
 
 */
 
@@ -15,9 +15,11 @@ import com.golfe1.gpi.dto.mapper.UtilisateurMapper;
 import com.golfe1.gpi.dto.request.UtilisateurRequest;
 import com.golfe1.gpi.dto.response.UtilisateurResponse;
 import com.golfe1.gpi.entities.Utilisateur;
+import com.golfe1.gpi.entities.enums.NiveauLog;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
 import com.golfe1.gpi.security.JwtFilter;
 import com.golfe1.gpi.security.JwtUtil;
+import com.golfe1.gpi.services.LogSystemeService;
 import com.golfe1.gpi.services.UtilisateurService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +46,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UtilisateurService utilisateurService;
     private final UtilisateurMapper utilisateurMapper;
+    private final LogSystemeService logSystemeService;
 
     @Value("${jwt.expiration}")
     private Long jwtExpirationMs;
@@ -53,11 +57,13 @@ public class AuthController {
     public AuthController(AuthenticationManager authenticationManager,
             JwtUtil jwtUtil,
             UtilisateurService utilisateurService,
-            UtilisateurMapper utilisateurMapper) {
+            UtilisateurMapper utilisateurMapper,
+            LogSystemeService logSystemeService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.utilisateurService = utilisateurService;
         this.utilisateurMapper = utilisateurMapper;
+        this.logSystemeService = logSystemeService;
     }
 
     @PostMapping("/login")
@@ -66,12 +72,20 @@ public class AuthController {
         String email = credentials.get("email");
         String password = credentials.get("password");
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password));
+        } catch (BadCredentialsException e) {
+            logSystemeService.enregistrer(NiveauLog.ERREUR, "Échec de connexion (identifiants invalides)",
+                    email != null ? email : "Utilisateur inconnu");
+            throw e;
+        }
 
         Utilisateur utilisateur = utilisateurService.getParEmail(email);
 
         if (!Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
+            logSystemeService.enregistrer(NiveauLog.AVERTISSEMENT, "Tentative de connexion avec email non vérifié",
+                    utilisateur.getEmail());
             throw new BusinessRuleException(
                     "Veuillez verifier votre adresse email avant de vous connecter. "
                             + "Un code vous a ete envoye a l'inscription.");
@@ -90,6 +104,8 @@ public class AuthController {
                 .maxAge(jwtExpirationMs / 1000)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        logSystemeService.enregistrer(NiveauLog.INFO, "Connexion réussie - tableau de bord", utilisateur.getEmail());
 
         Map<String, String> body = new HashMap<>();
         body.put("role", utilisateur.getRole().name());
@@ -110,18 +126,18 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
- @GetMapping("/me")
-public ResponseEntity<Map<String, Object>> me() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    Utilisateur utilisateur = utilisateurService.getParEmail(authentication.getName());
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> me() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Utilisateur utilisateur = utilisateurService.getParEmail(authentication.getName());
 
-    Map<String, Object> body = new HashMap<>();
-    body.put("idUtilisateur", utilisateur.getIdUtilisateur());
-    body.put("email", utilisateur.getEmail());
-    body.put("role", utilisateur.getRole().name());
-    body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
-    return ResponseEntity.ok(body);
-}
+        Map<String, Object> body = new HashMap<>();
+        body.put("idUtilisateur", utilisateur.getIdUtilisateur());
+        body.put("email", utilisateur.getEmail());
+        body.put("role", utilisateur.getRole().name());
+        body.put("nom", utilisateur.getNom() + " " + utilisateur.getPrenom());
+        return ResponseEntity.ok(body);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<UtilisateurResponse> register(@Valid @RequestBody UtilisateurRequest request) {

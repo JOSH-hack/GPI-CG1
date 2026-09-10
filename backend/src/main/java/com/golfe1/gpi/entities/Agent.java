@@ -1,11 +1,10 @@
 /*
 
 Nom du fichier   : Agent.java
-Objectif         : Entité JPA représentant les agents
+Objectif         : Entité JPA représentant un agent (utilisateur final du parc,
+                    pas forcement lie a un compte utilisateur - voir email)
 Propriétaire     : Josué BEDEL
-Date de création : 11/08/2026
-Date de mise à jour : 11/08/2026
-Objet de mise à jour : Initialisation du modèle JPA
+Date de création : 25/08/2026
 
 */
 
@@ -29,18 +28,16 @@ public class Agent {
     private String prenom;
 
     private String fonction;
+
     private String telephone;
+
+    private String email;
 
     @OneToOne
     @JoinColumn(name = "id_utilisateur", unique = true)
     private Utilisateur utilisateur;
 
     public Agent() {
-    }
-
-    public Agent(String nom, String prenom) {
-        this.nom = nom;
-        this.prenom = prenom;
     }
 
     public Long getIdAgent() {
@@ -83,6 +80,14 @@ public class Agent {
         this.telephone = telephone;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public Utilisateur getUtilisateur() {
         return utilisateur;
     }
@@ -97,8 +102,8 @@ public class Agent {
             return true;
         if (!(o instanceof Agent))
             return false;
-        Agent agent = (Agent) o;
-        return Objects.equals(idAgent, agent.idAgent);
+        Agent that = (Agent) o;
+        return Objects.equals(idAgent, that.idAgent);
     }
 
     @Override
@@ -112,8 +117,6 @@ public class Agent {
                 "idAgent=" + idAgent +
                 ", nom='" + nom + '\'' +
                 ", prenom='" + prenom + '\'' +
-                ", fonction='" + fonction + '\'' +
-                ", telephone='" + telephone + '\'' +
                 '}';
     }
 }

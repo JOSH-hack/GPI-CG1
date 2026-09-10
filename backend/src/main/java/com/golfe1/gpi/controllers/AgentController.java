@@ -1,3 +1,12 @@
+/*
+
+Nom du fichier   : AgentController.java
+Objectif         : Endpoints REST pour la gestion des agents
+Propriétaire     : Josué BEDEL
+Date de création : 25/08/2026
+
+*/
+
 package com.golfe1.gpi.controllers;
 
 import com.golfe1.gpi.dto.mapper.AgentMapper;

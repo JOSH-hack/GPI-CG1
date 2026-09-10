@@ -5,12 +5,10 @@ Objectif         : Endpoints REST pour l'upload, le streaming et la gestion
                      des pièces jointes - stockage organisé en sous-dossier par panne (uploads/pieces-jointes/{idPanne}/)
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
-Date de mise à jour : 26/08/2026
-Objet de mise à jour : Migration vers uploads/pieces-jointes/{idPanne}/ 
-                        (au lieu d'un dossier plat uploads/videos), 
-                        chemin de base injecté depuis application.properties 
-                        (app.upload.dir), correction des roles RBAC dans 
-                        @PreAuthorize (ADMIN -> ADMIN_INFO, DSI -> RESPONSABLE_DSI, ajout ADMIN_SYSTEME), correction du nom de fichier dans Content-Disposition (etait fige a "video.mp4")
+Date de mise à jour : 05/09/2026
+Objet de mise à jour : Fix constructeur (utilisateurService non initialise - jwtUtil
+                        remplace), ajout AGENT sur listerParPanne (bloquait un agent
+                        consultant ses propres pieces jointes)
 
 */
 
@@ -21,8 +19,8 @@ import com.golfe1.gpi.dto.response.PieceJointeResponse;
 import com.golfe1.gpi.entities.PieceJointe;
 import com.golfe1.gpi.entities.enums.TypePieceJointe;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
-import com.golfe1.gpi.security.JwtUtil;
 import com.golfe1.gpi.services.PieceJointeService;
+import com.golfe1.gpi.services.UtilisateurService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
@@ -32,6 +30,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,16 +49,16 @@ public class PieceJointeController {
 
     private final PieceJointeService pieceJointeService;
     private final PieceJointeMapper pieceJointeMapper;
-    private final JwtUtil jwtUtil;
+    private final UtilisateurService utilisateurService;
     private final Path uploadBaseDir;
 
     public PieceJointeController(PieceJointeService pieceJointeService,
             PieceJointeMapper pieceJointeMapper,
-            JwtUtil jwtUtil,
+            UtilisateurService utilisateurService,
             @Value("${app.upload.dir}") String uploadDirProperty) throws IOException {
         this.pieceJointeService = pieceJointeService;
         this.pieceJointeMapper = pieceJointeMapper;
-        this.jwtUtil = jwtUtil;
+        this.utilisateurService = utilisateurService;
         this.uploadBaseDir = Paths.get(uploadDirProperty);
         Files.createDirectories(uploadBaseDir);
     }
@@ -102,7 +102,8 @@ public class PieceJointeController {
 
     // STREAMING (decompte une vue via PieceJointeService.consulter)
     @GetMapping("/{id}/stream")
-    @PreAuthorize("hasRole('AGENT') or hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")    public ResponseEntity<Resource> stream(@PathVariable Long id) {
+    @PreAuthorize("hasRole('AGENT') or hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI') or hasRole('ADMIN_SYSTEME')")
+    public ResponseEntity<Resource> stream(@PathVariable Long id) {
         PieceJointe pieceJointe = pieceJointeService.consulter(id);
 
         try {
@@ -139,7 +140,7 @@ public class PieceJointeController {
 
     // CONSULTATION - liste des pieces jointes actives d'une panne
     @GetMapping("/panne/{idPanne}")
-    @PreAuthorize("hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('AGENT') or hasRole('TECHNICIEN') or hasRole('ADMIN_INFO') or hasRole('RESPONSABLE_DSI')")
     public ResponseEntity<List<PieceJointeResponse>> listerParPanne(@PathVariable Long idPanne) {
         List<PieceJointe> pieces = pieceJointeService.listerParPanne(idPanne);
         List<PieceJointeResponse> responses = pieces.stream()
@@ -148,7 +149,7 @@ public class PieceJointeController {
         return ResponseEntity.ok(responses);
     }
 
-     private Long extraireIdUtilisateur(HttpServletRequest request) {
+    private Long extraireIdUtilisateur(HttpServletRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return utilisateurService.getParEmail(authentication.getName()).getIdUtilisateur();
     }
