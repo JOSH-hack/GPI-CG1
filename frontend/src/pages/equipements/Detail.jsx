@@ -14,6 +14,7 @@ Date de création : 05/09/2026
 import { useEffect, useState } from 'react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
 import PrintOutlined from '@mui/icons-material/PrintOutlined'
+import { exportApi } from '../../api/exportApi'
 import QrCode2 from '@mui/icons-material/QrCode2'
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
@@ -241,11 +242,34 @@ export default function Detail() {
             <Typography sx={{ ...typo, color: '#0c5d7d', fontWeight: 600 }}>Fiche détaillée</Typography>
           </Breadcrumbs>
 
-          <Stack spacing={0.5}>
-            <Typography component="h1" sx={{ ...typo, color: '#0c5d7d', fontSize: { xs: '1.35rem', sm: '1.55rem' }, fontWeight: 700 }}>
-              Fiche détaillée
-            </Typography>
-            <Divider sx={{ borderBottomWidth: 3, borderColor: '#0c5d7d' }} />
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} flexWrap="wrap">
+            <Stack spacing={0.5} sx={{ flex: 1, minWidth: 200 }}>
+              <Typography component="h1" sx={{ ...typo, color: '#0c5d7d', fontSize: { xs: '1.35rem', sm: '1.55rem' }, fontWeight: 700 }}>
+                Fiche détaillée
+              </Typography>
+              <Divider sx={{ borderBottomWidth: 3, borderColor: '#0c5d7d' }} />
+            </Stack>
+
+            <Stack direction="row" spacing={1} className="no-print">
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<PrintOutlined sx={{ fontSize: 14 }} />}
+                onClick={() => window.print()}
+                sx={{ ...typo, borderColor: '#146f42', color: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
+              >
+                Imprimer
+              </Button>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<PrintOutlined sx={{ fontSize: 14 }} />}
+                onClick={() => exportApi.telechargerFicheEquipementPdf(equipement.idEquipement)}
+                sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
+              >
+                Télécharger PDF
+              </Button>
+            </Stack>
           </Stack>
 
           <Paper variant="outlined" sx={cardSx}>
