@@ -115,7 +115,6 @@ public class DocumentPdfService {
             ligne(table, "Adresse IP", reseau.getAdresseIp());
             ligne(table, "Adresse MAC", reseau.getAdresseMac());
             ligne(table, "Passerelle", reseau.getPasserelle());
-            ligne(table, "Masque", reseau.getMasqueSousReseau());
             ligne(table, "Nom d'hote", reseau.getNomHote());
             ligne(table, "Nombre de ports",
                     reseau.getNombrePorts() != null ? String.valueOf(reseau.getNombrePorts()) : "-");

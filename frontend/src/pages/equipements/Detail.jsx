@@ -264,10 +264,40 @@ export default function Detail() {
                 size="small"
                 variant="contained"
                 startIcon={<PrintOutlined sx={{ fontSize: 14 }} />}
-                onClick={() => exportApi.telechargerFicheEquipementPdf(equipement.idEquipement)}
-                sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
+                onClick={async () => {
+                  const response =
+                    await exportApi.telechargerFicheEquipementDocx(
+                      equipement.idEquipement
+                    )
+
+                  const url =
+                    window.URL.createObjectURL(
+                      new Blob(
+                        [response.data],
+                        {
+                          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        }
+                      )
+                    )
+
+                  const lien =
+                    document.createElement('a')
+
+                  lien.href = url
+
+                  lien.download =
+                    `fiche-equipement-${equipement.idEquipement}.docx`
+
+                  document.body.appendChild(lien)
+
+                  lien.click()
+
+                  lien.remove()
+
+                  window.URL.revokeObjectURL(url)
+                }}sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
               >
-                Télécharger PDF
+                Télécharger DOCX
               </Button>
             </Stack>
           </Stack>
