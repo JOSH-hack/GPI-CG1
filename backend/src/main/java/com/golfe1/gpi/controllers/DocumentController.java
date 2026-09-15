@@ -12,17 +12,16 @@
 
 package com.golfe1.gpi.controllers;
 
+import com.golfe1.gpi.dto.request.ExportRequest;
 import com.golfe1.gpi.services.DocumentDocxService;
 import com.golfe1.gpi.services.DocumentPdfService;
+import com.golfe1.gpi.services.ExportGeneratorFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -30,12 +29,15 @@ public class DocumentController {
 
     private final DocumentPdfService documentPdfService;
     private final DocumentDocxService documentDocxService;
+    private final ExportGeneratorFactory exportGeneratorFactory;
 
     public DocumentController(
             DocumentPdfService documentPdfService,
-            DocumentDocxService documentDocxService) {
+            DocumentDocxService documentDocxService,
+            ExportGeneratorFactory exportGeneratorFactory) {
         this.documentPdfService = documentPdfService;
         this.documentDocxService = documentDocxService;
+        this.exportGeneratorFactory = exportGeneratorFactory;
     }
 
     @GetMapping("/equipement/{id}/fiche-pdf")
@@ -49,15 +51,10 @@ public class DocumentController {
         byte[] pdf = documentPdfService.genererFicheEquipement(id);
 
         return ResponseEntity.ok()
-                .contentType(
-                        MediaType.APPLICATION_PDF)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"fiche-equipement-" +
-                                id +
-                                ".pdf\"")
-                .body(
-                        new ByteArrayResource(pdf));
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"fiche-equipement-" + id + ".pdf\"")
+                .body(new ByteArrayResource(pdf));
     }
 
     @GetMapping("/equipement/{id}/fiche-docx")
@@ -75,12 +72,27 @@ public class DocumentController {
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"fiche-equipement-" +
-                                id +
-                                ".docx\"")
-                .body(
-                        new ByteArrayResource(docx));
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"fiche-equipement-" + id + ".docx\"")
+                .body(new ByteArrayResource(docx));
+    }
+
+    @PostMapping("/export/generate")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN')")
+    public ResponseEntity<ByteArrayResource> genererDocumentEdite(
+            @RequestBody ExportRequest request) throws Exception {
+
+        byte[] fichier = exportGeneratorFactory.generer(request);
+
+        String extension = request.getFormat().equalsIgnoreCase("DOCX") ? "docx" : "xlsx";
+        String contentType = request.getFormat().equalsIgnoreCase("DOCX")
+                ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"export-" + request.getIdEquipement() + "." + extension + "\"")
+                .body(new ByteArrayResource(fichier));
     }
 }

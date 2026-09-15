@@ -1,12 +1,3 @@
-/*
-
-Nom du fichier   : AjouterEquipementWizard.jsx
-Objectif         : Wizard en 4 etapes pour l'ajout d'un equipement - Informations Generales, Localisation (creation), Agent (existant ou nouveau, ou passe), champs specifiques selon le type de categorie. Affiche en Dialog centre par-dessus la Vue Globale
-Propriétaire     : Josué BEDEL
-Date de création : 04/09/2026
-
-*/
-
 import { useEffect, useState } from 'react'
 import {
     Alert,
@@ -24,6 +15,7 @@ import {
     Typography,
 } from '@mui/material'
 
+import { useAgents } from '../../contexts/AgentContext'
 import { categorieApi } from '../../api/categorieApi'
 import { localisationApi } from '../../api/localisationApi'
 import { agentApi } from '../../api/agentApi'
@@ -64,7 +56,7 @@ export default function AjouterEquipementWizard({ open, onClose, onCree }) {
     const [enregistrement, setEnregistrement] = useState(false)
 
     const [categories, setCategories] = useState([])
-    const [agentsExistants, setAgentsExistants] = useState([])
+    const { agents: agentsExistants, refreshAgents } = useAgents()
 
     // Etape 1
     const [infosGenerales, setInfosGenerales] = useState({
@@ -117,8 +109,8 @@ export default function AjouterEquipementWizard({ open, onClose, onCree }) {
     useEffect(() => {
         if (!open) return
         categorieApi.listerToutes().then((res) => setCategories(res.data)).catch(() => setCategories([]))
-        agentApi.listerTous().then((res) => setAgentsExistants(res.data)).catch(() => setAgentsExistants([]))
-    }, [open])
+        refreshAgents()
+    }, [open, refreshAgents])
 
     function reinitialiser() {
         setEtape(1)
@@ -210,6 +202,7 @@ export default function AjouterEquipementWizard({ open, onClose, onCree }) {
                         idUtilisateur: null,
                     })
                     idAgent = resAgent.data.idAgent
+                    refreshAgents() // Rafraîchir le contexte après création
                 }
             }
 
@@ -507,67 +500,18 @@ export default function AjouterEquipementWizard({ open, onClose, onCree }) {
                         </Stack>
                     </CarteWizard>
                 )}
-
-                {etape === 4 && categorieChoisie?.type === TYPE_CATEGORIE.HARDWARE && (
-                    <CarteWizard titre="Équipement Matériel">
-                        <TextField label="Processeur" size="small" sx={champSx} value={champsMateriel.processeur} onChange={(e) => setChampsMateriel((p) => ({ ...p, processeur: e.target.value }))} />
-                        <TextField label="RAM" size="small" sx={champSx} value={champsMateriel.ram} onChange={(e) => setChampsMateriel((p) => ({ ...p, ram: e.target.value }))} />
-                        <TextField label="Capacité Stockage" size="small" sx={champSx} value={champsMateriel.capaciteDisque} onChange={(e) => setChampsMateriel((p) => ({ ...p, capaciteDisque: e.target.value }))} />
-                        <TextField label="Adresse IP" size="small" sx={champSx} value={champsMateriel.adresseIp} onChange={(e) => setChampsMateriel((p) => ({ ...p, adresseIp: e.target.value }))} />
-                        <TextField label="Adresse MAC" size="small" sx={champSx} value={champsMateriel.adresseMac} onChange={(e) => setChampsMateriel((p) => ({ ...p, adresseMac: e.target.value }))} />
-                        <TextField label="Système d'exploitation" size="small" sx={champSx} value={champsMateriel.systemeExploitation} onChange={(e) => setChampsMateriel((p) => ({ ...p, systemeExploitation: e.target.value }))} />
+                {etape === 4 && (
+                    <CarteWizard titre="Finalisation">
+                        <Typography>Voulez-vous enregistrer cet équipement ?</Typography>
                         <Stack direction="row" justifyContent="space-between">
                             <Button onClick={() => setEtape(3)}>Précédent</Button>
-                            <Button variant="contained" disabled={enregistrement} onClick={handleTerminer} sx={{ bgcolor: '#e63946', '&:hover': { bgcolor: '#c72d3a' } }}>
-                                {enregistrement ? 'Ajout...' : 'Ajouter'}
-                            </Button>
-                        </Stack>
-                    </CarteWizard>
-                )}
-
-                {etape === 4 && categorieChoisie?.type === TYPE_CATEGORIE.SOFTWARE && (
-                    <CarteWizard titre="Équipement Logiciel">
-                        <TextField label="Version" size="small" sx={champSx} value={champsLogiciel.version} onChange={(e) => setChampsLogiciel((p) => ({ ...p, version: e.target.value }))} />
-                        <TextField label="Éditeur (optionnel)" size="small" sx={champSx} value={champsLogiciel.editeur} onChange={(e) => setChampsLogiciel((p) => ({ ...p, editeur: e.target.value }))} />
-                        <TextField label="Nombre de Licences" type="number" size="small" sx={champSx} value={champsLogiciel.nombreLicences} onChange={(e) => setChampsLogiciel((p) => ({ ...p, nombreLicences: e.target.value }))} />
-                        <TextField label="Clé de Licence" size="small" sx={champSx} value={champsLogiciel.cleLicence} onChange={(e) => setChampsLogiciel((p) => ({ ...p, cleLicence: e.target.value }))} />
-                        <TextField label="Date de Début de la licence" type="date" size="small" sx={champSx} InputLabelProps={{ shrink: true }} value={champsLogiciel.dateDebutLicence} onChange={(e) => setChampsLogiciel((p) => ({ ...p, dateDebutLicence: e.target.value }))} />
-                        <TextField label="Date d'expiration Licence" type="date" size="small" sx={champSx} InputLabelProps={{ shrink: true }} value={champsLogiciel.dateExpirationLicence} onChange={(e) => setChampsLogiciel((p) => ({ ...p, dateExpirationLicence: e.target.value }))} />
-                        <Stack direction="row" justifyContent="space-between">
-                            <Button onClick={() => setEtape(3)}>Précédent</Button>
-                            <Button variant="contained" disabled={enregistrement} onClick={handleTerminer} sx={{ bgcolor: '#e63946', '&:hover': { bgcolor: '#c72d3a' } }}>
-                                {enregistrement ? 'Ajout...' : 'Ajouter'}
-                            </Button>
-                        </Stack>
-                    </CarteWizard>
-                )}
-
-                {etape === 4 && categorieChoisie?.type === TYPE_CATEGORIE.RESEAU && (
-                    <CarteWizard titre="Équipement Réseau">
-                        <FormControl fullWidth size="small" sx={champSx}>
-                            <InputLabel>Type d'adresse</InputLabel>
-                            <Select
-                                label="Type d'adresse"
-                                value={champsReseau.typeAdresse}
-                                onChange={(e) => setChampsReseau((p) => ({ ...p, typeAdresse: e.target.value }))}
+                            <Button
+                                variant="contained"
+                                onClick={handleTerminer}
+                                disabled={enregistrement}
+                                sx={{ bgcolor: '#146f42', '&:hover': { bgcolor: '#0f5a35' } }}
                             >
-                                {Object.values(TYPE_ADRESSE_RESEAU).map((t) => (
-                                    <MenuItem key={t} value={t}>
-                                        {TYPE_ADRESSE_RESEAU_LABELS[t]}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <TextField label="Adresse IP" size="small" sx={champSx} value={champsReseau.adresseIp} onChange={(e) => setChampsReseau((p) => ({ ...p, adresseIp: e.target.value }))} />
-                        <TextField label="Masque" size="small" sx={champSx} value={champsReseau.masqueSousReseau} onChange={(e) => setChampsReseau((p) => ({ ...p, masqueSousReseau: e.target.value }))} />
-                        <TextField label="Passerelle" size="small" sx={champSx} value={champsReseau.passerelle} onChange={(e) => setChampsReseau((p) => ({ ...p, passerelle: e.target.value }))} />
-                        <TextField label="DNS (optionnel)" size="small" sx={champSx} value={champsReseau.dns} onChange={(e) => setChampsReseau((p) => ({ ...p, dns: e.target.value }))} />
-                        <TextField label="Nom d'Hôte" size="small" sx={champSx} value={champsReseau.nomHote} onChange={(e) => setChampsReseau((p) => ({ ...p, nomHote: e.target.value }))} />
-                        <TextField label="Nombre de ports" type="number" size="small" sx={champSx} value={champsReseau.nombrePorts} onChange={(e) => setChampsReseau((p) => ({ ...p, nombrePorts: e.target.value }))} />
-                        <Stack direction="row" justifyContent="space-between">
-                            <Button onClick={() => setEtape(3)}>Précédent</Button>
-                            <Button variant="contained" disabled={enregistrement} onClick={handleTerminer} sx={{ bgcolor: '#e63946', '&:hover': { bgcolor: '#c72d3a' } }}>
-                                {enregistrement ? 'Ajout...' : 'Ajouter'}
+                                {enregistrement ? 'Enregistrement...' : 'Enregistrer'}
                             </Button>
                         </Stack>
                     </CarteWizard>

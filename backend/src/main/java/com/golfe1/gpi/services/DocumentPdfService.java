@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class DocumentPdfService {
@@ -49,15 +50,27 @@ public class DocumentPdfService {
 
     public byte[] genererFicheEquipement(Long idEquipement) throws DocumentException, IOException {
         Equipement equipement = equipementService.getParId(idEquipement);
-        List<Panne> pannes = panneService.listerParEquipement(idEquipement);
-        List<HistoriqueMouvement> mouvements = historiqueMouvementService.listerParEquipement(idEquipement);
+        return genererPDF(equipement, panneService.listerParEquipement(idEquipement),
+                          historiqueMouvementService.listerParEquipement(idEquipement), "FICHE DETAILLEE EQUIPEMENT");
+    }
 
+    public byte[] genererFicheEquipementEditee(Long idEquipement, Map<String, Object> donneesEditees)
+            throws DocumentException, IOException {
+
+        Equipement equipement = equipementService.getParId(idEquipement);
+        // Note : Pour la prévisualisation, on utilise les données de la base + les surcharges
+        // Pour les historiques, on garde ceux de la base.
+        return genererPDF(equipement, panneService.listerParEquipement(idEquipement),
+                          historiqueMouvementService.listerParEquipement(idEquipement), "FICHE EQUIPEMENT (PREVIEW)");
+    }
+
+    private byte[] genererPDF(Equipement equipement, List<Panne> pannes, List<HistoriqueMouvement> mouvements, String titre) throws DocumentException, IOException {
         Document document = new Document(PageSize.A4, 36, 36, 20, 20);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, out);
         document.open();
 
-        EnTeteMairiePdf.ajouterEnTete(document, "FICHE DETAILLEE EQUIPEMENT");
+        EnTeteMairiePdf.ajouterEnTete(document, titre);
 
         document.add(section("Informations Generales"));
         PdfPTable general = nouvelleTableInfo();

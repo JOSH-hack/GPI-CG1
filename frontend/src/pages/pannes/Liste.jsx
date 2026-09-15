@@ -83,15 +83,18 @@ const TOUTES_COLONNES = [
 ]
 
 const controlSx = {
+  bgcolor: '#fff',
   '& .MuiOutlinedInput-root': {
-    height: 34,
-    borderRadius: '5px',
+    height: 40,
+    borderRadius: '6px',
     color: '#0c5d7d',
     fontSize: '16px',
-    fontWeight: 500,
+    fontWeight: 700,
     fontFamily: 'Quicksand, sans-serif',
   },
-  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(13, 93, 125, 0.2)' },
+  '& .MuiOutlinedInput-notchedOutline': { borderColor: '#0c5d7d', borderWidth: '2px' },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#146f42' },
+  '& .Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#146f42', borderWidth: '2px' },
 }
 
 function formaterDate(valeur) {
@@ -111,7 +114,7 @@ function KpiCard({ icon, valeur, label, color }) {
         px: 1.75,
         py: 1.25,
         borderRadius: '10px',
-        border: '1px solid rgba(13, 93, 125, 0.15)',
+        border: '3px solid rgba(13, 93, 125, 0.15)',
         bgcolor: '#fff',
       }}
     >
@@ -268,7 +271,7 @@ export default function Liste() {
         spacing={1.5}
         flexWrap="wrap"
         useFlexGap
-        sx={{ mb: 2.5, p: 1.5, border: '1px dashed rgba(13, 93, 125, 0.3)', borderRadius: '10px' }}
+        sx={{ mb: 2.5, p: 1.5, border: '3px dashed rgba(13, 93, 125, 0.8)', borderRadius: '10px' }}
       >
         <KpiCard icon={<WarningAmberIcon />} valeur={kpis.total} label="Pannes signalées" color="#0c5d7d" />
         <KpiCard icon={<ReportProblemIcon />} valeur={kpis.critiques} label="Pannes critiques" color="#dc5e60" />
@@ -459,7 +462,7 @@ export default function Liste() {
             variant="outlined"
             disabled={pageActuelle === 1}
             onClick={() => setPage((current) => Math.max(1, current - 1))}
-            sx={{ height: 30, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#0c5d7d', fontSize: 16, fontWeight: 600, textTransform: 'none' }}
+            sx={{ height: 37, px: 1.5, borderColor: 'rgba(13, 93, 125, 0.2)', borderRadius: '5px', color: '#030303', fontSize: 16, fontWeight: 600, textTransform: 'none' }}
           >
             Précédent
           </Button>

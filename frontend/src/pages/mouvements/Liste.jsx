@@ -47,6 +47,7 @@ import { historiqueApi } from '../../api/historiqueApi'
 import { equipementApi } from '../../api/equipementApi'
 import { localisationApi } from '../../api/localisationApi'
 import { agentApi } from '../../api/agentApi'
+import { useAgents } from '../../contexts/AgentContext'
 import { TYPE_MOUVEMENT, TYPE_MOUVEMENT_LABELS } from '../../utils/constants'
 
 const COULEURS_TYPE = {
@@ -57,7 +58,7 @@ const COULEURS_TYPE = {
 }
 
 const controlSx = {
-    '& .MuiOutlinedInput-root': { height: 40, borderRadius: '8px', fontFamily: 'Quicksand, sans-serif' },
+    '& .MuiOutlinedInput-root': { height: 40, margin: 1, borderRadius: '6px', fontFamily: 'Quicksand, sans-serif' },
 }
 
 function formaterDate(valeur) {
@@ -144,7 +145,7 @@ export default function MouvementsListe() {
                 }}
             />
             <Box sx={{ position: 'relative', zIndex: 1 }}>
-                <Typography sx={{ color: '#0c5d7d', fontSize: 24, fontWeight: 700 }}>Historique des mouvements</Typography>
+                <Typography sx={{ color: '#0c5d7d', fontSize: 46, fontWeight: 700 }}>Historique des mouvements</Typography>
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', sm: 'center' }}>
                     <FormControl size="small" sx={{ minWidth: 170, ...controlSx }}>
@@ -161,7 +162,7 @@ export default function MouvementsListe() {
                         placeholder="Rechercher un équipement"
                         value={rechercheEquipement}
                         onChange={(e) => { setRechercheEquipement(e.target.value); setPage(1) }}
-                        InputProps={{ startAdornment: <SearchIcon sx={{ mr: 0.75, color: '#0c5d7d', fontSize: 18 }} /> }}
+                        InputProps={{ startAdornment: <SearchIcon sx={{ mr: 0.75, color: '#0c5d7d', fontSize: 20 }} /> }}
                         sx={{ width: 220, ...controlSx }}
                     />
 
@@ -175,7 +176,7 @@ export default function MouvementsListe() {
                     </Button>
                 </Stack>
             </Box>
-         <Box />
+            <Box />
             {erreur && <Alert severity="error" sx={{ mb: 2 }}>{erreur}</Alert>}
 
             <TableContainer sx={{ border: '1px solid #157042', borderRadius: '12px', overflowX: 'auto' }}>
@@ -183,7 +184,7 @@ export default function MouvementsListe() {
                     <TableHead>
                         <TableRow sx={{ bgcolor: '#0c5d7d' }}>
                             {['Date', 'Équipement', 'Type de mouvement', 'Ancienne valeur', 'Nouvelle valeur', 'Motif', 'Opérateur'].map((label) => (
-                                <TableCell key={label} sx={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>
+                                <TableCell key={label} sx={{ color: '#fff', fontWeight: 700, fontSize: 20 }}>
                                     {label}
                                 </TableCell>
                             ))}
@@ -205,8 +206,8 @@ export default function MouvementsListe() {
                         ) : (
                             mouvementsAffiches.map((m, index) => (
                                 <TableRow key={m.idMouvement} sx={{ bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d', fontWeight: 600 }}>{formaterDate(m.dateMouvement)}</TableCell>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d', fontWeight: 600 }}>{m.equipement?.codeInventaire}</TableCell>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000', fontWeight: 600 }}>{formaterDate(m.dateMouvement)}</TableCell>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000', fontWeight: 600 }}>{m.equipement?.codeInventaire}</TableCell>
                                     <TableCell>
                                         <Chip
                                             label={TYPE_MOUVEMENT_LABELS[m.typeMouvement]}
@@ -214,10 +215,10 @@ export default function MouvementsListe() {
                                             sx={{ bgcolor: COULEURS_TYPE[m.typeMouvement], color: '#fff', fontWeight: 700 }}
                                         />
                                     </TableCell>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d' }}>{m.ancienneValeur}</TableCell>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d' }}>{m.nouvelleValeur}</TableCell>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d' }}>{m.motif}</TableCell>
-                                    <TableCell sx={{ fontSize: 14, color: '#0c5d7d' }}>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000' }}>{m.ancienneValeur}</TableCell>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000' }}>{m.nouvelleValeur}</TableCell>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000' }}>{m.motif}</TableCell>
+                                    <TableCell sx={{ fontSize: 19, color: '#000000' }}>
                                         {m.operateur ? `${m.operateur.nom} ${m.operateur.prenom}` : '—'}
                                     </TableCell>
                                 </TableRow>
@@ -229,7 +230,7 @@ export default function MouvementsListe() {
 
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={1} sx={{ mt: 2 }}>
                 <Stack direction="row" alignItems="center" spacing={0.75}>
-                    <Typography sx={{ color: '#0c5d7d', fontSize: 14 }}>Lignes affichées</Typography>
+                    <Typography sx={{ color: '#000000', fontSize: 18 }}>Lignes affichées</Typography>
                     <FormControl size="small" sx={{ minWidth: 60, ...controlSx }}>
                         <Select value={rowsPerPage} onChange={(e) => { setRowsPerPage(e.target.value); setPage(1) }}>
                             <MenuItem value="10">10</MenuItem>
@@ -274,6 +275,7 @@ function ModalEnregistrerMouvement({ ouvert, onFermer, equipements, onEnregistre
     const [type, setType] = useState(TYPE_MOUVEMENT.DEPLACEMENT)
     const [localisations, setLocalisations] = useState([])
     const [agents, setAgents] = useState([])
+    const { agents: contextAgents, refreshAgents } = useAgents()
     const [nouvelleLocalisation, setNouvelleLocalisation] = useState('')
     const [nouvelAgent, setNouvelAgent] = useState('')
     const [motif, setMotif] = useState('')
@@ -283,14 +285,14 @@ function ModalEnregistrerMouvement({ ouvert, onFermer, equipements, onEnregistre
     useEffect(() => {
         if (!ouvert) return
         localisationApi.listerToutes().then((res) => setLocalisations(res.data)).catch(() => setLocalisations([]))
-        agentApi.listerTous().then((res) => setAgents(res.data)).catch(() => setAgents([]))
+        refreshAgents()
         setEquipementChoisi(null)
         setType(TYPE_MOUVEMENT.DEPLACEMENT)
         setNouvelleLocalisation('')
         setNouvelAgent('')
         setMotif('')
         setErreur('')
-    }, [ouvert])
+    }, [ouvert, refreshAgents])
 
     async function handleEnregistrer() {
         setErreur('')
@@ -350,7 +352,7 @@ function ModalEnregistrerMouvement({ ouvert, onFermer, equipements, onEnregistre
                     />
 
                     <Box>
-                        <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#0c5d7d', mb: 0.5 }}>Type de mouvement</Typography>
+                        <Typography sx={{ fontSize: 18, fontWeight: 600, color: '#0c5d7d', mb: 0.5 }}>Type de mouvement</Typography>
                         <RadioGroup row value={type} onChange={(e) => setType(e.target.value)}>
                             <FormControlLabel value={TYPE_MOUVEMENT.DEPLACEMENT} control={<Radio />} label="Déplacement" />
                             <FormControlLabel value={TYPE_MOUVEMENT.AFFECTATION} control={<Radio />} label="Affectation" />
@@ -384,7 +386,7 @@ function ModalEnregistrerMouvement({ ouvert, onFermer, equipements, onEnregistre
                                 onChange={(e) => setNouvelAgent(e.target.value)}
                                 fullWidth
                             >
-                                {agents.map((a) => (
+                                {contextAgents.map((a) => (
                                     <MenuItem key={a.idAgent} value={a.idAgent}>
                                         {a.nom} {a.prenom}
                                     </MenuItem>

@@ -139,6 +139,14 @@
             <artifactId>core</artifactId>
             <version>3.5.3</version>
         </dependency>
+
+        <!-- Docx4 -->
+        <dependency>
+            <groupId>org.docx4j</groupId>
+            <artifactId>docx4j-JAXB-ReferenceImpl</artifactId>
+            <version>11.4.9</version> 
+        </dependency>
+
     </dependencies>
 
 

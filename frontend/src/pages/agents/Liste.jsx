@@ -31,7 +31,8 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 
-import { agentApi } from '../../api/agentApi'
+import { useAgents } from '../../contexts/AgentContext'
+import { categorieApi } from '../../api/categorieApi'
 import { ROLE_LABELS, ROLE_COLORS } from '../../utils/constants'
 import backgroundPic from '../../assets/background/backgroundpic.png'
 
@@ -61,9 +62,7 @@ const controlSx = {
 
 export default function Liste() {
   const navigate = useNavigate()
-
-  const [agents, setAgents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { agents, loading, refreshAgents } = useAgents()
   const [erreur, setErreur] = useState('')
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,22 +70,9 @@ export default function Liste() {
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState('10')
 
-  async function chargerAgents() {
-    setLoading(true)
-    setErreur('')
-    try {
-      const response = await agentApi.listerTous()
-      setAgents(response.data)
-    } catch {
-      setErreur('Impossible de charger la liste des agents.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    chargerAgents()
-  }, [])
+    refreshAgents().catch(() => setErreur('Impossible de charger la liste des agents.'))
+  }, [refreshAgents])
 
   const agentsFiltres = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()

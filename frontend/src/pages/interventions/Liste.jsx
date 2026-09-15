@@ -75,7 +75,7 @@ function formaterDateHeure(valeur) {
 }
 
 const controlSx = {
-  '& .MuiOutlinedInput-root': { height: 36, borderRadius: '6px', fontFamily: 'Quicksand, sans-serif' },
+  '& .MuiOutlinedInput-root': { height: 36, borderRadius: '6px', border: ' 2px' , fontFamily: 'Quicksand, sans-serif' },
 }
 
 export default function InterventionsListe() {
@@ -146,7 +146,7 @@ export default function InterventionsListe() {
           spacing={1.5}
           sx={{ mb: 2 }}
         >
-          <Typography sx={{ color: '#0c5d7d', fontSize: 24, fontWeight: 700 }}>Interventions</Typography>
+          <Typography sx={{ color: '#084f91', fontSize: 46, fontWeight: 700 }}>Interventions</Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
             <FormControl size="small" sx={{ minWidth: 180, ...controlSx }}>
@@ -182,9 +182,9 @@ export default function InterventionsListe() {
         <TableContainer sx={{ border: '2px solid #146f42', borderRadius: '9px', overflowX: 'auto' }}>
           <Table size="small" sx={{ minWidth: 900 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#0c5d7d' }}>
+              <TableRow sx={{ bgcolor: '#000000' }}>
                 {['N° Ticket', 'Équipement', 'Technicien', 'Type', 'Statut', 'Date intervention'].map((label) => (
-                  <TableCell key={label} sx={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>
+                  <TableCell key={label} sx={{ color: '#fff', fontWeight: 900, fontSize: 20 }}>
                     {label}
                   </TableCell>
                 ))}
@@ -211,14 +211,14 @@ export default function InterventionsListe() {
                       key={intervention.idIntervention}
                       hover
                       onClick={() => navigate(`/assistance/interventions/ticket/${intervention.panne?.idPanne}`)}
-                      sx={{ cursor: 'pointer', bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}
+                      sx={{ cursor: 'pointer',color: '#000000', bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}
                     >
-                      <TableCell sx={{ color: '#0c5d7d', fontWeight: 600 }}>{numeroTicket(intervention.panne)}</TableCell>
-                      <TableCell sx={{ color: '#0c5d7d' }}>{intervention.panne?.equipement?.codeInventaire}</TableCell>
-                      <TableCell sx={{ color: '#0c5d7d' }}>
+                      <TableCell sx={{ color: '#000000', fontWeight: 600 }}>{numeroTicket(intervention.panne)}</TableCell>
+                      <TableCell sx={{ color: '#000000' }}>{intervention.panne?.equipement?.codeInventaire}</TableCell>
+                      <TableCell sx={{ color: '#000000' }}>
                         {intervention.technicien?.nom} {intervention.technicien?.prenom}
                       </TableCell>
-                      <TableCell sx={{ color: '#0c5d7d' }}>{TYPE_INTERVENTION_LABELS[intervention.typeIntervention]}</TableCell>
+                      <TableCell sx={{ color: '#000000' }}>{TYPE_INTERVENTION_LABELS[intervention.typeIntervention]}</TableCell>
                       <TableCell>
                         <Chip
                           label={STATUT_DERIVE_LABELS[statut]}
@@ -226,7 +226,7 @@ export default function InterventionsListe() {
                           sx={{ bgcolor: STATUT_DERIVE_COLORS[statut], color: '#fff', fontWeight: 700 }}
                         />
                       </TableCell>
-                      <TableCell sx={{ color: '#0c5d7d' }}>{formaterDateHeure(intervention.dateIntervention)}</TableCell>
+                      <TableCell sx={{ color: '#000000' }}>{formaterDateHeure(intervention.dateIntervention)}</TableCell>
                     </TableRow>
                   )
                 })
