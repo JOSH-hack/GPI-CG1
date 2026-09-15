@@ -13,12 +13,15 @@ Date de mise à jour : 31/08/2026
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { authApi } from '../api/authApi'
+import SplashScreen from '../components/common/SplashScreen'
+
 
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [dureeMinimumEcoulee, setDureeMinimumEcoulee] = useState(false)
 
     //  Restauration de session au chargement de l'app 
     // Le cookie httpOnly voyage automatiquement avec la requete si present et valide.
@@ -36,6 +39,11 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         restaurerSession()
     }, [restaurerSession])
+
+    useEffect(() => {
+        const minuteur = setTimeout(() => setDureeMinimumEcoulee(true), 2000)
+        return () => clearTimeout(minuteur)
+    }, [])
 
     //  Connexion 
     // Le backend pose le cookie httpOnly via Set-Cookie ; on recupere juste
@@ -69,7 +77,11 @@ export function AuthProvider({ children }) {
         refreshUser: restaurerSession,
     }
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    return (
+        <AuthContext.Provider value={value}>
+            {loading || !dureeMinimumEcoulee ? <SplashScreen /> : children}
+        </AuthContext.Provider >
+    )
 }
 
 //  Hook d'acces au contexte 

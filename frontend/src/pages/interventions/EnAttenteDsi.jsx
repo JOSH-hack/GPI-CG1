@@ -50,7 +50,12 @@ export default function EnAttenteDsi() {
   useEffect(() => {
     interventionApi
       .listerEnAttenteDsi()
-      .then((res) => setInterventions(res.data))
+      .then((res) => {
+        const triees = [...res.data].sort(
+          (a, b) => new Date(b.dateRapport || 0) - new Date(a.dateRapport || 0)
+        )
+        setInterventions(triees)
+      })
       .catch(() => setErreur('Impossible de charger les interventions en attente.'))
       .finally(() => setChargement(false))
   }, [])
@@ -81,7 +86,7 @@ export default function EnAttenteDsi() {
         }}
       />
       <Box sx={{ position: 'relative', zIndex: 1 }}>
-        <Typography sx={{ color: '#0c5d7d', fontSize: 24, fontWeight: 700, mb: 2 }}>
+        <Typography sx={{ color: '#000000', fontSize: 24, fontWeight: 700, mb: 2 }}>
           Interventions en attente de validation DSI
         </Typography>
 
@@ -90,9 +95,9 @@ export default function EnAttenteDsi() {
         <TableContainer sx={{ border: '2px solid #146f42', borderRadius: '9px', overflowX: 'auto' }}>
           <Table size="small" sx={{ minWidth: 900 }}>
             <TableHead>
-              <TableRow sx={{ bgcolor: '#0c5d7d' }}>
+              <TableRow sx={{ bgcolor: '#000000', fontWeight: 900, fontSize: 22, color: '#ffffff' }}>
                 {['N° Ticket', 'Équipement', 'Technicien', 'Type', 'Rapport soumis le', ''].map((label) => (
-                  <TableCell key={label} sx={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>
+                  <TableCell key={label} sx={{ color: '#000000', fontWeight: 700, fontSize: 20 }}>
                     {label}
                   </TableCell>
                 ))}
@@ -113,20 +118,20 @@ export default function EnAttenteDsi() {
                 </TableRow>
               ) : (
                 interventions.map((intervention, index) => (
-                  <TableRow key={intervention.idIntervention} sx={{ bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6' }}>
-                    <TableCell sx={{ color: '#0c5d7d', fontWeight: 600 }}>{numeroTicket(intervention.panne)}</TableCell>
-                    <TableCell sx={{ color: '#0c5d7d' }}>{intervention.panne?.equipement?.codeInventaire}</TableCell>
-                    <TableCell sx={{ color: '#0c5d7d' }}>
+                  <TableRow key={intervention.idIntervention} sx={{ bgcolor: index % 2 === 0 ? '#fff' : '#f3f4f6', fontWeight: 900, }}>
+                    <TableCell sx={{ color: '#000000', fontWeight: 600 }}>{numeroTicket(intervention.panne)}</TableCell>
+                    <TableCell sx={{ color: '#000000', fontWeight: 600 }}>{intervention.panne?.equipement?.codeInventaire}</TableCell>
+                    <TableCell sx={{ color: '#000000', fontWeight: 600 }}>
                       {intervention.technicien?.nom} {intervention.technicien?.prenom}
                     </TableCell>
-                    <TableCell sx={{ color: '#0c5d7d' }}>{TYPE_INTERVENTION_LABELS[intervention.typeIntervention]}</TableCell>
-                    <TableCell sx={{ color: '#0c5d7d' }}>{formaterDateHeure(intervention.dateRapport)}</TableCell>
+                    <TableCell sx={{ color: '#000000', fontWeight: 600 }}>{TYPE_INTERVENTION_LABELS[intervention.typeIntervention]}</TableCell>
+                    <TableCell sx={{ color: '#000000', fontWeight: 600 }}>{formaterDateHeure(intervention.dateRapport)}</TableCell>
                     <TableCell>
                       <Button
                         size="small"
                         variant="contained"
                         onClick={() => navigate(`/assistance/interventions/ticket/${intervention.panne?.idPanne}`)}
-                        sx={{ bgcolor: '#146f42', textTransform: 'none', '&:hover': { bgcolor: '#0f5a35' } }}
+                        sx={{ bgcolor: '#000000', textTransform: 'uppercase', '&:hover': { bgcolor: '#0f5a35' } }}
                       >
                         Examiner
                       </Button>

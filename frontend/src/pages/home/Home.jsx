@@ -132,7 +132,7 @@ export default function Home() {
 
 
   function allerVersConnexionOuEspace() {
-    navigate(isAuthenticated ? '/dashboard' : '/login')
+    navigate('/login')
   }
 
   function handleNavigationClick(item) {
@@ -291,7 +291,7 @@ export default function Home() {
                 },
               }}
             >
-              {isAuthenticated ? 'MON ESPACE' : 'SE CONNECTER'}
+              {isAuthenticated ? 'CONNEXION' : 'SE CONNECTER'}
             </Button>
             <Box
               component="img"
@@ -595,7 +595,7 @@ export default function Home() {
             proximity={280}
             autoAnimate
           >
-            {isAuthenticated ? 'ACCÉDER À MON ESPACE' : 'SE CONNECTER'}
+            {isAuthenticated ? 'SE CONNECTER' : 'SE CONNECTER'}
           </SpecularButton>
         </Stack>
       </Container>

@@ -18,6 +18,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward'
 import StarIcon from '@mui/icons-material/Star'
 import DownloadOutlined from '@mui/icons-material/DownloadOutlined'
+import backgroundPic from '../../assets/background/backgroundpic.png'
 import {
     Alert,
     Box,
@@ -95,21 +96,21 @@ function KpiCard({ label, valeur, delta, deltaAmelioration }) {
     const Icone = positif ? ArrowUpwardIcon : ArrowDownwardIcon
 
     return (
-        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
+        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Typography sx={{ fontSize: 26, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
+                <Typography sx={{ fontSize: 46, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
                     {valeur}
                 </Typography>
                 {delta !== null && (
                     <Chip
                         size="small"
-                        icon={<Icone sx={{ fontSize: '14px !important', color: `${couleur} !important` }} />}
+                        icon={<Icone sx={{ fontSize: '18px !important', color: `${couleur} !important` }} />}
                         label={`${positif ? '+' : ''}${delta}`}
-                        sx={{ bgcolor: `${couleur}1a`, color: couleur, fontWeight: 700, fontSize: 11, height: 22 }}
+                        sx={{ bgcolor: `${couleur}1a`, color: couleur, fontWeight: 700, fontSize: 19, height: 22 }}
                     />
                 )}
             </Stack>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6b7280', fontFamily: 'Quicksand, sans-serif', mt: 0.5 }}>
+            <Typography sx={{ fontSize: 19, fontWeight: 600, color: '#6b7280', fontFamily: 'Quicksand, sans-serif', mt: 0.5 }}>
                 {label}
             </Typography>
         </Paper>
@@ -131,8 +132,8 @@ function construireGradient(items, total) {
 function PrioriteDonut({ items, total }) {
     const gradient = construireGradient(items, total)
     return (
-        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
-            <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
+        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 22, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
                 Répartition par priorité
             </Typography>
             <Stack direction="row" spacing={2} alignItems="center">
@@ -140,17 +141,17 @@ function PrioriteDonut({ items, total }) {
                     sx={{
                         width: 100,
                         height: 100,
-                        borderRadius: '50%',
+                        borderRadius: '25%',
                         background: gradient,
                         display: 'grid',
                         placeItems: 'center',
                         flexShrink: 0,
                     }}
                 >
-                    <Box sx={{ width: 58, height: 58, borderRadius: '50%', bgcolor: '#fff', display: 'grid', placeItems: 'center' }}>
+                    <Box sx={{ width: 58, height: 58, borderRadius: '25%', bgcolor: '#fff', display: 'grid', placeItems: 'center' }}>
                         <Stack spacing={0} alignItems="center">
-                            <Typography sx={{ fontSize: 16, fontWeight: 700 }}>{total ? '100%' : '0%'}</Typography>
-                            <Typography sx={{ fontSize: 10, color: 'text.secondary' }}>Pannes</Typography>
+                            <Typography sx={{ fontSize: 20, fontWeight: 700 }}>{total ? '100%' : '0%'}</Typography>
+                            <Typography sx={{ fontSize: 15, color: '#000000' }}>Pannes</Typography>
                         </Stack>
                     </Box>
                 </Box>
@@ -158,7 +159,7 @@ function PrioriteDonut({ items, total }) {
                     {items.map((item) => (
                         <Stack key={item.label} direction="row" alignItems="center" spacing={0.75}>
                             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: item.color }} />
-                            <Typography sx={{ fontSize: 12, color: '#374151', fontFamily: 'Quicksand, sans-serif' }}>
+                            <Typography sx={{ fontSize: 18, color: '#374151', fontFamily: 'Quicksand, sans-serif' }}>
                                 {item.label} ({total ? Math.round((item.value / total) * 100) : 0}%)
                             </Typography>
                         </Stack>
@@ -380,355 +381,385 @@ export default function Statistiques() {
     }
 
     return (
-        <Box component="section" sx={{ p: { xs: 2, md: 3 }, width: '100%', boxSizing: 'border-box', flex: 1, minHeight: '100%' }}>
-            {erreur && <Alert severity="error" sx={{ mb: 2 }}>{erreur}</Alert>}
+        <Box
+            component="section"
+            sx={{
+                position: 'relative',
+                p: { xs: 2, md: 3 },
+                width: '100%',
+                boxSizing: 'border-box',
+                flex: 1,
+                minHeight: '100%',
+            }}
+        >
+            <Box
+                aria-hidden="true"
+                sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 0,
+                    backgroundImage: ` linear-gradient(
+                                                                 rgba(252, 249, 249, 0.55),
+                                                                 rgba(240, 238, 238, 0.49)
+                                                           ),
+                                                           url(${backgroundPic})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    opacity: 1,
+                }}
+            />
+            <Box sx={{ position: 'relative', zIndex: 1 }}>
+                {erreur && <Alert severity="error" sx={{ mb: 2 }}>{erreur}</Alert>}
 
-            <Stack spacing={2.5}>
-                <Box>
-                    <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
-                        Statistiques - Assistance
-                    </Typography>
-                    <Box sx={{ mt: 0.65, width: 260, maxWidth: '100%', height: 3, bgcolor: '#111827' }} />
-                </Box>
+                <Stack spacing={2.5}>
 
-                {/* Barre de filtres */}
-                <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 2, borderColor: '#e5e7eb' }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', md: 'center' }}>
-                        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                            {PERIODES.map((p) => (
-                                <Button
-                                    key={p.valeur}
-                                    size="small"
-                                    onClick={() => setPeriode(p.valeur)}
-                                    sx={{
-                                        textTransform: 'none',
-                                        borderRadius: '999px',
-                                        px: 1.5,
-                                        bgcolor: periode === p.valeur ? '#0c5d7d' : 'transparent',
-                                        color: periode === p.valeur ? '#fff' : '#374151',
-                                        fontWeight: periode === p.valeur ? 700 : 500,
-                                        '&:hover': { bgcolor: periode === p.valeur ? '#094a63' : 'rgba(0,0,0,0.04)' },
-                                    }}
-                                >
-                                    {p.label}
-                                </Button>
-                            ))}
+                    <Box>
+                        <Typography sx={{ fontSize: { xs: 22, md: 46 }, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
+                            Statistiques - Assistance
+                        </Typography>
+                        <Box sx={{ mt: 0.65, width: 260, maxWidth: '100%', height: 3, bgcolor: '#111827' }} />
+                    </Box>
+
+                    {/* Barre de filtres */}
+                    <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 1, borderColor: '#000000' }}>
+                        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', md: 'center' }}>
+                            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                                {PERIODES.map((p) => (
+                                    <Button
+                                        key={p.valeur}
+                                        size="small"
+                                        onClick={() => setPeriode(p.valeur)}
+                                        sx={{
+                                            textTransform: 'uppercase',
+                                            borderRadius: '9px',
+                                            px: 1.5,
+                                            bgcolor: periode === p.valeur ? '#0c5d7d' : 'transparent',
+                                            color: periode === p.valeur ? '#fff' : '#374151',
+                                            fontWeight: periode === p.valeur ? 700 : 500,
+                                            '&:hover': { bgcolor: periode === p.valeur ? '#094a63' : 'rgba(0,0,0,0.04)' },
+                                        }}
+                                    >
+                                        {p.label}
+                                    </Button>
+                                ))}
+                            </Stack>
+
+                            {periode === 'PERSONNALISE' && (
+                                <Stack direction="row" spacing={1}>
+                                    <TextField
+                                        type="date"
+                                        size="small"
+                                        value={dateDebutPerso}
+                                        onChange={(e) => setDateDebutPerso(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                    <TextField
+                                        type="date"
+                                        size="small"
+                                        value={dateFinPerso}
+                                        onChange={(e) => setDateFinPerso(e.target.value)}
+                                        InputLabelProps={{ shrink: true }}
+                                    />
+                                </Stack>
+                            )}
+
+                            <Select size="small" value={annexe} onChange={(e) => setAnnexe(e.target.value)} sx={{ minWidth: 190 }}>
+                                <MenuItem value="TOUTE">Annexe : Toute la commune</MenuItem>
+                                {Object.values(ANNEXES).map((a) => (
+                                    <MenuItem key={a} value={a}>
+                                        {ANNEXE_LABELS[a]}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+
+                            <Box sx={{ flex: 1 }} />
+
+                            <Button
+                                variant="contained"
+                                onClick={() => setGenererDeclenche((n) => n + 1)}
+                                sx={{ bgcolor: '#0c5d7d', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#094a63' } }}
+                            >
+                                Générer le rapport
+                            </Button>
                         </Stack>
+                    </Paper>
 
-                        {periode === 'PERSONNALISE' && (
-                            <Stack direction="row" spacing={1}>
-                                <TextField
-                                    type="date"
-                                    size="small"
-                                    value={dateDebutPerso}
-                                    onChange={(e) => setDateDebutPerso(e.target.value)}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                                <TextField
-                                    type="date"
-                                    size="small"
-                                    value={dateFinPerso}
-                                    onChange={(e) => setDateFinPerso(e.target.value)}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Stack>
-                        )}
-
-                        <Select size="small" value={annexe} onChange={(e) => setAnnexe(e.target.value)} sx={{ minWidth: 190 }}>
-                            <MenuItem value="TOUTE">Annexe : Toute la commune</MenuItem>
-                            {Object.values(ANNEXES).map((a) => (
-                                <MenuItem key={a} value={a}>
-                                    {ANNEXE_LABELS[a]}
-                                </MenuItem>
-                            ))}
-                        </Select>
-
-                        <Box sx={{ flex: 1 }} />
-
-                        <Button
-                            variant="contained"
-                            onClick={() => setGenererDeclenche((n) => n + 1)}
-                            sx={{ bgcolor: '#0c5d7d', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#094a63' } }}
-                        >
-                            Générer le rapport
-                        </Button>
-                    </Stack>
-                </Paper>
-
-                {/* KPIs */}
-                <Grid container spacing={1.5}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <KpiCard
-                            label="Temps moyen de résolution"
-                            valeur={`${kpisActuels.tempsMoyen.toFixed(1)} jours`}
-                            delta={Number((kpisActuels.tempsMoyen - kpisPrecedents.tempsMoyen).toFixed(1))}
-                            deltaAmelioration={kpisActuels.tempsMoyen <= kpisPrecedents.tempsMoyen}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <KpiCard
-                            label="Taux de résolution"
-                            valeur={`${Math.round(kpisActuels.tauxResolution)}%`}
-                            delta={Math.round(kpisActuels.tauxResolution - kpisPrecedents.tauxResolution)}
-                            deltaAmelioration={kpisActuels.tauxResolution >= kpisPrecedents.tauxResolution}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
-                            <Stack direction="row" alignItems="center" spacing={0.5}>
-                                <Typography sx={{ fontSize: 26, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
-                                    {kpisActuels.noteMoyenne.toFixed(1)}/5
+                    {/* KPIs */}
+                    <Grid container spacing={1.5}>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <KpiCard
+                                label="Temps moyen de résolution"
+                                valeur={`${kpisActuels.tempsMoyen.toFixed(1)} jours`}
+                                delta={Number((kpisActuels.tempsMoyen - kpisPrecedents.tempsMoyen).toFixed(1))}
+                                deltaAmelioration={kpisActuels.tempsMoyen <= kpisPrecedents.tempsMoyen}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <KpiCard
+                                label="Taux de résolution"
+                                valeur={`${Math.round(kpisActuels.tauxResolution)}%`}
+                                delta={Math.round(kpisActuels.tauxResolution - kpisPrecedents.tauxResolution)}
+                                deltaAmelioration={kpisActuels.tauxResolution >= kpisPrecedents.tauxResolution}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
+                                <Stack direction="row" alignItems="center" spacing={0.5}>
+                                    <Typography sx={{ fontSize: 46, fontWeight: 700, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
+                                        {kpisActuels.noteMoyenne.toFixed(1)}/5
+                                    </Typography>
+                                    <StarIcon sx={{ color: '#e6a817', fontSize: 20 }} />
+                                </Stack>
+                                <Typography sx={{ fontSize: 19, fontWeight: 600, color: '#6b7280', fontFamily: 'Quicksand, sans-serif', mt: 0.5 }}>
+                                    Note moyenne de satisfaction
                                 </Typography>
-                                <StarIcon sx={{ color: '#e6a817', fontSize: 20 }} />
-                            </Stack>
-                            <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#6b7280', fontFamily: 'Quicksand, sans-serif', mt: 0.5 }}>
-                                Note moyenne de satisfaction
-                            </Typography>
-                        </Paper>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <KpiCard
+                                label="Pannes par équipement"
+                                valeur={kpisActuels.pannesParEquipement.toFixed(1)}
+                                delta={Number((kpisActuels.pannesParEquipement - kpisPrecedents.pannesParEquipement).toFixed(1))}
+                                deltaAmelioration={kpisActuels.pannesParEquipement <= kpisPrecedents.pannesParEquipement}
+                            />
+                        </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <KpiCard
-                            label="Pannes par équipement"
-                            valeur={kpisActuels.pannesParEquipement.toFixed(1)}
-                            delta={Number((kpisActuels.pannesParEquipement - kpisPrecedents.pannesParEquipement).toFixed(1))}
-                            deltaAmelioration={kpisActuels.pannesParEquipement <= kpisPrecedents.pannesParEquipement}
-                        />
-                    </Grid>
-                </Grid>
 
-                {/* Evolution + repartition */}
-                <Grid container spacing={1.5}>
-                    <Grid item xs={12} md={7}>
-                        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
-                            <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
-                                Évolution des pannes sur la période
-                            </Typography>
-                            <Stack direction="row" spacing={1} sx={{ height: 160 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, flex: 1, minHeight: 140 }}>
-                                    {evolutionMensuelle.map((mois, index) => (
-                                        <Box key={`${mois.label}-${index}`} sx={{ flex: 1, textAlign: 'center' }}>
-                                            <Box
-                                                sx={{
-                                                    height: `${(mois.value / maxEvolution) * 120}px`,
-                                                    bgcolor: '#a7d8c9',
-                                                    borderRadius: 1,
-                                                    mx: 'auto',
-                                                    width: '70%',
-                                                    transition: 'height 0.5s ease',
-                                                }}
-                                            />
-                                            <Typography sx={{ fontSize: 10, color: '#9ca3af', mt: 0.5 }}>{mois.label}</Typography>
-                                        </Box>
-                                    ))}
-                                </Box>
-                            </Stack>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12} md={5}>
-                        <PrioriteDonut items={parPriorite} total={pannesPeriode.length} />
-                    </Grid>
-                </Grid>
-
-                {/* Top 5 + charge technicien */}
-                <Grid container spacing={1.5}>
-                    <Grid item xs={12} md={7}>
-                        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
-                            <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
-                                Top 5 des équipements les plus en panne
-                            </Typography>
-                            <Stack spacing={1.25}>
-                                {top5Categories.length === 0 ? (
-                                    <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>Aucune donnée sur la période.</Typography>
-                                ) : (
-                                    top5Categories.map((item) => {
-                                        const max = top5Categories[0].value
-                                        return (
-                                            <Stack key={item.label} direction="row" alignItems="center" spacing={1}>
-                                                <Typography sx={{ width: 100, fontSize: 12, color: '#374151', flexShrink: 0 }}>{item.label}</Typography>
-                                                <Box sx={{ flex: 1, bgcolor: '#e5e7eb', borderRadius: 1, height: 14 }}>
-                                                    <Box
-                                                        sx={{
-                                                            width: `${(item.value / max) * 100}%`,
-                                                            height: '100%',
-                                                            bgcolor: '#3b82f6',
-                                                            borderRadius: 1,
-                                                        }}
-                                                    />
-                                                </Box>
-                                                <Typography sx={{ width: 24, fontSize: 12, fontWeight: 700, textAlign: 'right' }}>{item.value}</Typography>
-                                            </Stack>
-                                        )
-                                    })
-                                )}
-                            </Stack>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12} md={5}>
-                        <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb', height: '100%' }}>
-                            <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
-                                Charge de travail par technicien
-                            </Typography>
-                            <Stack direction="row" spacing={1.5} alignItems="flex-end" sx={{ height: 140 }}>
-                                {chargeTechniciens.length === 0 ? (
-                                    <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>Aucune donnée sur la période.</Typography>
-                                ) : (
-                                    chargeTechniciens.map((item) => {
-                                        const max = chargeTechniciens[0].value
-                                        return (
-                                            <Box key={item.label} sx={{ flex: 1, textAlign: 'center' }}>
-                                                <Typography sx={{ fontSize: 12, fontWeight: 700, color: '#1f2937' }}>{item.value}</Typography>
+                    {/* Evolution + repartition */}
+                    <Grid container spacing={1.5}>
+                        <Grid item xs={12} md={7}>
+                            <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
+                                <Typography sx={{ fontWeight: 700, fontSize: 22, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
+                                    Évolution des pannes sur la période
+                                </Typography>
+                                <Stack direction="row" spacing={1} sx={{ height: 160 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, flex: 1, minHeight: 140 }}>
+                                        {evolutionMensuelle.map((mois, index) => (
+                                            <Box key={`${mois.label}-${index}`} sx={{ flex: 1, textAlign: 'center' }}>
                                                 <Box
                                                     sx={{
-                                                        height: `${(item.value / max) * 90}px`,
-                                                        bgcolor: '#8b5cf6',
-                                                        borderRadius: 1,
+                                                        height: `${(mois.value / maxEvolution) * 120}px`,
+                                                        bgcolor: '#3e413edc',
+                                                        borderRadius: 0.5,
                                                         mx: 'auto',
-                                                        width: '55%',
-                                                        mt: 0.5,
+                                                        width: '70%',
+                                                        transition: 'height 0.5s ease',
                                                     }}
                                                 />
-                                                <Typography sx={{ fontSize: 10, color: '#6b7280', mt: 0.5 }}>{item.label}</Typography>
+                                                <Typography sx={{ fontSize: 18, color: '#000000', mt: 0.5 }}>{mois.label}</Typography>
                                             </Box>
-                                        )
-                                    })
-                                )}
-                            </Stack>
-                        </Paper>
+                                        ))}
+                                    </Box>
+                                </Stack>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} md={5}>
+                            <PrioriteDonut items={parPriorite} total={pannesPeriode.length} />
+                        </Grid>
                     </Grid>
-                </Grid>
 
-                {/* Detail des equipements */}
-                <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 2, borderColor: '#e5e7eb' }}>
-                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 1.5 }}>
-                        <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
-                            Détail des équipements
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                            <Select size="small" displayEmpty value={triCategorie} onChange={(e) => setTriCategorie(e.target.value)}>
-                                <MenuItem value="">Trier par Catégorie</MenuItem>
-                                <MenuItem value="categorie">Catégorie (A→Z)</MenuItem>
-                            </Select>
-                            <Select size="small" displayEmpty value={triStatut} onChange={(e) => setTriStatut(e.target.value)}>
-                                <MenuItem value="">Trier par Statut</MenuItem>
-                                <MenuItem value="statut">Statut (A→Z)</MenuItem>
-                            </Select>
-                            <TextField
-                                size="small"
-                                placeholder="Recherche rapide..."
-                                value={recherche}
-                                onChange={(e) => {
-                                    setRecherche(e.target.value)
-                                    setPage(1)
-                                }}
-                            />
+                    {/* Top 5 + charge technicien */}
+                    <Grid container spacing={1.5}>
+                        <Grid item xs={12} md={7}>
+                            <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
+                                <Typography sx={{ fontWeight: 700, fontSize: 22, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
+                                    Top 5 des équipements les plus en panne
+                                </Typography>
+                                <Stack spacing={1.25}>
+                                    {top5Categories.length === 0 ? (
+                                        <Typography sx={{ fontSize: 19, color: 'text.secondary' }}>Aucune donnée sur la période.</Typography>
+                                    ) : (
+                                        top5Categories.map((item) => {
+                                            const max = top5Categories[0].value
+                                            return (
+                                                <Stack key={item.label} direction="row" alignItems="center" spacing={1}>
+                                                    <Typography sx={{ width: 100, fontSize: 18, color: '#374151', flexShrink: 0 }}>{item.label}</Typography>
+                                                    <Box sx={{ flex: 1, bgcolor: '#e5e7eb', borderRadius: 1, height: 14 }}>
+                                                        <Box
+                                                            sx={{
+                                                                width: `${(item.value / max) * 100}%`,
+                                                                height: '100%',
+                                                                bgcolor: '#3b82f6',
+                                                                borderRadius: 1,
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                    <Typography sx={{ width: 24, fontSize: 18, fontWeight: 700, textAlign: 'right' }}>{item.value}</Typography>
+                                                </Stack>
+                                            )
+                                        })
+                                    )}
+                                </Stack>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} md={5}>
+                            <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000', height: '100%' }}>
+                                <Typography sx={{ fontWeight: 700, fontSize: 19, color: '#1f2937', fontFamily: 'Quicksand, sans-serif', mb: 1.5 }}>
+                                    Charge de travail par technicien
+                                </Typography>
+                                <Stack direction="row" spacing={1.5} alignItems="flex-end" sx={{ height: 140 }}>
+                                    {chargeTechniciens.length === 0 ? (
+                                        <Typography sx={{ fontSize: 19, color: 'text.secondary' }}>Aucune donnée sur la période.</Typography>
+                                    ) : (
+                                        chargeTechniciens.map((item) => {
+                                            const max = chargeTechniciens[0].value
+                                            return (
+                                                <Box key={item.label} sx={{ flex: 1, textAlign: 'center' }}>
+                                                    <Typography sx={{ fontSize: 19, fontWeight: 700, color: '#1f2937' }}>{item.value}</Typography>
+                                                    <Box
+                                                        sx={{
+                                                            height: `${(item.value / max) * 90}px`,
+                                                            bgcolor: '#8b5cf6',
+                                                            borderRadius: 0.5,
+                                                            mx: 'auto',
+                                                            width: '55%',
+                                                            mt: 0.5,
+                                                        }}
+                                                    />
+                                                    <Typography sx={{ fontSize: 16, color: '#0e0e0f', mt: 0.5, fontWeight: 900 }}>{item.label}</Typography>
+                                                </Box>
+                                            )
+                                        })
+                                    )}
+                                </Stack>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+
+                    {/* Detail des equipements */}
+                    <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 1, borderColor: '#000000' }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1} sx={{ mb: 1.5 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: 22, color: '#1f2937', fontFamily: 'Quicksand, sans-serif' }}>
+                                Détail des équipements
+                            </Typography>
+                            <Stack direction="row" spacing={1}>
+                                <Select size="small" displayEmpty value={triCategorie} onChange={(e) => setTriCategorie(e.target.value)}>
+                                    <MenuItem value="">Trier par Catégorie</MenuItem>
+                                    <MenuItem value="categorie">Catégorie (A→Z)</MenuItem>
+                                </Select>
+                                <Select size="small" displayEmpty value={triStatut} onChange={(e) => setTriStatut(e.target.value)}>
+                                    <MenuItem value="">Trier par Statut</MenuItem>
+                                    <MenuItem value="statut">Statut (A→Z)</MenuItem>
+                                </Select>
+                                <TextField
+                                    size="small"
+                                    placeholder="Recherche rapide..."
+                                    value={recherche}
+                                    onChange={(e) => {
+                                        setRecherche(e.target.value)
+                                        setPage(1)
+                                    }}
+                                />
+                            </Stack>
                         </Stack>
-                    </Stack>
 
-                    <TableContainer sx={{ border: '1px solid #e5e7eb', borderRadius: 1 }}>
-                        <Table size="small" sx={{ minWidth: 900 }}>
-                            <TableHead>
-                                <TableRow sx={{ bgcolor: '#f3f4f6' }}>
-                                    <TableCell padding="checkbox">
-                                        <Checkbox
-                                            size="small"
-                                            checked={selection.length > 0 && selection.length === equipementsAffiches.length}
-                                            indeterminate={selection.length > 0 && selection.length < equipementsAffiches.length}
-                                            onChange={toggleSelectAll}
-                                        />
-                                    </TableCell>
-                                    {['Code inventaire', 'Nom', 'Catégorie', 'Localisation', 'Statut', 'Agent affecté', "Date d'acquisition", ''].map((label) => (
-                                        <TableCell key={label} sx={{ fontWeight: 700, fontSize: 12, color: '#374151' }}>
-                                            {label}
+                        <TableContainer sx={{ border: '1px solid #e5e7eb', borderRadius: 1 }}>
+                            <Table size="small" sx={{ minWidth: 900 }}>
+                                <TableHead>
+                                    <TableRow sx={{ bgcolor: '#f3f4f6' }}>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                size="small"
+                                                checked={selection.length > 0 && selection.length === equipementsAffiches.length}
+                                                indeterminate={selection.length > 0 && selection.length < equipementsAffiches.length}
+                                                onChange={toggleSelectAll}
+                                            />
                                         </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {equipementsAffiches.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
-                                            Aucun équipement.
-                                        </TableCell>
+                                        {['Code inventaire', 'Nom', 'Catégorie', 'Localisation', 'Statut', 'Agent affecté', "Date d'acquisition", ''].map((label) => (
+                                            <TableCell key={label} sx={{ fontWeight: 700, fontSize: 18, color: '#374151' }}>
+                                                {label}
+                                            </TableCell>
+                                        ))}
                                     </TableRow>
-                                ) : (
-                                    equipementsAffiches.map((equipement, index) => (
-                                        <TableRow key={equipement.idEquipement} hover sx={{ bgcolor: index % 2 === 0 ? '#fff' : '#f9fafb' }}>
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    size="small"
-                                                    checked={selection.includes(equipement.idEquipement)}
-                                                    onChange={() => toggleSelectRow(equipement.idEquipement)}
-                                                />
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: 12, color: '#6b7280' }}>{equipement.codeInventaire}</TableCell>
-                                            <TableCell sx={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{equipement.nom}</TableCell>
-                                            <TableCell sx={{ fontSize: 12, color: '#6b7280' }}>{equipement.categorie?.libelle || '—'}</TableCell>
-                                            <TableCell sx={{ fontSize: 12, color: '#6b7280' }}>{libelleLocalisation(equipement.localisation)}</TableCell>
-                                            <TableCell>
-                                                <StatusChip type="statutEquipement" value={equipement.statut} />
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: 12, color: '#6b7280' }}>
-                                                {equipement.agent ? `${equipement.agent.nom} ${equipement.agent.prenom}` : 'Non affecté'}
-                                            </TableCell>
-                                            <TableCell sx={{ fontSize: 12, color: '#6b7280' }}>{formaterDate(equipement.dateAcquisition)}</TableCell>
-                                            <TableCell align="center">
-                                                <Tooltip title={`Voir ${equipement.nom}`}>
-                                                    <IconButton
-                                                        size="small"
-                                                        onClick={() => navigate(`/parc/equipements/${equipement.idEquipement}`)}
-                                                        sx={{ width: 22, height: 22, bgcolor: '#eff6ff', color: '#3b82f6', '&:hover': { bgcolor: '#dbeafe' } }}
-                                                    >
-                                                        <AddIcon sx={{ fontSize: 14 }} />
-                                                    </IconButton>
-                                                </Tooltip>
+                                </TableHead>
+                                <TableBody>
+                                    {equipementsAffiches.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+                                                Aucun équipement.
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                                    ) : (
+                                        equipementsAffiches.map((equipement, index) => (
+                                            <TableRow key={equipement.idEquipement} hover sx={{ bgcolor: index % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={selection.includes(equipement.idEquipement)}
+                                                        onChange={() => toggleSelectRow(equipement.idEquipement)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: 18, color: '#0e0e0e' }}>{equipement.codeInventaire}</TableCell>
+                                                <TableCell sx={{ fontSize: 18, fontWeight: 600, color: '#374151' }}>{equipement.nom}</TableCell>
+                                                <TableCell sx={{ fontSize: 18, color: '#111213' }}>{equipement.categorie?.libelle || '—'}</TableCell>
+                                                <TableCell sx={{ fontSize: 18, color: '#0f0f0f' }}>{libelleLocalisation(equipement.localisation)}</TableCell>
+                                                <TableCell>
+                                                    <StatusChip type="statutEquipement" value={equipement.statut} />
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: 18, color: '#000000' }}>
+                                                    {equipement.agent ? `${equipement.agent.nom} ${equipement.agent.prenom}` : 'Non affecté'}
+                                                </TableCell>
+                                                <TableCell sx={{ fontSize: 18, color: '#0e0e0e' }}>{formaterDate(equipement.dateAcquisition)}</TableCell>
+                                                <TableCell align="center">
+                                                    <Tooltip title={`Voir ${equipement.nom}`}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => navigate(`/parc/equipements/${equipement.idEquipement}`)}
+                                                            sx={{ width: 28, height: 28, bgcolor: '#c0c6cc', color: '#0f55c5', '&:hover': { bgcolor: '#dbeafe' } }}
+                                                        >
+                                                            <AddIcon sx={{ fontSize: 18, width: 22, height: 22 }} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
 
-                    <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={1} sx={{ mt: 1.5 }}>
-                        <Stack direction="row" alignItems="center" spacing={0.75}>
-                            <Typography sx={{ fontSize: 13, color: '#6b7280' }}>Lignes affichées :</Typography>
-                            <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#1f2937' }}>{parPage}</Typography>
-                        </Stack>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" spacing={1} sx={{ mt: 1.5 }}>
+                            <Stack direction="row" alignItems="center" spacing={0.75}>
+                                <Typography sx={{ fontSize: 13, color: '#6b7280' }}>Lignes affichées :</Typography>
+                                <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#1f2937' }}>{parPage}</Typography>
+                            </Stack>
 
-                        <Stack direction="row" spacing={0.5} alignItems="center">
-                            <Button size="small" disabled={pageActuelle === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} sx={{ textTransform: 'none' }}>
-                                Précédent
-                            </Button>
-                            {Array.from({ length: Math.min(3, nombrePages) }, (_, i) => i + 1).map((n) => (
-                                <Button
-                                    key={n}
-                                    size="small"
-                                    variant={pageActuelle === n ? 'contained' : 'outlined'}
-                                    onClick={() => setPage(n)}
-                                    sx={{ minWidth: 32, bgcolor: pageActuelle === n ? '#0c5d7d' : '#fff', color: pageActuelle === n ? '#fff' : '#0c5d7d' }}
-                                >
-                                    {n}
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                                <Button size="small" disabled={pageActuelle === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} sx={{ textTransform: 'none' }}>
+                                    Précédent
                                 </Button>
-                            ))}
-                            {nombrePages > 3 && <Typography sx={{ px: 0.5, color: '#9ca3af' }}>...</Typography>}
-                            <Button size="small" disabled={pageActuelle === nombrePages} onClick={() => setPage((p) => Math.min(nombrePages, p + 1))} sx={{ textTransform: 'none' }}>
-                                Suivant
+                                {Array.from({ length: Math.min(3, nombrePages) }, (_, i) => i + 1).map((n) => (
+                                    <Button
+                                        key={n}
+                                        size="small"
+                                        variant={pageActuelle === n ? 'contained' : 'outlined'}
+                                        onClick={() => setPage(n)}
+                                        sx={{ minWidth: 32, bgcolor: pageActuelle === n ? '#0c5d7d' : '#fff', color: pageActuelle === n ? '#fff' : '#0c5d7d' }}
+                                    >
+                                        {n}
+                                    </Button>
+                                ))}
+                                {nombrePages > 3 && <Typography sx={{ px: 0.5, color: '#9ca3af' }}>...</Typography>}
+                                <Button size="small" disabled={pageActuelle === nombrePages} onClick={() => setPage((p) => Math.min(nombrePages, p + 1))} sx={{ textTransform: 'none' }}>
+                                    Suivant
+                                </Button>
+                            </Stack>
+
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={exportEnCours ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : <DownloadOutlined />}
+                                onClick={handleExportPdf}
+                                disabled={exportEnCours}
+                                sx={{ bgcolor: '#1b7548', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#145d39' } }}
+                            >
+                                Exporter en PDF
                             </Button>
                         </Stack>
-
-                        <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={exportEnCours ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : <DownloadOutlined />}
-                            onClick={handleExportPdf}
-                            disabled={exportEnCours}
-                            sx={{ bgcolor: '#1b7548', textTransform: 'none', fontWeight: 700, '&:hover': { bgcolor: '#145d39' } }}
-                        >
-                            Exporter en PDF
-                        </Button>
-                    </Stack>
-                </Paper>
-            </Stack>
+                    </Paper>
+                </Stack>
+            </Box>
         </Box>
     )
 }

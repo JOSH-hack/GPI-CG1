@@ -33,6 +33,7 @@ import SpecularButton from '../../components/common/SpecularButton'
 import backgroundPic from '../../assets/background/backgroundpic.png'
 import { authApi } from '../../api/authApi'
 import VerifyEmail from '../../components/auth/VerifyEmail'
+import SplashScreen from '../../components/common/SplashScreen'
 
 import blobGreen from '../../assets/icons/blob-green.svg'
 import blobTeal from '../../assets/icons/blob-teal.svg'
@@ -79,6 +80,7 @@ const featureCards = [
             'Retracez l\'historique complet de chaque équipement : pannes, interventions et mouvements, en un seul endroit',
     },
 ]
+
 
 function FeatureCard({ feature }) {
     return (
@@ -205,6 +207,8 @@ export default function Register() {
     const [focusedField, setFocusedField] = useState(null)
     const [loading, setLoading] = useState(false)
     const [serverError, setServerError] = useState('')
+    const [afficherSplash, setAfficherSplash] = useState(false)
+
 
     const [showForm, setShowForm] = useState(true)
     const [showVerify, setShowVerify] = useState(false)
@@ -251,6 +255,9 @@ export default function Register() {
             setLoading(false)
         }
     }
+
+    if (afficherSplash) return <SplashScreen />
+
     return (
         <Box
             component="main"
@@ -605,7 +612,10 @@ export default function Register() {
                         <Box>
                             <VerifyEmail
                                 email={registeredEmail}
-                                onVerified={() => navigate('/login')}
+                                onVerified={() => {
+                                    setAfficherSplash(true)
+                                    setTimeout(() => navigate('/login'), 2500)
+                                }}
                                 onBack={() => {
                                     setShowVerify(false)
                                     setShowForm(true)

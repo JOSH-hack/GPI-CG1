@@ -32,6 +32,7 @@ import {
 
 import { interventionApi } from '../../api/interventionApi'
 import backgroundPic from '../../assets/background/backgroundpic.png'
+import { marquerInterventionsCommeVues } from '../../hooks/useMenuBadges'
 import { TYPE_INTERVENTION, TYPE_INTERVENTION_LABELS } from '../../utils/constants'
 
 const STATUT_DERIVE = {
@@ -93,20 +94,23 @@ export default function InterventionsListe() {
       .then((res) => setInterventions(res.data))
       .catch(() => setErreur('Impossible de charger les interventions.'))
       .finally(() => setChargement(false))
+    marquerInterventionsCommeVues()
   }, [])
 
   const interventionsFiltrees = useMemo(() => {
     const query = recherche.trim().toLowerCase()
-    return interventions.filter((i) => {
-      const matchStatut = filtreStatut === 'TOUS' || statutDerive(i) === filtreStatut
-      const matchType = filtreType === 'TOUS' || i.typeIntervention === filtreType
-      const matchRecherche =
-        !query ||
-        [i.panne?.equipement?.codeInventaire, i.technicien?.nom, i.technicien?.prenom]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(query))
-      return matchStatut && matchType && matchRecherche
-    })
+    return interventions
+      .filter((i) => {
+        const matchStatut = filtreStatut === 'TOUS' || statutDerive(i) === filtreStatut
+        const matchType = filtreType === 'TOUS' || i.typeIntervention === filtreType
+        const matchRecherche =
+          !query ||
+          [i.panne?.equipement?.codeInventaire, i.technicien?.nom, i.technicien?.prenom]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(query))
+        return matchStatut && matchType && matchRecherche
+      })
+      .sort((a, b) => new Date(b.dateIntervention || 0) - new Date(a.dateIntervention || 0))
   }, [interventions, filtreStatut, filtreType, recherche])
 
   return (

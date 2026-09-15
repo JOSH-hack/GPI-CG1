@@ -30,6 +30,7 @@ import { MENU_PAR_ROLE } from '../../config/menuConfig'
 import iconMenu from '../../assets/icons/icon-menu.svg'
 import iconChevron from '../../assets/icons/chevron.svg'
 import logoMairie from '../../assets/icons/logo.svg'
+import { useMenuBadges } from '../../hooks/useMenuBadges'
 
 function IconImg({ src, size = 18, sx, ...props }) {
   return (
@@ -53,7 +54,7 @@ export default function Sidebar() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-
+  const badges = useMenuBadges()
   const navigationItems = useMemo(() => MENU_PAR_ROLE[user?.role] || [], [user?.role])
 
   // Determine automatiquement le groupe a deplier et l'item selectionne
@@ -198,10 +199,21 @@ export default function Sidebar() {
                                 <IconImg src={child.icon} size={16} />
                               </ListItemIcon>
                               <ListItemText
-                                primary={child.label}
+                                primary={
+                                  <Stack direction="row" alignItems="center" spacing={0.75}>
+                                    <Box component="span">{child.label}</Box>
+                                    {badges[child.path] && (
+                                      <Box
+                                        component="span"
+                                        sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#ff4d4f', flexShrink: 0 }}
+                                      />
+                                    )}
+                                  </Stack>
+                                }
                                 primaryTypographyProps={{
                                   fontSize: 14,
-                                  fontWeight: isSelected ? 800 : 500,
+                                  fontWeight: isSelected ? 700 : 400,
+                                  component: 'div',
                                 }}
                               />
                             </ListItemButton>

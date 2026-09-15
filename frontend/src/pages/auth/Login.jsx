@@ -28,6 +28,7 @@ import GlareHover from '../../components/common/GlareHover'
 import SpecularButton from '../../components/common/SpecularButton'
 import backgroundPic from '../../assets/background/backgroundpic.png'
 import { useAuth } from '../../contexts/AuthContext'
+import SplashScreen from '../../components/common/SplashScreen'
 
 import blobGreen from '../../assets/icons/blob-green.svg'
 import blobTeal from '../../assets/icons/blob-teal.svg'
@@ -176,6 +177,7 @@ export default function Login() {
   const [focusedField, setFocusedField] = useState(null)
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [afficherSplash, setAfficherSplash] = useState(false)
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -193,7 +195,8 @@ export default function Login() {
       // login() appelle authApi.login (le backend pose le cookie httpOnly via
       // Set-Cookie) puis met a jour l'etat React avec role/nom.
       await login(formValues.email, formValues.password)
-      navigate(destinationApresConnexion, { replace: true })
+      setAfficherSplash(true)
+      setTimeout(() => navigate(destinationApresConnexion, { replace: true }), 2500)
     } catch (error) {
       const status = error.response?.status
       const messageServeur = error.response?.data?.message
@@ -210,6 +213,8 @@ export default function Login() {
       setLoading(false)
     }
   }
+
+  if (afficherSplash) return <SplashScreen />
 
   return (
     <Box
