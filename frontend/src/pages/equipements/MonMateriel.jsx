@@ -26,6 +26,7 @@ import {
 
 import { equipementApi } from '../../api/equipementApi'
 import { STATUT_EQUIPEMENT } from '../../utils/constants'
+import { marquerEquipementsCommeVus } from '../../hooks/useMenuBadges'
 
 function formaterDate(valeur) {
   if (!valeur) return '—'
@@ -47,7 +48,10 @@ export default function MonMateriel() {
   useEffect(() => {
     equipementApi
       .monMateriel()
-      .then((res) => setEquipements(res.data))
+      .then((res) => {
+        setEquipements(res.data)
+        marquerEquipementsCommeVus(res.data)
+      })
       .catch(() => setErreur('Impossible de charger votre matériel.'))
       .finally(() => setChargement(false))
   }, [])

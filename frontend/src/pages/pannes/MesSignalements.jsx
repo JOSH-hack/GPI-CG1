@@ -34,6 +34,7 @@ import {
 import { panneApi } from '../../api/panneApi'
 import backgroundPic from '../../assets/background/backgroundpic.png'
 import { STATUT_PANNE, PRIORITE_PANNE_LABELS } from '../../utils/constants'
+import { marquerStatutsPannesCommeVus } from '../../hooks/useMenuBadges'
 
 function numeroTicket(panne) {
   const annee = panne.dateSurvenance ? new Date(panne.dateSurvenance).getFullYear() : new Date().getFullYear()
@@ -114,7 +115,10 @@ export default function MesSignalements() {
   useEffect(() => {
     panneApi
       .mesSignalements()
-      .then((res) => setSignalements(res.data))
+      .then((res) => {
+        setSignalements(res.data)
+        marquerStatutsPannesCommeVus(res.data)
+      })
       .catch(() => setErreur('Impossible de charger vos signalements.'))
       .finally(() => setChargement(false))
   }, [])
