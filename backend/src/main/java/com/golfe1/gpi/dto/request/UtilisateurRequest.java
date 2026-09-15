@@ -1,7 +1,7 @@
 /*
 
 Nom du fichier   : UtilisateurRequest.java
-Objectif         : DTO de requête pour la création/modification d'un utilisateur
+Objectif         : DTO de requête pour la création/modification d'un utilisateur et d'un agent lié
 Propriétaire     : Josué BEDEL
 Date de création : 25/08/2026
 
@@ -33,6 +33,10 @@ public class UtilisateurRequest {
 
     @NotNull(message = "Le rôle est obligatoire")
     private RoleUtilisateur role;
+
+    // Fields for Agent creation
+    private String fonction;
+    private String telephone;
 
     // Getters & Setters
     public String getNom() {
@@ -73,5 +77,21 @@ public class UtilisateurRequest {
 
     public void setRole(RoleUtilisateur role) {
         this.role = role;
+    }
+
+    public String getFonction() {
+        return fonction;
+    }
+
+    public void setFonction(String fonction) {
+        this.fonction = fonction;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
     }
 }

@@ -15,6 +15,7 @@ import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.entities.enums.RoleUtilisateur;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
 import com.golfe1.gpi.exceptions.ResourceNotFoundException;
+import com.golfe1.gpi.repositories.AgentRepository;
 import com.golfe1.gpi.repositories.UtilisateurRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,16 @@ import java.util.List;
 public class UtilisateurService {
 
     private final UtilisateurRepository utilisateurRepository;
+    private final AgentRepository agentRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
     public UtilisateurService(UtilisateurRepository utilisateurRepository,
+            AgentRepository agentRepository,
             PasswordEncoder passwordEncoder,
             EmailService emailService) {
         this.utilisateurRepository = utilisateurRepository;
+        this.agentRepository = agentRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
@@ -48,7 +52,7 @@ public class UtilisateurService {
     
     @Transactional
     public Utilisateur creerUtilisateur(String nom, String prenom, String email,
-            String motDePasse, RoleUtilisateur role) {
+            String motDePasse, RoleUtilisateur role, String fonction, String telephone) {
 
         if (motDePasse == null || motDePasse.length() < 6) {
             throw new BusinessRuleException("Le mot de passe doit contenir au moins 6 caractères");
@@ -91,6 +95,17 @@ public class UtilisateurService {
         utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));
 
         Utilisateur utilisateurCree = utilisateurRepository.save(utilisateur);
+
+        // Creation automatique de l'agent associe
+        com.golfe1.gpi.entities.Agent agent = new com.golfe1.gpi.entities.Agent();
+        agent.setNom(nom);
+        agent.setPrenom(prenom);
+        agent.setFonction(fonction);
+        agent.setTelephone(telephone);
+        agent.setEmail(email);
+        agent.setUtilisateur(utilisateurCree);
+        agentRepository.save(agent);
+
         emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
 
         return utilisateurCree;

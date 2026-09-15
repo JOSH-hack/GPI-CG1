@@ -146,7 +146,9 @@ public class AuthController {
                 request.getPrenom(),
                 request.getEmail(),
                 request.getMotDePasse(),
-                request.getRole());
+                request.getRole(),
+                request.getFonction(),
+                request.getTelephone());
 
         UtilisateurResponse response = utilisateurMapper.toResponse(utilisateur);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
