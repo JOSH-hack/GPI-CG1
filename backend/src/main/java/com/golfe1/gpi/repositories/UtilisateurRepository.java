@@ -14,6 +14,7 @@ import com.golfe1.gpi.entities.enums.RoleUtilisateur;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,4 +30,8 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
     List<Utilisateur> findByActifTrue();
 
     List<Utilisateur> findByActifFalse();
+
+    // Comptes crees mais jamais verifies, dont le delai de validation (2 min)
+    // est deja depasse - utilise par la tache planifiee de nettoyage.
+    List<Utilisateur> findByEmailVerifieFalseAndDateExpirationCodeBefore(LocalDateTime instant);
 }

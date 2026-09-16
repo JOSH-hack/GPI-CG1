@@ -11,12 +11,14 @@ Date de création : 25/08/2026
 
 package com.golfe1.gpi.services;
 
+import com.golfe1.gpi.entities.Agent;
 import com.golfe1.gpi.entities.Utilisateur;
 import com.golfe1.gpi.entities.enums.RoleUtilisateur;
 import com.golfe1.gpi.exceptions.BusinessRuleException;
 import com.golfe1.gpi.exceptions.ResourceNotFoundException;
 import com.golfe1.gpi.repositories.AgentRepository;
 import com.golfe1.gpi.repositories.UtilisateurRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +27,13 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class UtilisateurService {
+
+    private static final Logger log = LoggerFactory.getLogger(UtilisateurService.class);
 
     private final UtilisateurRepository utilisateurRepository;
     private final AgentRepository agentRepository;
@@ -49,7 +56,7 @@ public class UtilisateurService {
         utilisateur.setRole(nouveauRole);
         return utilisateurRepository.save(utilisateur);
     }
-    
+
     @Transactional
     public Utilisateur creerUtilisateur(String nom, String prenom, String email,
             String motDePasse, RoleUtilisateur role, String fonction, String telephone) {
@@ -74,6 +81,12 @@ public class UtilisateurService {
             utilisateurExistant.setCodeVerification(nouveauCode);
             utilisateurExistant.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));
             Utilisateur utilisateurMisAJour = utilisateurRepository.save(utilisateurExistant);
+
+            // Le compte existant n'avait peut-etre pas encore d'agent associe
+            // (ancienne inscription anterieure a cette logique, ou echec precedent) :
+            // on cree ou on met a jour la fiche agent dans les deux cas.
+            creerOuMettreAJourAgent(utilisateurMisAJour, nom, prenom, fonction, telephone, email);
+
             emailService.envoyerCodeVerification(utilisateurMisAJour.getEmail(), nouveauCode);
 
             return utilisateurMisAJour;
@@ -97,18 +110,30 @@ public class UtilisateurService {
         Utilisateur utilisateurCree = utilisateurRepository.save(utilisateur);
 
         // Creation automatique de l'agent associe
-        com.golfe1.gpi.entities.Agent agent = new com.golfe1.gpi.entities.Agent();
+        creerOuMettreAJourAgent(utilisateurCree, nom, prenom, fonction, telephone, email);
+
+        emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
+
+        return utilisateurCree;
+    }
+
+    // Cree la fiche agent liee a cet utilisateur si elle n'existe pas encore,
+    // ou la met a jour si elle existe deja (cas d'une re-inscription avant
+    // verification de l'email : nom/prenom/fonction/telephone peuvent avoir
+    // change).
+    private void creerOuMettreAJourAgent(Utilisateur utilisateur, String nom, String prenom,
+            String fonction, String telephone, String email) {
+        Agent agent = agentRepository.findByUtilisateurIdUtilisateur(utilisateur.getIdUtilisateur())
+                .orElseGet(Agent::new);
+
         agent.setNom(nom);
         agent.setPrenom(prenom);
         agent.setFonction(fonction);
         agent.setTelephone(telephone);
         agent.setEmail(email);
-        agent.setUtilisateur(utilisateurCree);
+        agent.setUtilisateur(utilisateur);
+
         agentRepository.save(agent);
-
-        emailService.envoyerCodeVerification(utilisateurCree.getEmail(), code);
-
-        return utilisateurCree;
     }
 
     @Transactional
@@ -189,46 +214,70 @@ public class UtilisateurService {
     }
 
     @Transactional
-public Utilisateur verifierEmail(String email, String code) {
-    Utilisateur utilisateur = getParEmail(email);
+    public Utilisateur verifierEmail(String email, String code) {
+        Utilisateur utilisateur = getParEmail(email);
 
-    if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
-        throw new BusinessRuleException("Cet email est déjà vérifié");
-    }
-    if (utilisateur.getCodeVerification() == null || !utilisateur.getCodeVerification().equals(code)) {
-        throw new BusinessRuleException("Code de vérification incorrect");
-    }
-    if (LocalDateTime.now().isAfter(utilisateur.getDateExpirationCode())) {
-        throw new BusinessRuleException("Ce code a expiré, demandez-en un nouveau");
-    }
+        if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
+            throw new BusinessRuleException("Cet email est déjà vérifié");
+        }
+        if (utilisateur.getCodeVerification() == null || !utilisateur.getCodeVerification().equals(code)) {
+            throw new BusinessRuleException("Code de vérification incorrect");
+        }
+        if (LocalDateTime.now().isAfter(utilisateur.getDateExpirationCode())) {
+            throw new BusinessRuleException("Ce code a expiré, demandez-en un nouveau");
+        }
 
-    utilisateur.setEmailVerifie(true);
-    utilisateur.setCodeVerification(null);
-    utilisateur.setDateExpirationCode(null);
+        utilisateur.setEmailVerifie(true);
+        utilisateur.setCodeVerification(null);
+        utilisateur.setDateExpirationCode(null);
 
-    return utilisateurRepository.save(utilisateur);
-}
-
-@Transactional
-public void renvoyerCodeVerification(String email) {
-    Utilisateur utilisateur = getParEmail(email);
-
-    if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
-        throw new BusinessRuleException("Cet email est déjà vérifié");
+        return utilisateurRepository.save(utilisateur);
     }
 
-    String code = genererCode();
-    utilisateur.setCodeVerification(code);
-    utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));    utilisateurRepository.save(utilisateur);
+    @Transactional
+    public void renvoyerCodeVerification(String email) {
+        Utilisateur utilisateur = getParEmail(email);
 
-    emailService.envoyerCodeVerification(email, code);
-}
+        if (Boolean.TRUE.equals(utilisateur.getEmailVerifie())) {
+            throw new BusinessRuleException("Cet email est déjà vérifié");
+        }
 
-private String genererCode() {
-    SecureRandom random = new SecureRandom();
-    int code = 100000 + random.nextInt(900000);
-    return String.valueOf(code);
-}
+        String code = genererCode();
+        utilisateur.setCodeVerification(code);
+        utilisateur.setDateExpirationCode(LocalDateTime.now().plusMinutes(2));
+        utilisateurRepository.save(utilisateur);
+
+        emailService.envoyerCodeVerification(email, code);
+    }
+
+    private String genererCode() {
+        SecureRandom random = new SecureRandom();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    // Tache planifiee : purge les comptes crees mais jamais verifies dont le
+    // delai de validation (2 min, voir dateExpirationCode) est depasse.
+    // Frequence : toutes les 60 secondes, decalee de 10s au demarrage.
+    @Scheduled(fixedRate = 60_000, initialDelay = 10_000)
+    @Transactional
+    public void nettoyerComptesNonVerifiesExpires() {
+        List<Utilisateur> comptesExpires = utilisateurRepository
+                .findByEmailVerifieFalseAndDateExpirationCodeBefore(LocalDateTime.now());
+
+        if (comptesExpires.isEmpty()) {
+            return;
+        }
+
+        for (Utilisateur utilisateur : comptesExpires) {
+            // L'agent est cree en meme temps que l'utilisateur (voir creerUtilisateur) :
+            // il faut le supprimer d'abord pour respecter la contrainte de cle etrangere.
+            agentRepository.deleteByUtilisateurIdUtilisateur(utilisateur.getIdUtilisateur());
+            utilisateurRepository.delete(utilisateur);
+        }
+
+        log.info("Nettoyage comptes non verifies : {} compte(s) expire(s) supprime(s)", comptesExpires.size());
+    }
 
     private Utilisateur getUtilisateurOuException(Long idUtilisateur) {
         return utilisateurRepository.findById(idUtilisateur)

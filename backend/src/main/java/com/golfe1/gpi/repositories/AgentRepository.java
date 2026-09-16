@@ -12,6 +12,7 @@ package com.golfe1.gpi.repositories;
 import com.golfe1.gpi.entities.Agent;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +25,9 @@ public interface AgentRepository extends JpaRepository<Agent, Long> {
     Optional<Agent> findByUtilisateurIdUtilisateur(Long idUtilisateur);
 
     List<Agent> findByFonctionContainingIgnoreCase(String fonction);
+
+    // Utilise par la tache de nettoyage des comptes non verifies expires :
+    // supprime la fiche agent creee automatiquement a l'inscription.
+    @Transactional
+    void deleteByUtilisateurIdUtilisateur(Long idUtilisateur);
 }
