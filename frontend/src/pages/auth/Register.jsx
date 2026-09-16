@@ -120,10 +120,10 @@ function FeatureCard({ feature }) {
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        width: { xs: '100%', sm: '80%' },
+                        width: '100%',
                         minWidth: 0,
                         height: '100%',
-                        p: { xs: '6% 5%', sm: '13% !important' },
+                        p: { xs: '6% 5%', sm: '10% 10% !important' },
                     }}
                 >
                     <Typography
@@ -202,6 +202,8 @@ export default function Register() {
         prenom: '',
         email: '',
         motDePasse: '',
+        fonction: '',
+        telephone: '',
     })
     const [showPassword, setShowPassword] = useState(false)
     const [focusedField, setFocusedField] = useState(null)
@@ -222,6 +224,11 @@ export default function Register() {
         }))
     }
 
+    function handleTelephoneChange(event) {
+        const chiffres = event.target.value.replace(/\D/g, '').slice(0, 8)
+        setFormValues((valeursActuelles) => ({ ...valeursActuelles, telephone: chiffres }))
+    }
+
 
 
     async function handleSubmit(event) {
@@ -234,6 +241,8 @@ export default function Register() {
                 prenom: formValues.prenom,
                 email: formValues.email,
                 motDePasse: formValues.motDePasse,
+                fonction: formValues.fonction || null,
+                telephone: formValues.telephone ? `+228${formValues.telephone}` : null,
                 role: 'AGENT', // impose cote frontend - coherent avec la decision de securite prise plus tot
             })
             // Inscription reussie : on bascule vers l'ecran de saisie du code
@@ -257,7 +266,24 @@ export default function Register() {
     }
 
     if (afficherSplash) return <SplashScreen />
-
+    const champStyleRegister = {
+        '& .MuiOutlinedInput-root': {
+            height: 'clamp(29px, 4.8vw, 49px)',
+            borderRadius: '13px',
+            bgcolor: '#b2bdb4',
+            color: '#000',
+            fontFamily: 'Quicksand, sans-serif',
+            fontSize: 'clamp(10px, 1.4vw, 20px)',
+            fontWeight: 600,
+            transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
+            '&:hover': { bgcolor: '#a3b0a6', boxShadow: '0 2px 8px rgba(27, 117, 72, 0.25)' },
+            '&.Mui-focused': { bgcolor: '#fff', boxShadow: '0 0 0 2px #1b7548, 0 4px 12px rgba(27, 117, 72, 0.35)', transform: 'scale(1.01)' },
+        },
+        '& .MuiOutlinedInput-notchedOutline': { border: 0 },
+        '& .MuiOutlinedInput-input': { px: '3%', py: 0, color: '#000', WebkitTextFillColor: '#000' },
+        '& .MuiOutlinedInput-input::placeholder': { color: '#8c8c8c', opacity: 1, transition: 'opacity 0.2s ease' },
+        '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-input::placeholder': { opacity: 0.6 },
+    }
     return (
         <Box
             component="main"
@@ -478,107 +504,144 @@ export default function Register() {
                                 }}
                             >
                                 <Stack spacing={{ xs: 0.8, md: 1.5 }}>
-                                    {formFields.map((field) => (
-                                        <Box key={field.id}>
-                                            <Typography
-                                                component="label"
-                                                htmlFor={field.id}
-                                                sx={{
-                                                    display: 'block',
-                                                    mb: '1.2%',
-                                                    color: focusedField === field.id ? '#1b7548' : '#000',
-                                                    fontFamily: 'Quicksand, sans-serif',
-                                                    fontSize: 'clamp(8px, 1.25vw, 18px)',
-                                                    fontWeight: 700,
-                                                    lineHeight: 1.2,
-                                                    transition: 'color 0.2s ease',
-                                                }}
-                                            >
-                                                {field.label}
-                                            </Typography>
-                                            <TextField
-                                                fullWidth
-                                                id={field.id}
-                                                name={field.id}
-                                                type={field.type === 'password' && showPassword ? 'text' : field.type}
-                                                value={formValues[field.id]}
-                                                onChange={handleChange}
-                                                onFocus={() => setFocusedField(field.id)}
-                                                onBlur={() => setFocusedField(null)}
-                                                placeholder={field.placeholder}
-                                                variant="outlined"
-                                                inputProps={field.type === 'password' ? { minLength: 6 } : undefined}
-                                                InputProps={
-                                                    field.type === 'password'
-                                                        ? {
-                                                            endAdornment: (
-                                                                <InputAdornment position="end">
-                                                                    <IconButton
-                                                                        aria-label={
-                                                                            showPassword
-                                                                                ? 'Masquer le mot de passe'
-                                                                                : 'Afficher le mot de passe'
-                                                                        }
-                                                                        edge="end"
-                                                                        onClick={() => setShowPassword((visible) => !visible)}
-                                                                        size="small"
-                                                                        sx={{ mr: '1%' }}
-                                                                    >
-                                                                        <Box
-                                                                            component="img"
-                                                                            src={eyeOffIcon}
-                                                                            alt=""
-                                                                            sx={{ width: 'clamp(14px, 2.1vw, 30px)' }}
-                                                                        />
-                                                                    </IconButton>
-                                                                </InputAdornment>
-                                                            ),
-                                                        }
-                                                        : undefined
-                                                }
-                                                sx={{
-                                                    '& .MuiOutlinedInput-root': {
-                                                        height: 'clamp(29px, 4.8vw, 49px)',
-                                                        borderRadius: '13px',
-                                                        bgcolor: '#b2bdb4',
-                                                        color: '#000',
-                                                        fontFamily: 'Quicksand, sans-serif',
-                                                        fontSize: 'clamp(10px, 1.4vw, 20px)',
-                                                        fontWeight: 600,
-                                                        transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease',
+    <Stack direction="row" spacing={1.5}>
+        <Box sx={{ flex: 1 }}>
+            <Typography component="label" htmlFor="nom" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'nom' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+                Nom
+            </Typography>
+            <TextField
+                fullWidth
+                id="nom"
+                name="nom"
+                value={formValues.nom}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('nom')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="nom..."
+                variant="outlined"
+                sx={champStyleRegister}
+            />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+            <Typography component="label" htmlFor="prenom" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'prenom' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+                Prénom
+            </Typography>
+            <TextField
+                fullWidth
+                id="prenom"
+                name="prenom"
+                value={formValues.prenom}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('prenom')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="prénom..."
+                variant="outlined"
+                sx={champStyleRegister}
+            />
+        </Box>
+    </Stack>
 
-                                                        '&:hover': {
-                                                            bgcolor: '#a3b0a6',
-                                                            boxShadow: '0 2px 8px rgba(27, 117, 72, 0.25)',
-                                                        },
-                                                        '&.Mui-focused': {
-                                                            bgcolor: '#fff',
-                                                            boxShadow: '0 0 0 2px #1b7548, 0 4px 12px rgba(27, 117, 72, 0.35)',
-                                                            transform: 'scale(1.01)',
-                                                        },
-                                                    },
-                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                        border: 0,
-                                                    },
-                                                    '& .MuiOutlinedInput-input': {
-                                                        px: '3%',
-                                                        py: 0,
-                                                        color: '#000',
-                                                        WebkitTextFillColor: '#000',
-                                                    },
-                                                    '& .MuiOutlinedInput-input::placeholder': {
-                                                        color: '#8c8c8c',
-                                                        opacity: 1,
-                                                        transition: 'opacity 0.2s ease',
-                                                    },
-                                                    '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-input::placeholder': {
-                                                        opacity: 0.6,
-                                                    },
-                                                }}
-                                            />
-                                        </Box>
-                                    ))}
-                                </Stack>
+    <Box>
+        <Typography component="label" htmlFor="email" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'email' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+            Email
+        </Typography>
+        <TextField
+            fullWidth
+            id="email"
+            name="email"
+            type="email"
+            value={formValues.email}
+            onChange={handleChange}
+            onFocus={() => setFocusedField('email')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="emailadress@gmail.com"
+            variant="outlined"
+            sx={champStyleRegister}
+        />
+    </Box>
+
+    <Box>
+        <Typography component="label" htmlFor="motDePasse" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'motDePasse' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+            Mot De Passe
+        </Typography>
+        <TextField
+            fullWidth
+            id="motDePasse"
+            name="motDePasse"
+            type={showPassword ? 'text' : 'password'}
+            value={formValues.motDePasse}
+            onChange={handleChange}
+            onFocus={() => setFocusedField('motDePasse')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="au moins 12 caractères"
+            variant="outlined"
+            inputProps={{ minLength: 12 }}
+            InputProps={{
+                endAdornment: (
+                    <InputAdornment position="end">
+                        <IconButton
+                            aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                            edge="end"
+                            onClick={() => setShowPassword((visible) => !visible)}
+                            size="small"
+                            sx={{ mr: '1%' }}
+                        >
+                            <Box component="img" src={eyeOffIcon} alt="" sx={{ width: 'clamp(14px, 2.1vw, 30px)' }} />
+                        </IconButton>
+                    </InputAdornment>
+                ),
+            }}
+            sx={champStyleRegister}
+        />
+    </Box>
+
+    <Stack direction="row" spacing={1.5}>
+        <Box sx={{ flex: 1 }}>
+            <Typography component="label" htmlFor="fonction" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'fonction' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+                Fonction
+            </Typography>
+            <TextField
+                fullWidth
+                id="fonction"
+                name="fonction"
+                value={formValues.fonction}
+                onChange={handleChange}
+                onFocus={() => setFocusedField('fonction')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="fonction..."
+                variant="outlined"
+                sx={champStyleRegister}
+            />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+            <Typography component="label" htmlFor="telephone" sx={{ display: 'block', mb: '1.2%', color: focusedField === 'telephone' ? '#1b7548' : '#000', fontFamily: 'Quicksand, sans-serif', fontSize: 'clamp(8px, 1.25vw, 18px)', fontWeight: 700, lineHeight: 1.2, transition: 'color 0.2s ease' }}>
+                Téléphone
+            </Typography>
+            <TextField
+                fullWidth
+                id="telephone"
+                name="telephone"
+                value={formValues.telephone}
+                onChange={handleTelephoneChange}
+                onFocus={() => setFocusedField('telephone')}
+                onBlur={() => setFocusedField(null)}
+                placeholder="__ __ __ __"
+                variant="outlined"
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            <Typography sx={{ fontFamily: 'Quicksand, sans-serif', fontWeight: 700, color: '#000', fontSize: 'clamp(10px, 1.4vw, 20px)' }}>
+                                +228
+                            </Typography>
+                        </InputAdornment>
+                    ),
+                }}
+                sx={champStyleRegister}
+            />
+        </Box>
+    </Stack>
+</Stack>
+                                
 
                                 <Box sx={{ display: 'flex', justifyContent: { xs: 'center', md: 'flex-end' }, mt: '3%' }}>
                                     <SpecularButton
