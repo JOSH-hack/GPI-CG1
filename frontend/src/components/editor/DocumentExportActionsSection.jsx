@@ -1,0 +1,7 @@
+import { Box, Typography } from "@mui/material";
+
+export const DocumentExportActionsSection = () => (
+  <Box sx={{ p: 2, border: 1, borderColor: "divider", borderRadius: 1 }}>
+    <Typography>Stub for DocumentExportActionsSection</Typography>
+  </Box>
+);

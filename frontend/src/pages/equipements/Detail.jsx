@@ -145,6 +145,7 @@ function infosSpecifiques(equipement) {
 }
 
 export default function Detail() {
+  const [openEditor, setOpenEditor] = useState(false);
   const { id } = useParams()
   const [equipement, setEquipement] = useState(null)
   const [pannes, setPannes] = useState([])
@@ -251,6 +252,24 @@ export default function Detail() {
             </Stack>
 
             <Stack direction="row" spacing={1} className="no-print">
+              
+              <Button
+                variant="outlined"
+                startIcon={<DescriptionOutlinedIcon />}
+                onClick={() => setOpenEditor(true)}
+                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
+              >
+                Éditeur
+              </Button>
+              
+              <Button
+                variant="outlined"
+                startIcon={<DescriptionOutlinedIcon />}
+                onClick={() => setOpenEditor(true)}
+                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
+              >
+                Éditeur
+              </Button>
               <Button
                 size="small"
                 variant="outlined"
@@ -259,6 +278,15 @@ export default function Detail() {
                 sx={{ ...typo, borderColor: '#146f42', color: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
               >
                 Imprimer
+              </Button>
+              
+              <Button
+                variant="outlined"
+                startIcon={<DescriptionOutlinedIcon />}
+                onClick={() => setOpenEditor(true)}
+                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
+              >
+                Éditeur
               </Button>
               <Button
                 size="small"
@@ -467,6 +495,16 @@ export default function Detail() {
           </Paper>
         </Stack>
       </Box>
+
+      <Dialog
+        open={openEditor}
+        onClose={() => setOpenEditor(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <EditorModal />
+      </Dialog>
+
     </>
   )
 }
