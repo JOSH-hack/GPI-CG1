@@ -59,6 +59,52 @@ public class ChatWebSocketController {
 
         messagingTemplate.convertAndSend("/topic/intervention/" + idIntervention, response);
     }
+    
+    // Notification ephemere "en train d'ecrire" - jamais persistee, juste
+    // rediffusee aux abonnes du topic de frappe de cette intervention.
+    @MessageMapping("/intervention/{idIntervention}/typing")
+    public void notifierEnTrainDecrire(@DestinationVariable Long idIntervention, Principal principal) {
+        String email = principal.getName();
+        Utilisateur expediteur = utilisateurService.getParEmail(email);
+
+        TypingPayload payload = new TypingPayload();
+        payload.setIdUtilisateur(expediteur.getIdUtilisateur());
+        payload.setNom(expediteur.getNom());
+        payload.setPrenom(expediteur.getPrenom());
+
+        messagingTemplate.convertAndSend("/topic/intervention/" + idIntervention + "/typing", payload);
+    }
+
+    // Payload ephemere envoye aux abonnes quand quelqu'un est en train d'ecrire.
+    public static class TypingPayload {
+        private Long idUtilisateur;
+        private String nom;
+        private String prenom;
+
+        public Long getIdUtilisateur() {
+            return idUtilisateur;
+        }
+
+        public void setIdUtilisateur(Long idUtilisateur) {
+            this.idUtilisateur = idUtilisateur;
+        }
+
+        public String getNom() {
+            return nom;
+        }
+
+        public void setNom(String nom) {
+            this.nom = nom;
+        }
+
+        public String getPrenom() {
+            return prenom;
+        }
+
+        public void setPrenom(String prenom) {
+            this.prenom = prenom;
+        }
+    }
 
     // Payload minimal recu du frontend - juste le contenu du message.
     public static class ChatPayload {

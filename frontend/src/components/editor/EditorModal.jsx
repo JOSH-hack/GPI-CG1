@@ -12,7 +12,7 @@ import { EquipmentSpecificationsSection } from "./EquipmentSpecificationsSection
 import { EquipmentStatusSection } from "./EquipmentStatusSection";
 import { GeneralEquipmentInformationSection } from "./GeneralEquipmentInformationSection";
 
-const EditorModal = () => (
+const EditorModal = ({ equipement, pannes = [], mouvements = [], onCancel, onExport }) => (
   <Paper
     component="main"
     elevation={0}
@@ -21,7 +21,7 @@ const EditorModal = () => (
       flexDirection: "column",
       width: "100%",
       maxWidth: 1180,
-      minHeight: "100%",
+      height: "100%",
       overflow: "hidden",
       border: 1,
       borderColor: "divider",
@@ -29,17 +29,12 @@ const EditorModal = () => (
       bgcolor: "background.paper",
     }}
   >
-    <DocumentEditorHeaderSection />
+    <DocumentEditorHeaderSection equipement={equipement} />
     <DocumentFormattingToolbarSection />
     <Box
       component="section"
       aria-label="Document editor"
-      sx={{
-        flexGrow: 1,
-        bgcolor: "grey.50",
-        px: { xs: 1, sm: 3 },
-        py: 3,
-      }}
+      sx={{ flexGrow: 1, minHeight: 0, overflowY: "auto", bgcolor: "grey.50", px: { xs: 1, sm: 3 }, py: 3 }}
     >
       <Paper
         component="article"
@@ -58,38 +53,33 @@ const EditorModal = () => (
       >
         <Stack spacing={2.5}>
           <EquipmentDocumentMastheadSection />
-          <Stack
-            component="header"
-            spacing={0.75}
-            alignItems="center"
-            pt={1.25}
-          >
+          <Stack component="header" spacing={0.75} alignItems="center" pt={1.25}>
             <Typography
               component="h1"
               align="center"
               sx={{
                 color: "common.black",
                 fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
-                fontSize: { xs: "1.25rem", sm: "1.875rem" },
+                fontSize: { xs: "1.25rem", sm: "2rem" },
                 fontWeight: 700,
                 textDecoration: "underline",
               }}
             >
-              FICHE DÉTAILLÉE D&apos;ÉQUIPEMENT
+              FICHE DETAILLEE D&apos;EQUIPEMENT
             </Typography>
           </Stack>
-          <EquipmentIdentifierQrSection />
-          <GeneralEquipmentInformationSection />
-          <EquipmentStatusSection />
-          <EquipmentSpecificationsSection />
-          <AssignedAgentInformationSection />
-          <EquipmentFailureHistorySection />
-          <EquipmentMovementHistorySection />
+          <EquipmentIdentifierQrSection equipement={equipement} />
+          <GeneralEquipmentInformationSection equipement={equipement} />
+          <EquipmentStatusSection equipement={equipement} />
+          <EquipmentSpecificationsSection equipement={equipement} />
+          <AssignedAgentInformationSection agent={equipement?.agent} />
+          <EquipmentFailureHistorySection pannes={pannes} />
+          <EquipmentMovementHistorySection mouvements={mouvements} />
           <DocumentLegalFooterSection />
         </Stack>
       </Paper>
     </Box>
-    <DocumentExportActionsSection />
+    <DocumentExportActionsSection pageCount={2} onCancel={onCancel} onExport={onExport} />
   </Paper>
 );
 

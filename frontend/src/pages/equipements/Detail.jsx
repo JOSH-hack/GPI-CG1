@@ -14,21 +14,22 @@ Date de création : 05/09/2026
 import { useEffect, useState } from 'react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
 import PrintOutlined from '@mui/icons-material/PrintOutlined'
-import { exportApi } from '../../api/exportApi'
-import QrCode2 from '@mui/icons-material/QrCode2'
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 import { QRCodeSVG } from 'qrcode.react'
 import logo from '../../assets/icons/logo.svg'
+import { exportApi } from '../../api/exportApi'
+import EditorModal from '../../components/editor/EditorModal'
 
 import {
   Alert,
   Box,
   Breadcrumbs,
   Button,
-  Chip,
   CircularProgress,
+  Dialog,
   Divider,
   Link,
   Paper,
@@ -87,7 +88,7 @@ function InformationItem({ label, value }) {
       <Typography component="dt" sx={{ ...typo, color: '#070707', fontSize: '0.85rem', fontWeight: 600 }}>
         {label}
       </Typography>
-      <Typography component="dd" sx={{ ...typo, m: 0, color: 'rgba(112,108,108,0.91)', fontSize: '0.82rem', lineHeight: 1.3 }}>
+      <Typography component="dd" sx={{ ...typo, m: 0, color: '#000', fontSize: '0.92rem', fontWeight: 700, lineHeight: 1.3 }}>
         {value ?? '—'}
       </Typography>
     </Stack>
@@ -145,7 +146,7 @@ function infosSpecifiques(equipement) {
 }
 
 export default function Detail() {
-  const [openEditor, setOpenEditor] = useState(false);
+  const [openEditor, setOpenEditor] = useState(false)
   const { id } = useParams()
   const [equipement, setEquipement] = useState(null)
   const [pannes, setPannes] = useState([])
@@ -174,6 +175,22 @@ export default function Detail() {
     }
     charger()
   }, [id])
+
+  async function telechargerDocx() {
+    const response = await exportApi.telechargerFicheEquipementDocx(equipement.idEquipement)
+    const url = window.URL.createObjectURL(
+      new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      })
+    )
+    const lien = document.createElement('a')
+    lien.href = url
+    lien.download = `fiche-equipement-${equipement.idEquipement}.docx`
+    document.body.appendChild(lien)
+    lien.click()
+    lien.remove()
+    window.URL.revokeObjectURL(url)
+  }
 
   if (chargement) {
     return (
@@ -252,24 +269,16 @@ export default function Detail() {
             </Stack>
 
             <Stack direction="row" spacing={1} className="no-print">
-              
               <Button
+                size="small"
                 variant="outlined"
-                startIcon={<DescriptionOutlinedIcon />}
+                startIcon={<DescriptionOutlined sx={{ fontSize: 14 }} />}
                 onClick={() => setOpenEditor(true)}
-                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
+                sx={{ ...typo, fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
               >
-                Éditeur
+                Ouvrir l&apos;éditeur
               </Button>
-              
-              <Button
-                variant="outlined"
-                startIcon={<DescriptionOutlinedIcon />}
-                onClick={() => setOpenEditor(true)}
-                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
-              >
-                Éditeur
-              </Button>
+
               <Button
                 size="small"
                 variant="outlined"
@@ -279,51 +288,13 @@ export default function Detail() {
               >
                 Imprimer
               </Button>
-              
-              <Button
-                variant="outlined"
-                startIcon={<DescriptionOutlinedIcon />}
-                onClick={() => setOpenEditor(true)}
-                sx={{ ...typo, borderColor: "#0c5d7d", color: "#0c5d7d", fontSize: "0.7rem", fontWeight: 700, textTransform: "none" }}
-              >
-                Éditeur
-              </Button>
+
               <Button
                 size="small"
                 variant="contained"
-                startIcon={<PrintOutlined sx={{ fontSize: 14 }} />}
-                onClick={async () => {
-                  const response =
-                    await exportApi.telechargerFicheEquipementDocx(
-                      equipement.idEquipement
-                    )
-
-                  const url =
-                    window.URL.createObjectURL(
-                      new Blob(
-                        [response.data],
-                        {
-                          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        }
-                      )
-                    )
-
-                  const lien =
-                    document.createElement('a')
-
-                  lien.href = url
-
-                  lien.download =
-                    `fiche-equipement-${equipement.idEquipement}.docx`
-
-                  document.body.appendChild(lien)
-
-                  lien.click()
-
-                  lien.remove()
-
-                  window.URL.revokeObjectURL(url)
-                }}sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
+                startIcon={<DescriptionOutlined sx={{ fontSize: 14 }} />}
+                onClick={telechargerDocx}
+                sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
               >
                 Télécharger DOCX
               </Button>
@@ -340,7 +311,8 @@ export default function Detail() {
               }}
             >
               <Stack alignItems="center" spacing={0.5} className="no-print">
-<QRCodeSVG value={equipement.codeInventaire} size={106} />              </Stack>
+                <QRCodeSVG value={equipement.codeInventaire} size={106} />
+              </Stack>
               <Stack spacing={0.4}>
                 <Typography sx={{ ...typo, color: '#0c5d7d', fontSize: '0.95rem', fontWeight: 600 }}>{equipement.codeInventaire}</Typography>
                 <Typography sx={{ ...typo, color: '#000', fontSize: '0.9rem', fontWeight: 700, textDecoration: 'underline' }}>
@@ -501,10 +473,18 @@ export default function Detail() {
         onClose={() => setOpenEditor(false)}
         maxWidth="lg"
         fullWidth
+        PaperProps={{ sx: { height: '90vh' } }}
       >
-        <EditorModal />
-      </Dialog>
-
+        <EditorModal
+          equipement={equipement}
+          pannes={pannes}
+          mouvements={mouvements}
+          onCancel={() => setOpenEditor(false)}
+          onExport={(format) => {
+            if (format === 'docx') telechargerDocx()
+            setOpenEditor(false)
+          }}
+        />      </Dialog>
     </>
   )
 }

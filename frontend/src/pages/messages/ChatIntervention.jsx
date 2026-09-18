@@ -29,6 +29,8 @@ import {
 import { messageApi } from '../../api/messageApi'
 import { interventionApi } from '../../api/interventionApi'
 import { useWebSocketChat } from '../../hooks/useWebSocketChat'
+import backgroundPic from '../../assets/background/backgroundpic.png'
+import { useAuth } from '../../contexts/AuthContext'
 
 function formaterHeure(valeur) {
   if (!valeur) return ''
@@ -37,6 +39,7 @@ function formaterHeure(valeur) {
 
 export default function ChatIntervention() {
   const { idIntervention } = useParams()
+  const { user } = useAuth()
   const [intervention, setIntervention] = useState(null)
   const [historique, setHistorique] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -44,7 +47,14 @@ export default function ChatIntervention() {
   const [saisie, setSaisie] = useState('')
   const finDeListeRef = useRef(null)
 
-  const { messages, connecte, erreur: erreurWs, envoyerMessage } = useWebSocketChat(idIntervention)
+  const {
+    messages,
+    connecte,
+    erreur: erreurWs,
+    envoyerMessage,
+    utilisateurEnTrainDecrire,
+    notifierEnTrainDecrire,
+  } = useWebSocketChat(idIntervention)
 
   useEffect(() => {
     async function charger() {
@@ -75,6 +85,11 @@ export default function ChatIntervention() {
   useEffect(() => {
     finDeListeRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [tousLesMessages.length])
+
+  function handleSaisieChange(event) {
+    setSaisie(event.target.value)
+    notifierEnTrainDecrire()
+  }
 
   function handleEnvoyer() {
     if (!saisie.trim()) return
@@ -108,7 +123,7 @@ export default function ChatIntervention() {
   const idTechnicien = intervention.technicien?.idUtilisateur
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 3 }, width: '100%', boxSizing: 'border-box', fontFamily: 'Quicksand, sans-serif' }}>
+    <Box sx={{ p: { xs: 1.5, sm: 3 }, width: '100%', boxSizing: 'border-box', fontFamily: 'Quicksand, sans-serif', }}>
       <IconButton
         component={RouterLink}
         to={`/assistance/interventions/ticket/${intervention.panne?.idPanne}`}
@@ -123,12 +138,15 @@ export default function ChatIntervention() {
           maxWidth: 640,
           mx: 'auto',
           border: '2px solid #146f42',
+          backgroundImage: `linear-gradient(rgba(204, 204, 204, 0.35), rgba(201, 201, 201, 0.47)), url(${backgroundPic})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
           borderRadius: '14px',
           overflow: 'hidden',
-          bgcolor: '#fff',
+          bgcolor: '#879485',
           display: 'flex',
           flexDirection: 'column',
-          height: '75vh',
+          height: '65vh',
         }}
       >
         {/* En-tete */}
@@ -163,25 +181,21 @@ export default function ChatIntervention() {
 
         {/* Messages */}
         <Stack spacing={1.75} sx={{ flex: 1, overflowY: 'auto', p: 2, bgcolor: '#fafafa' }}>
-          {tousLesMessages.length === 0 ? (
-            <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-              Aucun message pour l&apos;instant.
-            </Typography>
-          ) : (
+          {
             tousLesMessages.map((message) => {
-              const estTechnicien = message.expediteur?.idUtilisateur === idTechnicien
-              const role = estTechnicien ? 'Technicien' : 'Agent'
-              const initiale = estTechnicien ? 'T' : 'A'
+              const estMoi = message.expediteur?.idUtilisateur === user?.idUtilisateur
+              const nomComplet = [message.expediteur?.prenom, message.expediteur?.nom].filter(Boolean).join(' ') || 'Utilisateur'
+              const initiale = (message.expediteur?.prenom || message.expediteur?.nom || '?').charAt(0).toUpperCase()
 
               return (
                 <Stack
                   key={message.idMessage}
                   direction="row"
-                  justifyContent={estTechnicien ? 'flex-start' : 'flex-end'}
+                  justifyContent={estMoi ? 'flex-end' : 'flex-start'}
                   spacing={1}
                   alignItems="flex-end"
                 >
-                  {estTechnicien && (
+                  {!estMoi && (
                     <Avatar sx={{ bgcolor: '#0c5d7d', width: 30, height: 30, fontSize: 14 }}>{initiale}</Avatar>
                   )}
                   <Box sx={{ maxWidth: '70%' }}>
@@ -190,37 +204,43 @@ export default function ChatIntervention() {
                         fontSize: 13,
                         fontWeight: 700,
                         color: '#0c5d7d',
-                        textAlign: estTechnicien ? 'left' : 'right',
+                        textAlign: estMoi ? 'right' : 'left',
                         mb: 0.25,
                       }}
                     >
-                      {role}
+                      {estMoi ? 'Vous' : nomComplet}
                     </Typography>
                     <Box
                       sx={{
                         px: 1.5,
                         py: 1,
                         borderRadius: 2,
-                        bgcolor: estTechnicien ? '#fff' : '#e6f4ea',
-                        border: estTechnicien ? '1px solid #e5e7eb' : 'none',
+                        bgcolor: estMoi ? '#83c295' : '#b1ebc0',
+                        border: estMoi ? '2px solid #74ad91' : '2px solid #59a710',
+                        
                       }}
                     >
-                      <Typography sx={{ fontSize: 14, color: '#1f2937', whiteSpace: 'pre-wrap' }}>
+                      <Typography sx={{ fontSize: 21,fontFamily: 'Iceland', color: '#1f2937', whiteSpace: 'pre-wrap' }}>
                         {message.contenu}
                       </Typography>
                     </Box>
                     <Typography
-                      sx={{ fontSize: 11, color: 'text.secondary', mt: 0.25, textAlign: estTechnicien ? 'left' : 'right' }}
+                      sx={{ fontSize: 11, color: '#000000',fontWeight: 500  ,  mt: 0.25, textAlign: estMoi ? 'right' : 'left' }}
                     >
                       {formaterHeure(message.dateEnvoi)}
                     </Typography>
                   </Box>
-                  {!estTechnicien && (
-                    <Avatar sx={{ bgcolor: '#1b7548', width: 30, height: 30, fontSize: 14 }}>{initiale}</Avatar>
+                  {estMoi && (
+                    <Avatar sx={{ bgcolor: '#1b7548', width: 50, height: 40, fontSize: 16, fontWeight: 900 }}>{initiale}</Avatar>
                   )}
                 </Stack>
               )
-            })
+            })}
+
+          {utilisateurEnTrainDecrire && utilisateurEnTrainDecrire.idUtilisateur !== user?.idUtilisateur && (
+            <Typography sx={{ fontSize: 13, fontStyle: 'italic', color: 'text.secondary', pl: 1 }}>
+              {[utilisateurEnTrainDecrire.prenom, utilisateurEnTrainDecrire.nom].filter(Boolean).join(' ')} est en train d&apos;écrire…
+            </Typography>
           )}
           <div ref={finDeListeRef} />
         </Stack>
@@ -235,7 +255,7 @@ export default function ChatIntervention() {
             onChange={(e) => setSaisie(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={!connecte}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '999px', bgcolor: '#f3f4f6' } }}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '9px', bgcolor: '#f3f4f6', color: ' #000000',fontWeight: 900, fontSize: 16 } }}
           />
           <IconButton
             onClick={handleEnvoyer}

@@ -88,7 +88,7 @@ public PanneController(PanneService panneService, PanneMapper panneMapper, Utili
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI')")
+    @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('ADMIN_SYSTEME') or hasRole('TECHNICIEN') or hasRole('RESPONSABLE_DSI') or hasRole('AGENT')")
     public ResponseEntity<PanneResponse> getParId(@PathVariable Long id) {
         Panne panne = panneService.getParId(id);
         return ResponseEntity.ok(panneMapper.toResponse(panne));

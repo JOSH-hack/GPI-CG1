@@ -8,16 +8,17 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { valeurAffichee } from "./documentValues";
 
-const agentInformation = [
-  { label: "Identifiant agent", value: "$agent.idAgent" },
-  { label: "Nom", value: "$agent.nom" },
-  { label: "Prénom", value: "$agent.prenom" },
-  { label: "Fonction", value: "$agent.fonction" },
-  { label: "Téléphone", value: "$agent.telephone" },
-];
+const AssignedAgentInformationSection = ({ agent }) => {
+  const agentInformation = [
+    { label: "Identifiant agent", value: valeurAffichee(agent?.idAgent) },
+    { label: "Nom", value: valeurAffichee(agent?.nom) },
+    { label: "Prénom", value: valeurAffichee(agent?.prenom) },
+    { label: "Fonction", value: valeurAffichee(agent?.fonction) },
+    { label: "Téléphone", value: valeurAffichee(agent?.telephone) },
+  ];
 
-export const AssignedAgentInformationSection = () => {
   return (
     <Box
       component="section"
@@ -28,36 +29,17 @@ export const AssignedAgentInformationSection = () => {
       <Typography
         id="assigned-agent-information-title"
         component="h2"
-        sx={{
-          mb: 0.75,
-          color: "common.black",
-          fontSize: 14,
-          fontWeight: 700,
-          lineHeight: 1.2,
-        }}
+        sx={{ mb: 0.75, color: "common.black", fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
       >
         4. INFORMATIONS SUR L&apos;AGENT AFFECTÉ
       </Typography>
-      <TableContainer
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 1,
-          overflow: "hidden",
-        }}
-      >
+      <TableContainer sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
         <Table
           size="small"
           aria-label="Informations sur l'agent affecté"
           sx={{
             tableLayout: "fixed",
-            "& .MuiTableCell-root": {
-              borderColor: "divider",
-              px: 1,
-              py: 0.5,
-              fontSize: 10,
-              lineHeight: 1.2,
-            },
+            "& .MuiTableCell-root": { borderColor: "divider", px: 1, py: 0.5, fontSize: 14, lineHeight: 1.2 },
           }}
         >
           <TableBody>
@@ -72,12 +54,7 @@ export const AssignedAgentInformationSection = () => {
                 <TableCell
                   component="th"
                   scope="row"
-                  sx={{
-                    width: { xs: "42%", sm: 200 },
-                    color: "#1c2a30",
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                  }}
+                  sx={{ width: { xs: "42%", sm: 200 }, color: "#1c2a30", fontWeight: 700, whiteSpace: "nowrap" }}
                 >
                   {label}
                 </TableCell>
@@ -90,12 +67,10 @@ export const AssignedAgentInformationSection = () => {
                       bgcolor: "#e0f5ee",
                       borderRadius: 1,
                       color: "#146f42",
-                      fontFamily: "monospace",
-                      fontSize: 10,
+                      fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
+                      fontSize: 14,
                       fontWeight: 600,
-                      "& .MuiChip-label": {
-                        px: 0.75,
-                      },
+                      "& .MuiChip-label": { px: 0.75 },
                     }}
                   />
                 </TableCell>
@@ -107,3 +82,6 @@ export const AssignedAgentInformationSection = () => {
     </Box>
   );
 };
+
+export default AssignedAgentInformationSection;
+export { AssignedAgentInformationSection };

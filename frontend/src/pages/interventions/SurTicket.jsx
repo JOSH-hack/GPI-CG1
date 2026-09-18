@@ -7,7 +7,9 @@ Objectif         : Page "Intervention sur ticket" - fidele a la maquette Anima.
                     selection du type d'intervention + creation sur place.
                     Une fois creee : diagnostic, chat (lien), pieces jointes,
                     resultat, rapport, validation DSI, historique - tout sur
-                    la meme page, sans navigation.
+                    la meme page, sans navigation. Vue simplifiee pour l'agent
+                    signaleur (pas d'acces aux outils techniciens) : gros bouton
+                    chat si a distance, etat resume si sur site.
 Propriétaire     : Josué BEDEL
 Date de création : 03/09/2026
 
@@ -79,9 +81,27 @@ function statutChip(statut) {
     if (statut === STATUT_PANNE.REPAREE) return { label: 'Réparée', bgcolor: '#1b7548' }
     return { label: 'Réformée', bgcolor: '#9CA3AF' }
 }
-
-const cardSx = { p: 2.5, borderRadius: '8px', bgcolor: '#fff', border: '4px solid #146f42' }
+const cardSx = { p: 2.5, borderRadius: '2px', bgcolor: '#fff', border: '8px solid #146f42' }
 const fieldSx = { '& .MuiOutlinedInput-root': { borderRadius: '4px', fontFamily: 'Quicksand, sans-serif' } }
+
+// Un champ "lecture seule" doit rester lisible (texte foncé), contrairement au
+// style "disabled" de MUI qui grise le texte comme s'il s'agissait d'un placeholder.
+function champLectureSeuleSx(estModifiable) {
+    return {
+        ...fieldSx,
+        '& .MuiOutlinedInput-root': {
+            ...fieldSx['& .MuiOutlinedInput-root'],
+            bgcolor: estModifiable ? 'transparent' : '#f7f8f9',
+        },
+        '& .MuiInputBase-input': {
+            color: '#1c2a30',
+            WebkitTextFillColor: '#1c2a30',
+            fontWeight: 900,
+            fontSize: 29,
+            fontFamily: 'Iceland, sans-serif',
+        },
+    }
+}
 
 const CARTES_TYPE = [
     { valeur: TYPE_INTERVENTION.A_DISTANCE, icon: <WifiIcon sx={{ fontSize: 36 }} />, titre: 'À DISTANCE', description: 'Assistance via chat ou prise en main à distance' },
@@ -162,6 +182,8 @@ export default function SurTicket() {
         const estAdmin =
             user?.role === ROLES.ADMIN_INFO ||
             user?.role === ROLES.ADMIN_SYSTEME
+
+
 
         let idTechnicien
 
@@ -309,6 +331,7 @@ export default function SurTicket() {
         user?.role === ROLES.ADMIN_SYSTEME
 
     const estAdmin = user?.role === ROLES.ADMIN_INFO || user?.role === ROLES.ADMIN_SYSTEME
+    const estAgentSignaleur = user?.role === ROLES.AGENT
 
     const estSonIntervention =
         (estTechnicien && intervention?.technicien?.idUtilisateur === user?.idUtilisateur) || estAdmin
@@ -321,7 +344,7 @@ export default function SurTicket() {
     const peutModifierDiagnostic = estSonIntervention && interventionEnCours
     const peutRedigerRapport = estSonIntervention && resultatEnAttente
     const peutValider = estDsi && enAttenteValidation
-    
+
     const historique = intervention
         ? [
             panne.dateSurvenance && { date: panne.dateSurvenance, label: `Ticket créé par ${panne.utilisateurSignaleur?.nom || ''} ${panne.utilisateurSignaleur?.prenom || ''}` },
@@ -349,324 +372,404 @@ export default function SurTicket() {
                 flex: 1,
             }}
         >
-            
-                {erreurAction && (
-                    <Alert severity="error" onClose={() => setErreurAction('')}>
-                        {erreurAction}
-                    </Alert>
-                )}
 
-                {/* Carte ticket */}
-                <Paper elevation={0} sx={cardSx}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" spacing={1}>
-                        <Typography sx={{ color: '#0c5d7d', fontSize: 25, fontWeight: 700 }}>
-                            Ticket {numeroTicket(panne)}
-                        </Typography>
-                        <Stack direction="row" spacing={1}>
-                            <Chip label={badge.label} size="small" sx={{ bgcolor: badge.bgcolor, color: '#fff', fontWeight: 700, fontFamily: 'Quicksand, sans-serif' }} />
-                            {intervention && (
-                                <Chip label={TYPE_INTERVENTION_LABELS[intervention.typeIntervention]} size="small" sx={{ bgcolor: '#0c5d7d', color: '#fff', fontWeight: 700, fontFamily: 'Quicksand, sans-serif' }} />
-                            )}
-                        </Stack>
-                    </Stack>
-                    <Stack spacing={0.5} sx={{ mt: 1 }}>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Équipement :</strong> {panne.equipement?.codeInventaire} — {panne.equipement?.marque} {panne.equipement?.modele}
-                        </Typography>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Problème :</strong> {panne.description}
-                        </Typography>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Priorité :</strong> {PRIORITE_PANNE_LABELS[panne.priorite]}
-                        </Typography>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Signalé par :</strong> {panne.utilisateurSignaleur?.nom} {panne.utilisateurSignaleur?.prenom}
-                        </Typography>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Date :</strong> {formaterDate(panne.dateSurvenance)}
-                        </Typography>
-                        <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                            <strong>Localisation :</strong> {libelleLocalisation(panne.equipement?.localisation)}
-                        </Typography>
+            {erreurAction && (
+                <Alert severity="error" onClose={() => setErreurAction('')}>
+                    {erreurAction}
+                </Alert>
+            )}
+
+            {/* Carte ticket */}
+            <Paper elevation={0} sx={cardSx}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" spacing={1}>
+                    <Typography sx={{ color: '#000000', fontSize: 46, fontWeight: 700 }}>
+                        Ticket {numeroTicket(panne)}
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                        <Chip label={badge.label} size="small" sx={{ bgcolor: badge.bgcolor, color: '#fff', fontWeight: 700, fontFamily: 'Quicksand, sans-serif' }} />
                         {intervention && (
-                            <Typography sx={{ fontSize: 18, color: '#0c5d7d' }}>
-                                <strong>Technicien :</strong> {intervention.technicien?.nom} {intervention.technicien?.prenom}
-                            </Typography>
+                            <Chip label={TYPE_INTERVENTION_LABELS[intervention.typeIntervention]} size="small" sx={{ bgcolor: '#000000', color: '#fff', fontWeight: 700, fontFamily: 'Quicksand, sans-serif' }} />
                         )}
+                    </Stack>
+                </Stack>
+                <Stack spacing={0.5} sx={{ mt: 1 }}>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Équipement :</strong> {panne.equipement?.codeInventaire} — {panne.equipement?.marque} {panne.equipement?.modele}
+                    </Typography>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Problème :</strong> {panne.description}
+                    </Typography>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Priorité :</strong> {PRIORITE_PANNE_LABELS[panne.priorite]}
+                    </Typography>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Signalé par :</strong> {panne.utilisateurSignaleur?.nom} {panne.utilisateurSignaleur?.prenom}
+                    </Typography>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Date :</strong> {formaterDate(panne.dateSurvenance)}
+                    </Typography>
+                    <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                        <strong>Localisation :</strong> {libelleLocalisation(panne.equipement?.localisation)}
+                    </Typography>
+                    {intervention && (
+                        <Typography sx={{ fontSize: 18, color: '#000000' }}>
+                            <strong>Technicien :</strong> {intervention.technicien?.nom} {intervention.technicien?.prenom}
+                        </Typography>
+                    )}
+                </Stack>
+            </Paper>
+
+            {/* Choix du type - seulement si aucune intervention n'existe encore */}
+            {!intervention && !estAgentSignaleur && (
+                <Paper elevation={0} sx={cardSx}>
+                    <Typography sx={{ color: '#000000', fontSize: 28, fontWeight: 700, mb: 1.5 }}>
+                        Choisissez le type d&apos;intervention
+                    </Typography>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        {CARTES_TYPE.map((carte) => {
+                            const isSelected = typeChoisi === carte.valeur
+                            return (
+                                <Box
+                                    key={carte.valeur}
+                                    onClick={() => setTypeChoisi(carte.valeur)}
+                                    sx={{
+                                        flex: 1,
+                                        p: 2,
+                                        borderRadius: '10px',
+                                        border: '8px solid',
+                                        borderColor: isSelected ? '#146f42' : 'rgba(26, 27, 27, 0.2)',
+                                        bgcolor: isSelected ? 'rgba(30, 51, 40, 0.06)' : '#fff',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.15s ease',
+                                        textAlign: 'center',
+
+                                    }}
+                                >
+                                    <Box sx={{ color: isSelected ? '#146f42' : '#000000', mb: 1 }}>{carte.icon}</Box>
+                                    <Typography sx={{ fontWeight: 700, color: '#000000', fontSize: 20 }}>{carte.titre}</Typography>
+                                    <Typography sx={{ fontSize: 16, color: 'text.secondary', mt: 0.5 }}>{carte.description}</Typography>
+                                </Box>
+                            )
+                        })}
+                    </Stack>
+                    <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
+                        {(user?.role === ROLES.ADMIN_INFO ||
+                            user?.role === ROLES.ADMIN_SYSTEME) && (
+                                <TextField
+                                    select
+                                    fullWidth
+                                    label="Technicien assigné"
+                                    value={technicienSelectionne}
+                                    onChange={(event) =>
+                                        setTechnicienSelectionne(event.target.value)
+                                    }
+                                    disabled={chargementTechniciens || creation}
+                                    sx={{ ...fieldSx, mt: 2 }}
+                                    helperText={
+                                        chargementTechniciens
+                                            ? 'Chargement des techniciens...'
+                                            : 'Sélectionnez le technicien qui prendra en charge cette intervention'
+                                    }
+                                >
+                                    {techniciens.length === 0 ? (
+                                        <MenuItem disabled>
+                                            Aucun technicien disponible
+                                        </MenuItem>
+                                    ) : (
+                                        techniciens.map((technicien) => (
+                                            <MenuItem
+                                                key={technicien.idUtilisateur}
+                                                value={technicien.idUtilisateur}
+                                            >
+                                                {technicien.nom} {technicien.prenom}
+                                            </MenuItem>
+                                        ))
+                                    )}
+                                </TextField>
+                            )}
+
+                        <Button
+                            variant="contained"
+                            disabled={
+                                !typeChoisi ||
+                                creation ||
+                                (
+                                    (user?.role === ROLES.ADMIN_INFO ||
+                                        user?.role === ROLES.ADMIN_SYSTEME) &&
+                                    !technicienSelectionne
+                                )
+                            }
+                            onClick={handleCreerIntervention}
+                            sx={{ bgcolor: '#000000', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#094a63' } }}
+                        >
+
+                            {creation ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Suivant'}
+                        </Button>
                     </Stack>
                 </Paper>
+            )}
 
-                {/* Choix du type - seulement si aucune intervention n'existe encore */}
-                {!intervention && (
-                    <Paper elevation={0} sx={cardSx}>
-                        <Typography sx={{ color: '#0c5d7d', fontSize: 28, fontWeight: 700, mb: 1.5 }}>
-                            Choisissez le type d&apos;intervention
-                        </Typography>
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                            {CARTES_TYPE.map((carte) => {
-                                const isSelected = typeChoisi === carte.valeur
-                                return (
-                                    <Box
-                                        key={carte.valeur}
-                                        onClick={() => setTypeChoisi(carte.valeur)}
-                                        sx={{
-                                            flex: 1,
-                                            p: 2,
-                                            borderRadius: '10px',
-                                            border: '3px solid',
-                                            borderColor: isSelected ? '#146f42' : 'rgba(13, 93, 125, 0.2)',
-                                            bgcolor: isSelected ? 'rgba(20, 111, 66, 0.06)' : '#fff',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.15s ease',
-                                            textAlign: 'center',
+            {!intervention && estAgentSignaleur && (
+                <Alert severity="info">
+                    Votre signalement a bien été enregistré. Un technicien sera bientôt assigné à ce ticket.
+                </Alert>
+            )}
 
-                                        }}
-                                    >
-                                        <Box sx={{ color: isSelected ? '#146f42' : '#0c5d7d', mb: 1 }}>{carte.icon}</Box>
-                                        <Typography sx={{ fontWeight: 700, color: '#0c5d7d', fontSize: 20 }}>{carte.titre}</Typography>
-                                        <Typography sx={{ fontSize: 16, color: 'text.secondary', mt: 0.5 }}>{carte.description}</Typography>
-                                    </Box>
-                                )
-                            })}
-                        </Stack>
-                        <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-                            {(user?.role === ROLES.ADMIN_INFO ||
-    user?.role === ROLES.ADMIN_SYSTEME) && (
-    <TextField
-        select
-        fullWidth
-        label="Technicien assigné"
-        value={technicienSelectionne}
-        onChange={(event) =>
-            setTechnicienSelectionne(event.target.value)
-        }
-        disabled={chargementTechniciens || creation}
-        sx={{ ...fieldSx, mt: 2 }}
-        helperText={
-            chargementTechniciens
-                ? 'Chargement des techniciens...'
-                : 'Sélectionnez le technicien qui prendra en charge cette intervention'
-        }
-    >
-        {techniciens.length === 0 ? (
-            <MenuItem disabled>
-                Aucun technicien disponible
-            </MenuItem>
-        ) : (
-            techniciens.map((technicien) => (
-                <MenuItem
-                    key={technicien.idUtilisateur}
-                    value={technicien.idUtilisateur}
-                >
-                    {technicien.nom} {technicien.prenom}
-                </MenuItem>
-            ))
-        )}
-    </TextField>
-)}
-                            
-                            <Button
-                                variant="contained"
-                                disabled={
-                                    !typeChoisi ||
-                                    creation ||
-                                    (
-                                        (user?.role === ROLES.ADMIN_INFO ||
-                                            user?.role === ROLES.ADMIN_SYSTEME) &&
-                                        !technicienSelectionne
-                                    )
-                                }
-                                onClick={handleCreerIntervention}
-                                sx={{ bgcolor: '#0c5d7d', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#094a63' } }}
-                            >
-                                
-                                {creation ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Suivant'}
-                            </Button>
-                        </Stack>
-                    </Paper>
-                )}
-
-                {/* Le reste ne s'affiche qu'une fois l'intervention creee */}
-                {intervention && (
-                    <>
-                        {intervention.typeIntervention === TYPE_INTERVENTION.A_DISTANCE && (
-                            <Paper elevation={0} sx={cardSx}>
-                                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                        <ChatIcon sx={{ color: '#0c5d7d' }} />
-                                        <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18 }}>
-                                            Chat — intervention à distance
-                                        </Typography>
-                                    </Stack>
-                                    <Link component={RouterLink} to={`/assistance/messages/${intervention.idIntervention}`} sx={{ color: '#146f42', fontWeight: 700, fontSize: 16 }}>
-                                        Ouvrir le chat →
-                                    </Link>
-                                </Stack>
-                            </Paper>
-                        )}
-
-                        <Paper elevation={0} sx={cardSx}>
-                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Diagnostic</Typography>
-                            <TextField
-                                fullWidth
-                                multiline
-                                minRows={3}
-                                placeholder="Décrivez le diagnostic établi..."
-                                value={diagnostic}
-                                onChange={(event) => setDiagnostic(event.target.value)}
-                                disabled={!peutModifierDiagnostic}
-                                sx={fieldSx}
-                            />
-                        </Paper>
-
-                        <Paper elevation={0} sx={cardSx}>
-                            <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
-                                Solution / Pièces remplacées
+            {/* Vue simplifiee pour l'agent signaleur : pas d'acces aux outils techniciens,
+                juste le statut / le bouton pour ouvrir le chat */}
+            {intervention && estAgentSignaleur && (
+                <>
+                    {intervention.typeIntervention === TYPE_INTERVENTION.A_DISTANCE ? (
+                        <Paper elevation={0} sx={{ ...cardSx, textAlign: 'center', py: 5 }}>
+                            <ChatIcon sx={{ fontSize: 48, color: '#146f42', mb: 1.5 }} />
+                            <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 20, mb: 2 }}>
+                                Cette intervention se fait à distance
                             </Typography>
-                            <TextField
-                                fullWidth
-                                multiline
-                                minRows={3}
-                                placeholder="Décrivez la solution appliquée..."
-                                value={solution}
-                                onChange={(event) => setSolution(event.target.value)}
-                                disabled={!peutModifierDiagnostic}
-                                sx={{ ...fieldSx, mb: 1.5 }}
-                            />
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="Pièces remplacées (optionnel)"
-                                value={piecesRemplacees}
-                                onChange={(event) => setPiecesRemplacees(event.target.value)}
-                                disabled={!peutModifierDiagnostic}
-                                sx={fieldSx}
-                            />
-                            {peutModifierDiagnostic && (
-                                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                                    <Button
-                                        onClick={handleEnregistrerDiagnostic}
-                                        disabled={enregistrementDiagnostic}
-                                        sx={{ bgcolor: '#0c5d7d', color: '#fff', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 2.5, '&:hover': { bgcolor: '#094a63' } }}
-                                    >
-                                        {enregistrementDiagnostic ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'Enregistrer'}
-                                    </Button>
-                                </Stack>
-                            )}
+                            <Button
+                                component={RouterLink}
+                                to={`/assistance/messages/${intervention.idIntervention}`}
+                                variant="contained"
+                                size="large"
+                                startIcon={<ChatIcon />}
+                                sx={{
+                                    bgcolor: '#146f42',
+                                    textTransform: 'none',
+                                    fontWeight: 700,
+                                    fontFamily: 'Quicksand, sans-serif',
+                                    px: 4,
+                                    py: 1.5,
+                                    fontSize: 16,
+                                    '&:hover': { bgcolor: '#0f5a35' },
+                                }}
+                            >
+                                Ouvrir le chat avec le technicien
+                            </Button>
                         </Paper>
-
-                        {/* Pieces jointes de la panne - upload par l'agent/technicien, consultation ici */}
+                    ) : (
                         <Paper elevation={0} sx={cardSx}>
-                            <PieceJointesListe idPanne={panne.idPanne} />
+                            <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
+                                État de votre intervention
+                            </Typography>
+                            <Stack spacing={1}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Box
+                                        sx={{
+                                            width: 10,
+                                            height: 10,
+                                            borderRadius: '50%',
+                                            bgcolor: terminee ? '#1b7548' : interventionEnCours ? '#e6a817' : '#0c5d7d',
+                                        }}
+                                    />
+                                    <Typography sx={{ fontSize: 16, color: '#000000', fontWeight: 600 }}>
+                                        {interventionEnCours && 'Intervention en cours sur site'}
+                                        {resultatEnAttente && 'Intervention terminée — rapport en attente'}
+                                        {enAttenteValidation && 'Rapport soumis — en attente de validation DSI'}
+                                        {terminee && 'Intervention terminée et validée'}
+                                    </Typography>
+                                </Stack>
+                                {intervention.resultat && (
+                                    <Typography sx={{ fontSize: 15, color: '#000000' }}>
+                                        <strong>Résultat :</strong> {RESULTAT_INTERVENTION_LABELS[intervention.resultat]}
+                                    </Typography>
+                                )}
+                                {intervention.rapport && (
+                                    <Typography sx={{ fontSize: 15, color: '#000000', whiteSpace: 'pre-wrap' }}>
+                                        <strong>Rapport :</strong> {intervention.rapport}
+                                    </Typography>
+                                )}
+                            </Stack>
                         </Paper>
+                    )}
+                </>
+            )}
 
-                        {(interventionEnCours || intervention.resultat) && (
-                            <Paper elevation={0} sx={cardSx}>
-                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1 }}>
-                                    Résultat de l&apos;intervention
-                                </Typography>
+            {/* Le reste ne s'affiche qu'une fois l'intervention creee - reserve technicien/admin/dsi */}
+            {intervention && !estAgentSignaleur && (
+                <>
+                    {intervention.typeIntervention === TYPE_INTERVENTION.A_DISTANCE && (
+                        <Paper elevation={0} sx={cardSx}>
+                            <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <ChatIcon sx={{ color: '#000000' }} />
+                                    <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18 }}>
+                                        Chat — intervention à distance
+                                    </Typography>
+                                </Stack>
+                                <Link component={RouterLink} to={`/assistance/messages/${intervention.idIntervention}`} sx={{ color: '#146f42', fontWeight: 900, fontSize: 18 }}>
+                                    Ouvrir le chat →
+                                </Link>
+                            </Stack>
+                        </Paper>
+                    )}
+
+                    <Paper elevation={0} sx={cardSx}>
+                        <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Diagnostic</Typography>
+                        <TextField
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            placeholder="Décrivez le diagnostic établi..."
+                            value={diagnostic}
+                            onChange={(event) => setDiagnostic(event.target.value)}
+                            InputProps={{ readOnly: !peutModifierDiagnostic }}
+                            sx={champLectureSeuleSx(peutModifierDiagnostic)}
+                        />
+                    </Paper>
+
+                    <Paper elevation={0} sx={cardSx}>
+                        <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
+                            Solution / Pièces remplacées
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            placeholder="Décrivez la solution appliquée..."
+                            value={solution}
+                            onChange={(event) => setSolution(event.target.value)}
+                            InputProps={{ readOnly: !peutModifierDiagnostic }}
+                            sx={{ ...champLectureSeuleSx(peutModifierDiagnostic), mb: 1.5 }}
+                        />
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Pièces remplacées (optionnel)"
+                            value={piecesRemplacees}
+                            onChange={(event) => setPiecesRemplacees(event.target.value)}
+                            InputProps={{ readOnly: !peutModifierDiagnostic }}
+                            sx={champLectureSeuleSx(peutModifierDiagnostic)}
+                        />
+                        {peutModifierDiagnostic && (
+                            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                                <Button
+                                    onClick={handleEnregistrerDiagnostic}
+                                    disabled={enregistrementDiagnostic}
+                                    sx={{ bgcolor: '#000000', color: '#fff', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 2.5, '&:hover': { bgcolor: '#094a63' } }}
+                                >
+                                    {enregistrementDiagnostic ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : 'Enregistrer'}
+                                </Button>
+                            </Stack>
+                        )}
+                    </Paper>
+
+                    {/* Pieces jointes de la panne - upload par l'agent/technicien, consultation ici */}
+                    <Paper elevation={0} sx={cardSx}>
+                        <PieceJointesListe idPanne={panne.idPanne} lectureSeule />
+                    </Paper>
+
+                    {(interventionEnCours || intervention.resultat) && (
+                        <Paper elevation={0} sx={cardSx}>
+                            <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1 }}>
+                                Résultat de l&apos;intervention
+                            </Typography>
+                            {peutModifierDiagnostic ? (
                                 <RadioGroup value={resultat} onChange={(event) => setResultat(event.target.value)}>
                                     <FormControlLabel
                                         value={RESULTAT_INTERVENTION.REPARATION}
-                                        control={<Radio disabled={!peutModifierDiagnostic} />}
+                                        control={<Radio />}
                                         label="Réparation — l'équipement est entièrement fonctionnel"
                                     />
                                     <FormControlLabel
                                         value={RESULTAT_INTERVENTION.DEPANNAGE}
-                                        control={<Radio disabled={!peutModifierDiagnostic} />}
+                                        control={<Radio />}
                                         label="Dépannage — solution temporaire, suivi nécessaire"
                                     />
                                 </RadioGroup>
-                                {peutModifierDiagnostic && (
-                                    <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                                        <Button
-                                            onClick={handleTerminerIntervention}
-                                            disabled={terminaison}
-                                            sx={{ bgcolor: '#dc5e60', color: '#fff', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#c95355' } }}
-                                        >
-                                            {terminaison ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : "Terminer l'intervention"}
-                                        </Button>
-                                    </Stack>
-                                )}
-                            </Paper>
-                        )}
-
-                        {(peutRedigerRapport || intervention.rapport) && (
-                            <Paper elevation={0} sx={cardSx}>
-                                <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
-                                    Rapport d&apos;intervention
+                            ) : (
+                                <Typography sx={{ fontSize: 16, color: '#000000' }}>
+                                    {RESULTAT_INTERVENTION_LABELS[intervention.resultat] || '—'}
                                 </Typography>
-                                {peutRedigerRapport ? (
-                                    <>
-                                        <TextField
-                                            fullWidth
-                                            multiline
-                                            minRows={4}
-                                            placeholder="Rédigez le rapport final de cette intervention..."
-                                            value={rapport}
-                                            onChange={(event) => setRapport(event.target.value)}
-                                            sx={fieldSx}
-                                        />
-                                        <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                                            <Button
-                                                onClick={handleSoumettreRapport}
-                                                disabled={envoiRapport}
-                                                variant="contained"
-                                                sx={{ bgcolor: '#146f42', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#0f5a35' } }}
-                                            >
-                                                {envoiRapport ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Soumettre le rapport'}
-                                            </Button>
-                                        </Stack>
-                                    </>
-                                ) : (
-                                    <Typography sx={{ fontSize: 16, color: '#0c5d7d', whiteSpace: 'pre-wrap' }}>{intervention.rapport}</Typography>
-                                )}
-                            </Paper>
-                        )}
-
-                        {peutValider && (
-                            <Paper elevation={0} sx={cardSx}>
-                                <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" spacing={1}>
-                                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18 }}>
-                                        Ce rapport est en attente de votre validation
-                                    </Typography>
+                            )}
+                            {peutModifierDiagnostic && (
+                                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
                                     <Button
-                                        onClick={handleValider}
-                                        disabled={validation}
-                                        variant="contained"
-                                        sx={{ bgcolor: '#146f42', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#0f5a35' } }}
+                                        onClick={handleTerminerIntervention}
+                                        disabled={terminaison}
+                                        sx={{ bgcolor: '#dc5e60', color: '#fff', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#c95355' } }}
                                     >
-                                        {validation ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Valider'}
+                                        {terminaison ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : "Terminer l'intervention"}
                                     </Button>
                                 </Stack>
-                            </Paper>
-                        )}
+                            )}
+                        </Paper>
+                    )}
 
-                        {terminee && (
-                            <Alert severity="success">
-                                Cette intervention a été validée le {formaterDateHeure(intervention.dateValidationDsi)} par{' '}
-                                {intervention.validateurDsi?.nom} {intervention.validateurDsi?.prenom}.
-                            </Alert>
-                        )}
-                    </>
-                )}
+                    {(peutRedigerRapport || intervention.rapport) && (
+                        <Paper elevation={0} sx={cardSx}>
+                            <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1.5 }}>
+                                Rapport d&apos;intervention
+                            </Typography>
+                            {peutRedigerRapport ? (
+                                <>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={4}
+                                        placeholder="Rédigez le rapport final de cette intervention..."
+                                        value={rapport}
+                                        onChange={(event) => setRapport(event.target.value)}
+                                        sx={fieldSx}
+                                    />
+                                    <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                                        <Button
+                                            onClick={handleSoumettreRapport}
+                                            disabled={envoiRapport}
+                                            variant="contained"
+                                            sx={{ bgcolor: '#146f42', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#0f5a35' } }}
+                                        >
+                                            {envoiRapport ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Soumettre le rapport'}
+                                        </Button>
+                                    </Stack>
+                                </>
+                            ) : (
+                                <Typography sx={{ fontSize: 16, color: '#000000', whiteSpace: 'pre-wrap' }}>{intervention.rapport}</Typography>
+                            )}
+                        </Paper>
+                    )}
 
-                {/* Historique - toujours visible, meme avant creation de l'intervention */}
-                <Paper elevation={0} sx={cardSx}>
-                    <Typography sx={{ color: '#0c5d7d', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Historique du ticket</Typography>
-                    <Stack spacing={1.5}>
-                        {historique.map((evenement, index) => (
-                            <Stack key={index} direction="row" spacing={1.5} alignItems="flex-start">
-                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#146f42', mt: 0.6, flexShrink: 0 }} />
-                                <Box>
-                                    <Typography sx={{ fontSize: 16, color: 'text.secondary' }}>{formaterDateHeure(evenement.date)}</Typography>
-                                    <Typography sx={{ fontSize: 16, color: '#0c5d7d' }}>{evenement.label}</Typography>
-                                </Box>
+                    {peutValider && (
+                        <Paper elevation={0} sx={cardSx}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" spacing={1}>
+                                <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18 }}>
+                                    Ce rapport est en attente de votre validation
+                                </Typography>
+                                <Button
+                                    onClick={handleValider}
+                                    disabled={validation}
+                                    variant="contained"
+                                    sx={{ bgcolor: '#146f42', textTransform: 'none', fontWeight: 700, fontFamily: 'Quicksand, sans-serif', px: 3, '&:hover': { bgcolor: '#0f5a35' } }}
+                                >
+                                    {validation ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : 'Valider'}
+                                </Button>
                             </Stack>
-                        ))}
-                    </Stack>
-                </Paper>
-            
+                        </Paper>
+                    )}
+
+                    {terminee && (
+                        <Alert severity="success">
+                            Cette intervention a été validée le {formaterDateHeure(intervention.dateValidationDsi)} par{' '}
+                            {intervention.validateurDsi?.nom} {intervention.validateurDsi?.prenom}.
+                        </Alert>
+                    )}
+                </>
+            )}
+
+            {/* Historique - toujours visible, meme avant creation de l'intervention */}
+            <Paper elevation={0} sx={cardSx}>
+                <Typography sx={{ color: '#000000', fontWeight: 700, fontSize: 18, mb: 1.5 }}>Historique du ticket</Typography>
+                <Stack spacing={1.5}>
+                    {historique.map((evenement, index) => (
+                        <Stack key={index} direction="row" spacing={1.5} alignItems="flex-start">
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#146f42', mt: 0.6, flexShrink: 0 }} />
+                            <Box>
+                                <Typography sx={{ fontSize: 16, color: 'text.secondary' }}>{formaterDateHeure(evenement.date)}</Typography>
+                                <Typography sx={{ fontSize: 16, color: '#000000' }}>{evenement.label}</Typography>
+                            </Box>
+                        </Stack>
+                    ))}
+                </Stack>
+            </Paper>
+
         </Box>
     )
 }

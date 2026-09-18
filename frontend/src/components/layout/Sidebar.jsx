@@ -87,10 +87,11 @@ export default function Sidebar() {
       sx={{
         width: 248,
         minWidth: 248,
-        minHeight: '300vh',
+        height: '100%',
         bgcolor: '#1d7b4e',
         color: 'common.white',
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
       }}
     >
       <Stack component="nav" aria-label="Navigation principale" spacing={0}>

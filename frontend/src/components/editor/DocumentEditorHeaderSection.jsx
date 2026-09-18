@@ -1,7 +1,8 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { Box, Chip, Stack, Typography } from "@mui/material";
+import { valeurAffichee } from "./documentValues";
 
-export const DocumentEditorHeaderSection = () => {
+const DocumentEditorHeaderSection = ({ equipement }) => {
   return (
     <Box
       component="header"
@@ -33,13 +34,7 @@ export const DocumentEditorHeaderSection = () => {
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography
               component="h1"
-              sx={{
-                color: "#1c2a30",
-                fontFamily: "Quicksand, sans-serif",
-                fontSize: 17,
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
+              sx={{ color: "#1c2a30", fontFamily: "Quicksand, sans-serif", fontSize: 17, fontWeight: 700, lineHeight: 1.2 }}
             >
               Fiche détaillée d&apos;équipement
             </Typography>
@@ -54,24 +49,15 @@ export const DocumentEditorHeaderSection = () => {
                 fontFamily: "Inter, sans-serif",
                 fontSize: 10,
                 fontWeight: 600,
-                "& .MuiChip-label": {
-                  px: 0.75,
-                },
+                "& .MuiChip-label": { px: 0.75 },
               }}
             />
           </Stack>
           <Typography
             component="p"
-            sx={{
-              m: 0,
-              color: "#5c7078",
-              fontFamily: "Inter, sans-serif",
-              fontSize: 12,
-              fontWeight: 600,
-              lineHeight: 1.2,
-            }}
+            sx={{ m: 0, color: "#5c7078", fontFamily: "Inter, sans-serif", fontSize: 12, fontWeight: 600, lineHeight: 1.2 }}
           >
-            GPI · Commune du Golfe 1 · Code inventaire INV-2025-00042 ·
+            GPI · Commune du Golfe 1 · Code inventaire {valeurAffichee(equipement?.codeInventaire)} ·
             enregistré à l&apos;instant
           </Typography>
         </Stack>
@@ -79,3 +65,6 @@ export const DocumentEditorHeaderSection = () => {
     </Box>
   );
 };
+
+export default DocumentEditorHeaderSection;
+export { DocumentEditorHeaderSection };

@@ -15,17 +15,18 @@ import { ROLES } from '../../utils/constants'
 import FileUpload from '../common/FileUpload'
 import PieceJointeViewer from './PieceJointeViewer'
 
-export default function PieceJointesListe({ idPanne }) {
+export default function PieceJointesListe({ idPanne, lectureSeule = false }) {
     const { user } = useAuth()
     const [pieces, setPieces] = useState([])
     const [chargement, setChargement] = useState(true)
     const [erreur, setErreur] = useState('')
 
     const peutUploader =
-        user?.role === ROLES.AGENT ||
-        user?.role === ROLES.TECHNICIEN ||
-        user?.role === ROLES.ADMIN_INFO ||
-        user?.role === ROLES.ADMIN_SYSTEME
+        !lectureSeule &&
+        (user?.role === ROLES.AGENT ||
+            user?.role === ROLES.TECHNICIEN ||
+            user?.role === ROLES.ADMIN_INFO ||
+            user?.role === ROLES.ADMIN_SYSTEME)
         
     const chargerPieces = useCallback(async () => {
         setChargement(true)

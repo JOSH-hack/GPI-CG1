@@ -13,6 +13,7 @@ Objet de mise à jour : Branchement du theme MUI (theme.js existait mais n'etait
 import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import AppRoutes from './routes/AppRoutes'
+import SessionEntryRedirect from './routes/SessionEntryRedirect'
 import { AuthProvider } from './contexts/AuthContext'
 import theme from './theme/theme'
 
@@ -22,6 +23,7 @@ function App() {
       <CssBaseline />
       <BrowserRouter>
         <AuthProvider>
+          <SessionEntryRedirect />
           <AppRoutes />
         </AuthProvider>
       </BrowserRouter>

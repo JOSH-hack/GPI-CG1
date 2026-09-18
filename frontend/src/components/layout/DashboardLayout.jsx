@@ -23,9 +23,13 @@ export default function DashboardLayout() {
       component="main"
       sx={{ display: 'flex', minHeight: '100vh', width: '100%', overflow: 'hidden', bgcolor: 'background.default' }}
     >
-      <Box component="aside" sx={{ flexShrink: 0 }}>
+      <Box
+        component="aside"
+        sx={{ flexShrink: 0, position: 'sticky', top: 0, height: '100vh', alignSelf: 'flex-start' }}
+      >
         <Sidebar />
       </Box>
+      
       <Stack component="section" sx={{ flex: 1, minWidth: 0 }}>
         <Navbar />
         <Outlet />
