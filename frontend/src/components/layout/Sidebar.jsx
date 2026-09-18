@@ -15,6 +15,7 @@ import {
   Box,
   Collapse,
   Divider,
+  GlobalStyles,
   List,
   ListItem,
   ListItemButton,
@@ -30,7 +31,6 @@ import { MENU_PAR_ROLE } from '../../config/menuConfig'
 import iconMenu from '../../assets/icons/icon-menu.svg'
 import iconChevron from '../../assets/icons/chevron.svg'
 import logoMairie from '../../assets/icons/logo.svg'
-import { useMenuBadges } from '../../hooks/useMenuBadges'
 
 function IconImg({ src, size = 18, sx, ...props }) {
   return (
@@ -50,11 +50,10 @@ function IconImg({ src, size = 18, sx, ...props }) {
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ badges = {} }) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const badges = useMenuBadges()
   const navigationItems = useMemo(() => MENU_PAR_ROLE[user?.role] || [], [user?.role])
 
   // Determine automatiquement le groupe a deplier et l'item selectionne
@@ -94,6 +93,15 @@ export default function Sidebar() {
         overflowX: 'hidden',
       }}
     >
+      <GlobalStyles
+        styles={{
+          '@keyframes gpiBadgePulse': {
+            '0%': { boxShadow: '0 0 0 0 rgba(255,77,79,0.7)' },
+            '70%': { boxShadow: '0 0 0 6px rgba(236, 8, 12, 0.62)' },
+            '100%': { boxShadow: '0 0 0 0 rgba(255, 77, 80, 0.53)' },
+          },
+        }}
+      />
       <Stack component="nav" aria-label="Navigation principale" spacing={0}>
         <Box component="header" sx={{ px: 1.75, pt: 1.25, pb: 3.5 }}>
           <Stack direction="row" alignItems="center" spacing={0.75}>
@@ -137,6 +145,8 @@ export default function Sidebar() {
           {navigationItems.map((item) => {
             const isExpanded = expandedItem === item.label
             const isGroupeActif = groupeActif === item.label
+            const groupeAUneNouveaute =
+              !isExpanded && item.children?.some((child) => badges[child.path])
 
             return (
               <Box key={item.label}>
@@ -159,6 +169,20 @@ export default function Sidebar() {
                       primary={item.label}
                       primaryTypographyProps={{ fontSize: 18, fontWeight: 700 }}
                     />
+                    {groupeAUneNouveaute && (
+                      <Box
+                        component="span"
+                        sx={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          bgcolor: '#ff4d4f',
+                          flexShrink: 0,
+                          mr: item.children ? 0.75 : 0,
+                          animation: 'gpiBadgePulse 2s ease-in-out infinite',
+                        }}
+                      />
+                    )}
                     {item.children && (
                       <IconImg
                         src={iconChevron}
@@ -206,7 +230,14 @@ export default function Sidebar() {
                                     {badges[child.path] && (
                                       <Box
                                         component="span"
-                                        sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#ff4d4f', flexShrink: 0 }}
+                                        sx={{
+                                          width: 7,
+                                          height: 7,
+                                          borderRadius: '50%',
+                                          bgcolor: '#ff4d4f',
+                                          flexShrink: 0,
+                                          animation: 'gpiBadgePulse 1.4s ease-in-out infinite',
+                                        }}
                                       />
                                     )}
                                   </Stack>

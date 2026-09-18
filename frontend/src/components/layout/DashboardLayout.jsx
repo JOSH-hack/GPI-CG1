@@ -16,8 +16,11 @@ import { Outlet } from 'react-router-dom'
 
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
+import { useMenuBadges } from '../../hooks/useMenuBadges'
 
 export default function DashboardLayout() {
+  const badges = useMenuBadges()
+
   return (
     <Box
       component="main"
@@ -27,11 +30,11 @@ export default function DashboardLayout() {
         component="aside"
         sx={{ flexShrink: 0, position: 'sticky', top: 0, height: '100vh', alignSelf: 'flex-start' }}
       >
-        <Sidebar />
+        <Sidebar badges={badges} />
       </Box>
-      
+
       <Stack component="section" sx={{ flex: 1, minWidth: 0 }}>
-        <Navbar />
+        <Navbar badges={badges} />
         <Outlet />
       </Stack>
     </Box>
