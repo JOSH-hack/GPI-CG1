@@ -4,16 +4,18 @@ Nom du fichier   : Detail.jsx
 Objectif         : Fiche detaillee d'un equipement - fidele a la maquette
                     Gestion_Page_Fiche_detaillee. Header remplace par le fil
                     d'ariane standard de l'app (deja fourni par Navbar/Sidebar
-                    via DashboardLayout). Impression/telechargement PDF via
-                    window.print() cible uniquement sur la fiche.
+                    via DashboardLayout).
 Propriétaire     : Josué BEDEL
 Date de création : 05/09/2026
+Date de mise à jour : 19/09/2026
+Objet de mise à jour : Un seul bouton "Exporter le document" (ouvre
+                       l'éditeur) - suppression des boutons "Ouvrir
+                       l'éditeur", "Imprimer" et "Télécharger DOCX".
 
 */
 
 import { useEffect, useState } from 'react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
-import PrintOutlined from '@mui/icons-material/PrintOutlined'
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
@@ -24,9 +26,24 @@ import { exportApi } from '../../api/exportApi'
 import EditorModal from '../../components/editor/EditorModal'
 
 import {
-  Alert, Box, Breadcrumbs, Button, CircularProgress, Dialog, Divider,
-  Link, Paper, Snackbar, Stack, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Typography,
+  Alert,
+  Box,
+  Breadcrumbs,
+  Button,
+  CircularProgress,
+  Dialog,
+  Divider,
+  Link,
+  Paper,
+  Snackbar,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from '@mui/material'
 
 import { equipementApi } from '../../api/equipementApi'
@@ -163,39 +180,17 @@ export default function Detail() {
     charger()
   }, [id])
 
-  async function telechargerDocx() {
-    const response = await exportApi.telechargerFicheEquipementDocx(equipement.idEquipement)
-    const url = window.URL.createObjectURL(
-      new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      })
-    )
-    const lien = document.createElement('a')
-    lien.href = url
-    lien.download = `fiche-equipement-${equipement.idEquipement}.docx`
-    document.body.appendChild(lien)
-    lien.click()
-    lien.remove()
-    window.URL.revokeObjectURL(url)
-  }
-
-  async function telechargerDocumentEdite(format, donneesEditees, nomFichier) {
+  async function telechargerDocumentPdfImage(images, nomFichier) {
     try {
-      const response = await exportApi.genererDocumentEdite({
+      const response = await exportApi.genererDocumentEditeImage({
         idEquipement: equipement.idEquipement,
-        format,
-        donneesEditees,
+        images,
       })
 
-      const mimeType =
-        format === 'pdf'
-          ? 'application/pdf'
-          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }))
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
       const lien = document.createElement('a')
       lien.href = url
-      lien.download = `${nomFichier || `fiche-equipement-${equipement.idEquipement}`}.${format}`
+      lien.download = `${nomFichier || `fiche-equipement-${equipement.idEquipement}`}.pdf`
       document.body.appendChild(lien)
       lien.click()
       lien.remove()
@@ -291,22 +286,12 @@ export default function Detail() {
             <Stack direction="row" spacing={1} className="no-print">
               <Button
                 size="small"
-                variant="outlined"
+                variant="contained"
                 startIcon={<DescriptionOutlined sx={{ fontSize: 14 }} />}
                 onClick={() => setOpenEditor(true)}
-                sx={{ ...typo, fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
+                sx={{ ...typo, bgcolor: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#0f5732' } }}
               >
-                Exporter Document
-              </Button>
-
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<PrintOutlined sx={{ fontSize: 14 }} />}
-                onClick={() => window.print()}
-                sx={{ ...typo, borderColor: '#146f42', color: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
-              >
-                Imprimer
+                Exporter le document
               </Button>
             </Stack>
           </Stack>
@@ -490,8 +475,8 @@ export default function Detail() {
           pannes={pannes}
           mouvements={mouvements}
           onCancel={() => setOpenEditor(false)}
-          onExport={async (format, donneesEditees, nomFichier) => {
-            const succes = await telechargerDocumentEdite(format, donneesEditees, nomFichier)
+          onExport={async (images, nomFichier) => {
+            const succes = await telechargerDocumentPdfImage(images, nomFichier)
             if (succes) setOpenEditor(false)
           }}
         />

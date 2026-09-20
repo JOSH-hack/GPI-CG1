@@ -14,18 +14,20 @@ import { EquipmentStatusSection } from "./EquipmentStatusSection";
 import { GeneralEquipmentInformationSection } from "./GeneralEquipmentInformationSection";
 import { formaterDate, formaterMontant, valeurAffichee } from "./documentValues";
 import { EquipmentSignatureSection } from "./EquipmentSignatureSection";
+import { capturerPagesEditeur } from "./exportCapture";
 
 // Hauteur utile d'une page A4 en px (~1122px à 96dpi pour 297mm),
 // moins une estimation des marges d'impression haut/bas. C'est une
-// approximation pour donner un nombre de pages indicatif à l'écran —
-// la pagination réelle du DOCX/PDF exporté dépendra du moteur d'export
-// (Phase 4), pas de ce calcul.
+// approximation pour donner un nombre de pages indicatif à l'écran,
+// et c'est aussi la hauteur de tranche utilisee pour decouper la
+// capture d'ecran en pages lors de l'export (voir exportCapture.js).
 const HAUTEUR_UTILE_PAGE_A4_PX = 1050;
 
 // Construit l'état initial des données éditables à partir de l'équipement
 // chargé depuis l'API. Les clés utilisées ici sont exactement celles qui
 // seront envoyées au backend (ExportRequest.donneesEditees) au moment de
-// l'export DOCX/PDF — voir Phase 3 du plan.
+// l'export DOCX (voir Phase 3/4 du plan). Le PDF, lui, est desormais
+// genere par capture d'image (voir exportCapture.js / DocumentExportActionsSection).
 // Les valeurs sont déjà "formatées affichage" (dates, montants) pour que
 // ce qui est édité corresponde exactement à ce qui est visible et exporté.
 function buildDonneesInitiales(equipement) {
@@ -108,6 +110,7 @@ function buildDonneesInitiales(equipement) {
 const EditorModal = ({ equipement, pannes = [], mouvements = [], onCancel, onExport }) => {
   const [donneesEditees, setDonneesEditees] = useState(() => buildDonneesInitiales(equipement));
   const [pageCount, setPageCount] = useState(1);
+  const [exportEnCours, setExportEnCours] = useState(false);
   const articleRef = useRef(null);
 
   // Si l'éditeur est rouvert sur un autre équipement (changement d'id),
@@ -136,6 +139,20 @@ const EditorModal = ({ equipement, pannes = [], mouvements = [], onCancel, onExp
 
   const handleFieldChange = (fieldKey, valeur) => {
     setDonneesEditees((precedent) => ({ ...precedent, [fieldKey]: valeur }));
+  };
+
+  // Capture le rendu reel de la fiche (pages images), puis delegue au
+  // parent (Detail.jsx) l'envoi au backend + le telechargement. Le
+  // parent reste responsable de fermer (ou non) la modale selon le
+  // succes de l'operation.
+  const handleExportConfirm = async (nomFichier) => {
+    setExportEnCours(true);
+    try {
+      const images = await capturerPagesEditeur(articleRef.current, HAUTEUR_UTILE_PAGE_A4_PX);
+      await onExport?.(images, nomFichier);
+    } finally {
+      setExportEnCours(false);
+    }
   };
 
   return (
@@ -232,8 +249,9 @@ const EditorModal = ({ equipement, pannes = [], mouvements = [], onCancel, onExp
       <DocumentExportActionsSection
         pageCount={pageCount}
         donneesEditees={donneesEditees}
+        exportEnCours={exportEnCours}
         onCancel={onCancel}
-        onExport={(format, nomFichier) => onExport?.(format, donneesEditees, nomFichier)}
+        onExport={handleExportConfirm}
       />
     </Paper>
   );
