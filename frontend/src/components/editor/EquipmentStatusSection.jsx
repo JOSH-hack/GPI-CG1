@@ -1,6 +1,7 @@
 import {
   Box,
-  Chip,
+  MenuItem,
+  Select,
   Table,
   TableBody,
   TableCell,
@@ -9,25 +10,22 @@ import {
   Typography,
 } from "@mui/material";
 import { STATUT_EQUIPEMENT_LABELS } from "../../utils/constants";
-import { valeurAffichee } from "./documentValues";
+import { EditableChip } from "./EditableChip";
 
-const chipSx = {
-  height: 18,
-  bgcolor: "#e0f5ee",
-  borderRadius: 1,
-  color: "#146f42",
-  fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
+const selectSx = {
+  height: 24,
   fontSize: 14,
+  fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
   fontWeight: 600,
-  "& .MuiChip-label": { px: 0.75 },
+  color: "#146f42",
+  bgcolor: "#e0f5ee",
+  "& .MuiSelect-select": { py: 0.25, px: 1 },
+  "& fieldset": { border: "none" },
 };
 
-const EquipmentStatusSection = ({ equipement }) => {
-  const rows = [
-    { label: "Statut de l'équipement", value: valeurAffichee(STATUT_EQUIPEMENT_LABELS[equipement?.statut]) },
-    // Le DTO backend n'expose pas de champ "observation" : on utilise "description" (le champ réellement disponible sur EquipementResponse).
-    { label: "Observation", value: valeurAffichee(equipement?.description) },
-  ];
+const EquipmentStatusSection = ({ donneesEditees = {}, onFieldChange }) => {
+  const statutActuel = donneesEditees.statut ?? "";
+  const observation = donneesEditees.description ?? "";
 
   return (
     <Box component="section" aria-labelledby="equipment-status-title" sx={{ width: "100%" }}>
@@ -55,26 +53,43 @@ const EquipmentStatusSection = ({ equipement }) => {
           }}
         >
           <TableBody>
-            {rows.map(({ label, value }, index) => (
-              <TableRow
-                key={label}
-                sx={{
-                  bgcolor: index % 2 === 0 ? "grey.50" : "common.white",
-                  "&:last-child .MuiTableCell-root": { borderBottom: 0 },
-                }}
+            <TableRow sx={{ bgcolor: "grey.50" }}>
+              <TableCell
+                component="th"
+                scope="row"
+                sx={{ width: { xs: "42%", sm: 200 }, color: "#1c2a30", fontWeight: 700, whiteSpace: "nowrap" }}
               >
-                <TableCell
-                  component="th"
-                  scope="row"
-                  sx={{ width: { xs: "42%", sm: 200 }, color: "#1c2a30", fontWeight: 700, whiteSpace: "nowrap" }}
+                Statut de l&apos;équipement
+              </TableCell>
+              <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
+                <Select
+                  size="small"
+                  value={statutActuel}
+                  onChange={(event) => onFieldChange?.("statut", event.target.value)}
+                  displayEmpty
+                  sx={selectSx}
                 >
-                  {label}
-                </TableCell>
-                <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
-                  <Chip label={value} size="small" sx={chipSx} />
-                </TableCell>
-              </TableRow>
-            ))}
+                  {statutActuel === "" && <MenuItem value="">—</MenuItem>}
+                  {Object.entries(STATUT_EQUIPEMENT_LABELS).map(([valeur, libelle]) => (
+                    <MenuItem key={valeur} value={valeur}>
+                      {libelle}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </TableCell>
+            </TableRow>
+            <TableRow sx={{ bgcolor: "common.white", "& .MuiTableCell-root": { borderBottom: 0 } }}>
+              <TableCell
+                component="th"
+                scope="row"
+                sx={{ width: { xs: "42%", sm: 200 }, color: "#1c2a30", fontWeight: 700, whiteSpace: "nowrap" }}
+              >
+                Observation
+              </TableCell>
+              <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
+                <EditableChip fieldKey="description" value={observation} onFieldChange={onFieldChange} />
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>

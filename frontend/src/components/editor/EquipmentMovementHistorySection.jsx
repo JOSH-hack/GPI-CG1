@@ -15,14 +15,20 @@ import { formaterDate, valeurAffichee } from "./documentValues";
 const columns = ["Type de mouvement", "Motif", "Ancienne valeur", "Nouvelle valeur", "Date"];
 
 const chipSx = {
-  height: 18,
+  height: "auto",
+  minHeight: 18,
   bgcolor: "#e0f5ee",
   borderRadius: 1,
   color: "#146f42",
-  fontFamily: "monospace",
+  fontFamily: "Quicksand, sans-serif",
   fontSize: 14,
   fontWeight: 600,
-  "& .MuiChip-label": { px: 0.75 },
+  "& .MuiChip-label": {
+    px: 0.75,
+    whiteSpace: "normal",
+    overflow: "visible",
+    textOverflow: "unset",
+  },
 };
 
 function buildRow(mouvement) {

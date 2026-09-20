@@ -69,7 +69,6 @@ public class DocumentDocxService {
         private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy/ HH:mm");
         private static final int QR_CODE_SIZE_EMU = (int) (28 * 914400.0);
 
-
         public DocumentDocxService(
                         EquipementService equipementService,
                         PanneService panneService,
@@ -120,6 +119,63 @@ public class DocumentDocxService {
                 }
         }
 
+        // Génère la fiche à partir de ce que l'utilisateur a réellement édité
+        // dans EditorModal (frontend), plutôt que de tout repuiser depuis la
+        // BDD. Seuls l'historique des pannes/mouvements et le QR code restent
+        // pilotés par la BDD (ce sont des sections en lecture seule côté
+        // frontend, donc absentes de donneesEditees).
+        public byte[] genererFicheEquipementEditee(
+                        Long idEquipement,
+                        Map<String, Object> donneesEditees) throws Exception {
+
+                Equipement equipement = equipementService.getParId(idEquipement);
+
+                if (equipement == null) {
+                        throw new IllegalArgumentException(
+                                        "Équipement introuvable avec l'identifiant : " + idEquipement);
+                }
+
+                if (donneesEditees == null) {
+                        donneesEditees = new HashMap<>();
+                }
+
+                List<Panne> pannes = panneService.listerParEquipement(idEquipement);
+                List<HistoriqueMouvement> mouvements = historiqueMouvementService.timelineParEquipement(idEquipement);
+
+                ClassPathResource templateResource = new ClassPathResource("templates/DocumentTypeExport.docx");
+
+                if (!templateResource.exists()) {
+                        throw new IOException(
+                                        "Le modèle DOCX est introuvable : templates/DocumentTypeExport.docx");
+                }
+
+                try (
+                                InputStream inputStream = templateResource.getInputStream();
+                                XWPFDocument document = new XWPFDocument(inputStream);
+                                ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+                        nettoyerCorps(document);
+
+                        ajouterEnTete(document, donneesEditees);
+
+                        ajouterTitre(document);
+
+                        ajouterIdentificationEditee(document, equipement, donneesEditees);
+
+                        ajouterInformationsPrincipalesEditees(document, donneesEditees);
+
+                        ajouterHistorique(document, pannes, mouvements);
+
+                        ajouterSignatures(document, donneesEditees);
+
+                        ajouterPiedDePage(document, donneesEditees);
+
+                        document.write(outputStream);
+
+                        return outputStream.toByteArray();
+                }
+        }
+
         private void nettoyerCorps(XWPFDocument document) {
 
                 for (int i = document.getBodyElements().size() - 1; i >= 0; i--) {
@@ -148,6 +204,72 @@ public class DocumentDocxService {
                 run.setFontSize(12);
                 run.setFontFamily("Arial");
                 run.setText("FICHE DÉTAILLÉE DE L'ÉQUIPEMENT");
+        }
+
+        private void ajouterEnTete(
+                        XWPFDocument document,
+                        Map<String, Object> donneesEditees) {
+
+                XWPFTable table = document.createTable(1, 2);
+
+                table.setWidth("100%");
+                table.setCellMargins(0, 0, 0, 0);
+
+                XWPFTableCell gaucheCell = table.getRow(0).getCell(0);
+                XWPFTableCell droiteCell = table.getRow(0).getCell(1);
+
+                setCellWidth(gaucheCell, 60);
+                setCellWidth(droiteCell, 40);
+
+                clearCell(gaucheCell);
+                clearCell(droiteCell);
+
+                XWPFParagraph gaucheParagraph = gaucheCell.getParagraphs().get(0);
+                gaucheParagraph.setAlignment(ParagraphAlignment.CENTER);
+                gaucheParagraph.setSpacingAfter(0);
+
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.ministere"));
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.region"));
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.prefecture"));
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.commune"));
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.direction"));
+                ajouterLigneEnTete(gaucheParagraph, champ(donneesEditees, "entete.cellule"));
+
+                XWPFParagraph droiteParagraph = droiteCell.getParagraphs().get(0);
+                droiteParagraph.setAlignment(ParagraphAlignment.CENTER);
+                droiteParagraph.setSpacingAfter(0);
+
+                ajouterLigneEnTete(droiteParagraph, champ(donneesEditees, "entete.republique"));
+                ajouterLigneEnTete(droiteParagraph, champ(donneesEditees, "entete.devise"));
+
+                supprimerBordures(table);
+
+                document.createParagraph().setSpacingAfter(40);
+        }
+
+        // Ligne centrée en gras, taille réduite, pour le bloc institutionnel.
+        // "entete.ministere" peut contenir des \n (champ multi-lignes côté frontend).
+        private void ajouterLigneEnTete(
+                        XWPFParagraph paragraph,
+                        String texte) {
+
+                String[] lignes = texte.split("\n");
+
+                for (int i = 0; i < lignes.length; i++) {
+
+                        XWPFRun run = paragraph.createRun();
+
+                        run.setBold(true);
+                        run.setFontSize(8);
+                        run.setFontFamily("Arial");
+                        run.setText(lignes[i]);
+
+                        if (i < lignes.length - 1) {
+                                run.addBreak();
+                        }
+                }
+
+                paragraph.createRun().addBreak();
         }
 
         private void ajouterIdentification(
@@ -200,7 +322,61 @@ public class DocumentDocxService {
                 qrParagraph.setSpacingBefore(0);
                 qrParagraph.setSpacingAfter(0);
 
-                byte[] qrCode = genererQrCode(equipement);
+                byte[] qrCode = genererQrCode(equipement, equipement.getCodeInventaire());
+
+                try (ByteArrayInputStream qrInputStream = new ByteArrayInputStream(qrCode)) {
+
+                        qrParagraph.createRun().addPicture(
+                                        qrInputStream,
+                                        XWPFDocument.PICTURE_TYPE_PNG,
+                                        "qr-code.png",
+                                        QR_CODE_SIZE_EMU,
+                                        QR_CODE_SIZE_EMU);
+                }
+
+                supprimerBordures(table);
+
+                document.createParagraph().setSpacingAfter(20);
+        }
+
+        private void ajouterIdentificationEditee(
+                        XWPFDocument document,
+                        Equipement equipement,
+                        Map<String, Object> donneesEditees) throws Exception {
+
+                XWPFTable table = document.createTable(1, 2);
+
+                table.setWidth("100%");
+                table.setCellMargins(60, 60, 60, 60);
+
+                XWPFTableCell informationCell = table.getRow(0).getCell(0);
+                XWPFTableCell qrCell = table.getRow(0).getCell(1);
+
+                setCellWidth(informationCell, 75);
+                setCellWidth(qrCell, 25);
+
+                clearCell(informationCell);
+                clearCell(qrCell);
+
+                XWPFParagraph paragraph = informationCell.getParagraphs().get(0);
+
+                paragraph.setSpacingAfter(0);
+
+                ajouterLigne(paragraph, "Code inventaire : ", champ(donneesEditees, "codeInventaire"));
+                ajouterLigne(paragraph, "Désignation : ", champ(donneesEditees, "nom"));
+                ajouterLigne(
+                                paragraph,
+                                "Marque / Modèle : ",
+                                champ(donneesEditees, "marque") + " / " + champ(donneesEditees, "modele"));
+                ajouterLigne(paragraph, "Numéro de série : ", champ(donneesEditees, "numeroSerie"));
+
+                XWPFParagraph qrParagraph = qrCell.getParagraphs().get(0);
+
+                qrParagraph.setAlignment(ParagraphAlignment.CENTER);
+                qrParagraph.setSpacingBefore(0);
+                qrParagraph.setSpacingAfter(0);
+
+                byte[] qrCode = genererQrCode(equipement, champ(donneesEditees, "codeInventaire"));
 
                 try (ByteArrayInputStream qrInputStream = new ByteArrayInputStream(qrCode)) {
 
@@ -299,6 +475,105 @@ public class DocumentDocxService {
                 supprimerBordures(table);
 
                 document.createParagraph().setSpacingAfter(20);
+        }
+
+        private void ajouterInformationsPrincipalesEditees(
+                        XWPFDocument document,
+                        Map<String, Object> donneesEditees) {
+
+                XWPFTable table = document.createTable(1, 2);
+
+                table.setWidth("100%");
+                table.setCellMargins(60, 60, 60, 60);
+
+                XWPFTableCell generalCell = table.getRow(0).getCell(0);
+                XWPFTableCell specificCell = table.getRow(0).getCell(1);
+
+                setCellWidth(generalCell, 50);
+                setCellWidth(specificCell, 50);
+
+                clearCell(generalCell);
+                clearCell(specificCell);
+
+                XWPFParagraph generalParagraph = generalCell.getParagraphs().get(0);
+                XWPFParagraph specificParagraph = specificCell.getParagraphs().get(0);
+
+                ajouterTitreCellule(generalParagraph, "INFORMATIONS GÉNÉRALES");
+
+                ajouterLigne(generalParagraph, "Catégorie : ", champ(donneesEditees, "categorie.libelle"));
+                ajouterLigne(generalParagraph, "État : ", champ(donneesEditees, "statut"));
+                ajouterLigne(generalParagraph, "Observation : ", champ(donneesEditees, "description"));
+                ajouterLigne(generalParagraph, "Localisation : ", localisationEditee(donneesEditees));
+                ajouterLigne(generalParagraph, "Date d'acquisition : ", champ(donneesEditees, "dateAcquisition"));
+                ajouterLigne(generalParagraph, "Fin de garantie : ", champ(donneesEditees, "finGarantie"));
+                ajouterLigne(generalParagraph, "Coût : ", champ(donneesEditees, "coutAcquisition"));
+                ajouterLigne(generalParagraph, "Agent affecté : ", agentEditee(donneesEditees));
+
+                ajouterTitreCellule(specificParagraph, "INFORMATIONS SPÉCIFIQUES");
+
+                String typeCategorie = champ(donneesEditees, "categorie.type");
+
+                if ("HARDWARE".equalsIgnoreCase(typeCategorie)) {
+                        ajouterLigne(specificParagraph, "Processeur : ", champ(donneesEditees, "processeur"));
+                        ajouterLigne(specificParagraph, "RAM : ", champ(donneesEditees, "ram"));
+                        ajouterLigne(specificParagraph, "Disque : ", champ(donneesEditees, "capaciteDisque"));
+                        ajouterLigne(specificParagraph, "Adresse IP : ", champ(donneesEditees, "adresseIp"));
+                        ajouterLigne(specificParagraph, "Adresse MAC : ", champ(donneesEditees, "adresseMac"));
+                        ajouterLigne(specificParagraph, "Système : ", champ(donneesEditees, "systemeExploitation"));
+                } else if ("SOFTWARE".equalsIgnoreCase(typeCategorie)) {
+                        ajouterLigne(specificParagraph, "Version : ", champ(donneesEditees, "version"));
+                        ajouterLigne(specificParagraph, "Licences : ", champ(donneesEditees, "nombreLicences"));
+                        ajouterLigne(specificParagraph, "Clé de licence : ", champ(donneesEditees, "cleLicence"));
+                        ajouterLigne(specificParagraph, "Début licence : ", champ(donneesEditees, "dateDebutLicence"));
+                        ajouterLigne(specificParagraph, "Fin licence : ",
+                                        champ(donneesEditees, "dateExpirationLicence"));
+                } else if ("RESEAU".equalsIgnoreCase(typeCategorie)) {
+                        ajouterLigne(specificParagraph, "Type adresse : ", champ(donneesEditees, "typeAdresse"));
+                        ajouterLigne(specificParagraph, "Adresse IP : ", champ(donneesEditees, "adresseIp"));
+                        ajouterLigne(specificParagraph, "Adresse MAC : ", champ(donneesEditees, "adresseMac"));
+                        ajouterLigne(specificParagraph, "Passerelle : ", champ(donneesEditees, "passerelle"));
+                        ajouterLigne(specificParagraph, "Masque : ", champ(donneesEditees, "masqueSousReseau"));
+                        ajouterLigne(specificParagraph, "Hostname : ", champ(donneesEditees, "nomHote"));
+                } else {
+                        ajouterLigne(specificParagraph, "Type : ", champ(donneesEditees, "categorie.libelle"));
+                }
+
+                supprimerBordures(table);
+
+                document.createParagraph().setSpacingAfter(20);
+        }
+
+        private String localisationEditee(Map<String, Object> donneesEditees) {
+
+                StringBuilder sb = new StringBuilder();
+
+                sb.append(champ(donneesEditees, "localisation.annexe"))
+                                .append(" - ")
+                                .append(champ(donneesEditees, "localisation.service"));
+
+                String bureau = champ(donneesEditees, "localisation.bureau");
+                if (!"N/A".equals(bureau)) {
+                        sb.append(" / Bureau ").append(bureau);
+                }
+
+                String poste = champ(donneesEditees, "localisation.poste");
+                if (!"N/A".equals(poste)) {
+                        sb.append(" / Poste ").append(poste);
+                }
+
+                return sb.toString();
+        }
+
+        private String agentEditee(Map<String, Object> donneesEditees) {
+
+                String nom = champ(donneesEditees, "agent.nom");
+                String prenom = champ(donneesEditees, "agent.prenom");
+
+                if ("N/A".equals(nom) && "N/A".equals(prenom)) {
+                        return "Non affecté";
+                }
+
+                return nom + " " + prenom;
         }
 
         private void ajouterHardware(
@@ -441,6 +716,98 @@ public class DocumentDocxService {
                 supprimerBordures(table);
         }
 
+        private void ajouterSignatures(
+                        XWPFDocument document,
+                        Map<String, Object> donneesEditees) {
+
+                XWPFParagraph titreParagraph = document.createParagraph();
+                titreParagraph.setSpacingBefore(120);
+                titreParagraph.setSpacingAfter(60);
+
+                XWPFRun titreRun = titreParagraph.createRun();
+                titreRun.setBold(true);
+                titreRun.setFontSize(9);
+                titreRun.setFontFamily("Arial");
+                titreRun.setText("SIGNATURES");
+
+                XWPFTable table = document.createTable(1, 3);
+
+                table.setWidth("100%");
+                table.setCellMargins(60, 60, 60, 60);
+
+                String[] titreKeys = { "signature.titre1", "signature.titre2", "signature.titre3" };
+                String[] valeurKeys = { "signature.valeur1", "signature.valeur2", "signature.valeur3" };
+
+                for (int i = 0; i < 3; i++) {
+
+                        XWPFTableCell cell = table.getRow(0).getCell(i);
+
+                        setCellWidth(cell, 33);
+                        clearCell(cell);
+
+                        XWPFParagraph paragraph = cell.getParagraphs().get(0);
+                        paragraph.setAlignment(ParagraphAlignment.CENTER);
+                        paragraph.setSpacingAfter(0);
+
+                        XWPFRun titreRunCell = paragraph.createRun();
+                        titreRunCell.setBold(true);
+                        titreRunCell.setFontSize(8);
+                        titreRunCell.setFontFamily("Arial");
+                        titreRunCell.setText(champ(donneesEditees, titreKeys[i]));
+                        titreRunCell.addBreak();
+
+                        XWPFRun valeurRunCell = paragraph.createRun();
+                        valeurRunCell.setUnderline(UnderlinePatterns.SINGLE);
+                        valeurRunCell.setFontSize(8);
+                        valeurRunCell.setFontFamily("Arial");
+                        valeurRunCell.setText(champ(donneesEditees, valeurKeys[i]));
+                }
+
+                supprimerBordures(table);
+
+                document.createParagraph().setSpacingAfter(20);
+        }
+
+        private void ajouterPiedDePage(
+                        XWPFDocument document,
+                        Map<String, Object> donneesEditees) {
+
+                XWPFParagraph mentionParagraph = document.createParagraph();
+                mentionParagraph.setAlignment(ParagraphAlignment.CENTER);
+                mentionParagraph.setSpacingBefore(120);
+                mentionParagraph.setSpacingAfter(20);
+
+                XWPFRun mentionRun = mentionParagraph.createRun();
+                mentionRun.setItalic(true);
+                mentionRun.setFontSize(7);
+                mentionRun.setFontFamily("Arial");
+                mentionRun.setText(champ(donneesEditees, "pied.mention"));
+
+                XWPFParagraph coordonneesParagraph = document.createParagraph();
+                coordonneesParagraph.setAlignment(ParagraphAlignment.CENTER);
+                coordonneesParagraph.setSpacingAfter(0);
+
+                XWPFRun adresseRun = coordonneesParagraph.createRun();
+                adresseRun.setBold(true);
+                adresseRun.setFontSize(7);
+                adresseRun.setFontFamily("Arial");
+                adresseRun.setText(champ(donneesEditees, "pied.adresse") + "   Web : ");
+
+                XWPFRun webRun = coordonneesParagraph.createRun();
+                webRun.setBold(true);
+                webRun.setUnderline(UnderlinePatterns.SINGLE);
+                webRun.setFontSize(7);
+                webRun.setFontFamily("Arial");
+                webRun.setText(champ(donneesEditees, "pied.siteWeb") + "   E-mail : ");
+
+                XWPFRun emailRun = coordonneesParagraph.createRun();
+                emailRun.setBold(true);
+                emailRun.setUnderline(UnderlinePatterns.SINGLE);
+                emailRun.setFontSize(7);
+                emailRun.setFontFamily("Arial");
+                emailRun.setText(champ(donneesEditees, "pied.email"));
+        }
+
         private void ajouterPannes(
                         XWPFTableCell cell,
                         List<Panne> pannes) {
@@ -541,10 +908,11 @@ public class DocumentDocxService {
         }
 
         private byte[] genererQrCode(
-                        Equipement equipement) throws WriterException, IOException {
+                        Equipement equipement,
+                        String codeInventaire) throws WriterException, IOException {
 
                 String contenu = "GPI-CG1|EQUIPEMENT|"
-                                + valeur(equipement.getCodeInventaire())
+                                + valeur(codeInventaire)
                                 + "|ID|"
                                 + equipement.getIdEquipement();
 
@@ -707,6 +1075,25 @@ public class DocumentDocxService {
                                 : texte;
         }
 
+        // Équivalent de valeur(Object) mais pour lire dans la map donneesEditees
+        // envoyée par le frontend (clés du type "localisation.annexe", "agent.nom"...).
+        private String champ(Map<String, Object> donnees, String cle) {
+
+                if (donnees == null) {
+                        return "N/A";
+                }
+
+                Object valeur = donnees.get(cle);
+
+                if (valeur == null) {
+                        return "N/A";
+                }
+
+                String texte = String.valueOf(valeur).trim();
+
+                return texte.isEmpty() ? "N/A" : texte;
+        }
+
         private String valeurCategorie(
                         Equipement equipement) {
 
@@ -806,47 +1193,75 @@ public class DocumentDocxService {
                 return valeur(date);
         }
 
-    private void remplacerVariables(XWPFDocument document, Equipement equipement) throws Exception {
-        // Docx4j utilise WordprocessingMLPackage, alors que POI utilise XWPFDocument.
-        // La logique actuelle utilise POI pour construire le document, mais Docx4j pour remplacer les variables.
-        // C'est potentiellement incompatible si on utilise le même document.
-        
-        // Alternative : Utiliser POI pour faire le remplacement de texte
-        for (XWPFParagraph p : document.getParagraphs()) {
-            for (XWPFRun r : p.getRuns()) {
-                String text = r.getText(0);
-                if (text != null && text.contains("$")) {
-                    text = text.replace("$codeInventaire", equipement.getCodeInventaire() != null ? equipement.getCodeInventaire() : "");
-                    text = text.replace("$nom", equipement.getNom() != null ? equipement.getNom() : "");
-                    text = text.replace("$marque", equipement.getMarque() != null ? equipement.getMarque() : "");
-                    text = text.replace("$modele", equipement.getModele() != null ? equipement.getModele() : "");
-                    text = text.replace("$numeroSerie", equipement.getNumeroSerie() != null ? equipement.getNumeroSerie() : "");
-                    text = text.replace("$tagQr", equipement.getTagQr() != null ? equipement.getTagQr() : "");
-                    r.setText(text, 0);
-                }
-            }
-        }
-        // Faire la même chose pour les tables si nécessaire
-        for (XWPFTable tbl : document.getTables()) {
-            for (XWPFTableRow row : tbl.getRows()) {
-                for (XWPFTableCell cell : row.getTableCells()) {
-                    for (XWPFParagraph p : cell.getParagraphs()) {
+        private void remplacerVariables(XWPFDocument document, Equipement equipement) throws Exception {
+                // Docx4j utilise WordprocessingMLPackage, alors que POI utilise XWPFDocument.
+                // La logique actuelle utilise POI pour construire le document, mais Docx4j pour
+                // remplacer les variables.
+                // C'est potentiellement incompatible si on utilise le même document.
+
+                // Alternative : Utiliser POI pour faire le remplacement de texte
+                for (XWPFParagraph p : document.getParagraphs()) {
                         for (XWPFRun r : p.getRuns()) {
-                            String text = r.getText(0);
-                            if (text != null && text.contains("$")) {
-                                text = text.replace("$codeInventaire", equipement.getCodeInventaire() != null ? equipement.getCodeInventaire() : "");
-                                text = text.replace("$nom", equipement.getNom() != null ? equipement.getNom() : "");
-                                text = text.replace("$marque", equipement.getMarque() != null ? equipement.getMarque() : "");
-                                text = text.replace("$modele", equipement.getModele() != null ? equipement.getModele() : "");
-                                text = text.replace("$numeroSerie", equipement.getNumeroSerie() != null ? equipement.getNumeroSerie() : "");
-                                text = text.replace("$tagQr", equipement.getTagQr() != null ? equipement.getTagQr() : "");
-                                r.setText(text, 0);
-                            }
+                                String text = r.getText(0);
+                                if (text != null && text.contains("$")) {
+                                        text = text.replace("$codeInventaire",
+                                                        equipement.getCodeInventaire() != null
+                                                                        ? equipement.getCodeInventaire()
+                                                                        : "");
+                                        text = text.replace("$nom",
+                                                        equipement.getNom() != null ? equipement.getNom() : "");
+                                        text = text.replace("$marque",
+                                                        equipement.getMarque() != null ? equipement.getMarque() : "");
+                                        text = text.replace("$modele",
+                                                        equipement.getModele() != null ? equipement.getModele() : "");
+                                        text = text.replace("$numeroSerie",
+                                                        equipement.getNumeroSerie() != null
+                                                                        ? equipement.getNumeroSerie()
+                                                                        : "");
+                                        text = text.replace("$tagQr",
+                                                        equipement.getTagQr() != null ? equipement.getTagQr() : "");
+                                        r.setText(text, 0);
+                                }
                         }
-                    }
                 }
-            }
+                // Faire la même chose pour les tables si nécessaire
+                for (XWPFTable tbl : document.getTables()) {
+                        for (XWPFTableRow row : tbl.getRows()) {
+                                for (XWPFTableCell cell : row.getTableCells()) {
+                                        for (XWPFParagraph p : cell.getParagraphs()) {
+                                                for (XWPFRun r : p.getRuns()) {
+                                                        String text = r.getText(0);
+                                                        if (text != null && text.contains("$")) {
+                                                                text = text.replace("$codeInventaire",
+                                                                                equipement.getCodeInventaire() != null
+                                                                                                ? equipement.getCodeInventaire()
+                                                                                                : "");
+                                                                text = text.replace("$nom",
+                                                                                equipement.getNom() != null
+                                                                                                ? equipement.getNom()
+                                                                                                : "");
+                                                                text = text.replace("$marque",
+                                                                                equipement.getMarque() != null
+                                                                                                ? equipement.getMarque()
+                                                                                                : "");
+                                                                text = text.replace("$modele",
+                                                                                equipement.getModele() != null
+                                                                                                ? equipement.getModele()
+                                                                                                : "");
+                                                                text = text.replace("$numeroSerie", equipement
+                                                                                .getNumeroSerie() != null ? equipement
+                                                                                                .getNumeroSerie() : "");
+                                                                text = text.replace("$tagQr",
+                                                                                equipement.getTagQr() != null
+                                                                                                ? equipement.getTagQr()
+                                                                                                : "");
+                                                                r.setText(text, 0);
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
         }
-    }
 
 }

@@ -24,23 +24,9 @@ import { exportApi } from '../../api/exportApi'
 import EditorModal from '../../components/editor/EditorModal'
 
 import {
-  Alert,
-  Box,
-  Breadcrumbs,
-  Button,
-  CircularProgress,
-  Dialog,
-  Divider,
-  Link,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
+  Alert, Box, Breadcrumbs, Button, CircularProgress, Dialog, Divider,
+  Link, Paper, Snackbar, Stack, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Typography,
 } from '@mui/material'
 
 import { equipementApi } from '../../api/equipementApi'
@@ -153,6 +139,7 @@ export default function Detail() {
   const [mouvements, setMouvements] = useState([])
   const [chargement, setChargement] = useState(true)
   const [erreur, setErreur] = useState('')
+  const [erreurExport, setErreurExport] = useState('')
 
   useEffect(() => {
     async function charger() {
@@ -190,6 +177,39 @@ export default function Detail() {
     lien.click()
     lien.remove()
     window.URL.revokeObjectURL(url)
+  }
+
+  async function telechargerDocumentEdite(format, donneesEditees, nomFichier) {
+    try {
+      const response = await exportApi.genererDocumentEdite({
+        idEquipement: equipement.idEquipement,
+        format,
+        donneesEditees,
+      })
+
+      const mimeType =
+        format === 'pdf'
+          ? 'application/pdf'
+          : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: mimeType }))
+      const lien = document.createElement('a')
+      lien.href = url
+      lien.download = `${nomFichier || `fiche-equipement-${equipement.idEquipement}`}.${format}`
+      document.body.appendChild(lien)
+      lien.click()
+      lien.remove()
+      window.URL.revokeObjectURL(url)
+      return true
+    } catch (erreurRequete) {
+      const statut = erreurRequete?.response?.status
+      setErreurExport(
+        statut === 403
+          ? "Vous n'avez pas les droits nécessaires pour exporter ce document."
+          : "Une erreur est survenue pendant l'export du document. Veuillez réessayer."
+      )
+      return false
+    }
   }
 
   if (chargement) {
@@ -276,7 +296,7 @@ export default function Detail() {
                 onClick={() => setOpenEditor(true)}
                 sx={{ ...typo, fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
               >
-                Ouvrir l&apos;éditeur
+                Exporter Document
               </Button>
 
               <Button
@@ -287,16 +307,6 @@ export default function Detail() {
                 sx={{ ...typo, borderColor: '#146f42', color: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
               >
                 Imprimer
-              </Button>
-
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<DescriptionOutlined sx={{ fontSize: 14 }} />}
-                onClick={telechargerDocx}
-                sx={{ ...typo, bgcolor: '#0c5d7d', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none', '&:hover': { bgcolor: '#094a63' } }}
-              >
-                Télécharger DOCX
               </Button>
             </Stack>
           </Stack>
@@ -480,11 +490,23 @@ export default function Detail() {
           pannes={pannes}
           mouvements={mouvements}
           onCancel={() => setOpenEditor(false)}
-          onExport={(format) => {
-            if (format === 'docx') telechargerDocx()
-            setOpenEditor(false)
+          onExport={async (format, donneesEditees, nomFichier) => {
+            const succes = await telechargerDocumentEdite(format, donneesEditees, nomFichier)
+            if (succes) setOpenEditor(false)
           }}
-        />      </Dialog>
+        />
+      </Dialog>
+
+      <Snackbar
+        open={Boolean(erreurExport)}
+        autoHideDuration={6000}
+        onClose={() => setErreurExport('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setErreurExport('')} sx={{ width: '100%' }}>
+          {erreurExport}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

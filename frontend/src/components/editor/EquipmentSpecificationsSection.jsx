@@ -1,6 +1,5 @@
 import {
   Box,
-  Chip,
   Stack,
   Table,
   TableBody,
@@ -10,59 +9,46 @@ import {
   Typography,
 } from "@mui/material";
 import { TYPE_CATEGORIE } from "../../utils/constants";
-import { formaterDate, valeurAffichee } from "./documentValues";
+import { EditableChip } from "./EditableChip";
 
-const chipSx = {
-  height: 18,
-  bgcolor: "#e0f5ee",
-  borderRadius: 1,
-  color: "#146f42",
-  fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
-  fontSize: 14 ,
-  fontWeight: 600,
-  "& .MuiChip-label": { px: 0.75 },
-};
-
-function buildRows(equipement) {
-  const type = equipement?.categorie?.type;
-
-  if (type === TYPE_CATEGORIE.HARDWARE) {
+function buildRows(typeCategorie) {
+  if (typeCategorie === TYPE_CATEGORIE.HARDWARE) {
     return {
       title: "Équipement matériel",
       rows: [
-        { label: "Processeur", value: valeurAffichee(equipement?.processeur) },
-        { label: "Mémoire RAM", value: valeurAffichee(equipement?.ram) },
-        { label: "Capacité disque", value: valeurAffichee(equipement?.capaciteDisque) },
-        { label: "Adresse IP", value: valeurAffichee(equipement?.adresseIp) },
-        { label: "Adresse MAC", value: valeurAffichee(equipement?.adresseMac) },
-        { label: "Système d'exploitation", value: valeurAffichee(equipement?.systemeExploitation) },
+        { label: "Processeur", key: "processeur" },
+        { label: "Mémoire RAM", key: "ram" },
+        { label: "Capacité disque", key: "capaciteDisque" },
+        { label: "Adresse IP", key: "adresseIp" },
+        { label: "Adresse MAC", key: "adresseMac" },
+        { label: "Système d'exploitation", key: "systemeExploitation" },
       ],
     };
   }
 
-  if (type === TYPE_CATEGORIE.SOFTWARE) {
+  if (typeCategorie === TYPE_CATEGORIE.SOFTWARE) {
     return {
       title: "Équipement logiciel",
       rows: [
-        { label: "Version", value: valeurAffichee(equipement?.version) },
-        { label: "Nombre de licences", value: valeurAffichee(equipement?.nombreLicences) },
-        { label: "Clé de licence", value: valeurAffichee(equipement?.cleLicence) },
-        { label: "Date de début de licence", value: formaterDate(equipement?.dateDebutLicence) },
-        { label: "Date d'expiration de licence", value: formaterDate(equipement?.dateExpirationLicence) },
+        { label: "Version", key: "version" },
+        { label: "Nombre de licences", key: "nombreLicences" },
+        { label: "Clé de licence", key: "cleLicence" },
+        { label: "Date de début de licence", key: "dateDebutLicence" },
+        { label: "Date d'expiration de licence", key: "dateExpirationLicence" },
       ],
     };
   }
 
-  if (type === TYPE_CATEGORIE.RESEAU) {
+  if (typeCategorie === TYPE_CATEGORIE.RESEAU) {
     return {
       title: "Équipement réseau",
       rows: [
-        { label: "Type d'adresse", value: valeurAffichee(equipement?.typeAdresse) },
-        { label: "Adresse IP", value: valeurAffichee(equipement?.adresseIp) },
-        { label: "Adresse MAC", value: valeurAffichee(equipement?.adresseMac) },
-        { label: "Passerelle", value: valeurAffichee(equipement?.passerelle) },
-        { label: "Masque", value: valeurAffichee(equipement?.masqueSousReseau) },
-        { label: "Nom d'hôte", value: valeurAffichee(equipement?.nomHote) },
+        { label: "Type d'adresse", key: "typeAdresse" },
+        { label: "Adresse IP", key: "adresseIp" },
+        { label: "Adresse MAC", key: "adresseMac" },
+        { label: "Passerelle", key: "passerelle" },
+        { label: "Masque", key: "masqueSousReseau" },
+        { label: "Nom d'hôte", key: "nomHote" },
       ],
     };
   }
@@ -70,7 +56,7 @@ function buildRows(equipement) {
   return { title: null, rows: [] };
 }
 
-const SpecificationSubTable = ({ title, rows }) => (
+const SpecificationSubTable = ({ title, rows, donneesEditees, onFieldChange }) => (
   <Stack spacing={0.5}>
     <Typography
       component="h3"
@@ -94,9 +80,9 @@ const SpecificationSubTable = ({ title, rows }) => (
         }}
       >
         <TableBody>
-          {rows.map(({ label, value }, index) => (
+          {rows.map(({ label, key }, index) => (
             <TableRow
-              key={label}
+              key={key}
               sx={{
                 bgcolor: index % 2 === 0 ? "grey.50" : "common.white",
                 "&:last-child .MuiTableCell-root": { borderBottom: 0 },
@@ -110,7 +96,11 @@ const SpecificationSubTable = ({ title, rows }) => (
                 {label}
               </TableCell>
               <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
-                <Chip label={value} size="small" sx={chipSx} />
+                <EditableChip
+                  fieldKey={key}
+                  value={donneesEditees?.[key] ?? ""}
+                  onFieldChange={onFieldChange}
+                />
               </TableCell>
             </TableRow>
           ))}
@@ -120,8 +110,8 @@ const SpecificationSubTable = ({ title, rows }) => (
   </Stack>
 );
 
-const EquipmentSpecificationsSection = ({ equipement }) => {
-  const { title, rows } = buildRows(equipement);
+const EquipmentSpecificationsSection = ({ typeCategorie, donneesEditees = {}, onFieldChange }) => {
+  const { title, rows } = buildRows(typeCategorie);
 
   return (
     <Box component="section" aria-labelledby="equipment-specifications-title" sx={{ width: "100%" }}>
@@ -134,7 +124,12 @@ const EquipmentSpecificationsSection = ({ equipement }) => {
         3. INFORMATIONS SPÉCIFIQUES
       </Typography>
       {title ? (
-        <SpecificationSubTable title={title} rows={rows} />
+        <SpecificationSubTable
+          title={title}
+          rows={rows}
+          donneesEditees={donneesEditees}
+          onFieldChange={onFieldChange}
+        />
       ) : (
         <Typography sx={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#5c7078" }}>
           Aucune information spécifique pour cette catégorie d&apos;équipement.

@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import {
   Box,
-  Chip,
   Table,
   TableBody,
   TableCell,
@@ -9,55 +8,43 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { formaterDate, formaterMontant, valeurAffichee } from "./documentValues";
+import { EditableChip } from "./EditableChip";
 
-const chipSx = {
-  height: 18,
-  bgcolor: "#e0f5ee",
-  borderRadius: 1,
-  color: "#146f42",
-  fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
-  fontSize: 14,
-  fontWeight: 600,
-  "& .MuiChip-label": { px: 0.75 },
-};
-
-function buildRows(equipement) {
-  const localisation = equipement?.localisation ?? {};
+function buildRows() {
   return [
     [
-      { label: "Code inventaire", value: valeurAffichee(equipement?.codeInventaire) },
-      { label: "Nom / désignation", value: valeurAffichee(equipement?.nom) },
+      { label: "Code inventaire", key: "codeInventaire" },
+      { label: "Nom / désignation", key: "nom" },
     ],
     [
-      { label: "Numéro de série", value: valeurAffichee(equipement?.numeroSerie) },
-      { label: "Marque", value: valeurAffichee(equipement?.marque) },
+      { label: "Numéro de série", key: "numeroSerie" },
+      { label: "Marque", key: "marque" },
     ],
     [
-      { label: "Modèle", value: valeurAffichee(equipement?.modele) },
-      { label: "Date d'acquisition", value: formaterDate(equipement?.dateAcquisition) },
+      { label: "Modèle", key: "modele" },
+      { label: "Date d'acquisition", key: "dateAcquisition" },
     ],
     [
-      { label: "Fin de garantie", value: formaterDate(equipement?.finGarantie) },
-      { label: "Coût d'acquisition", value: formaterMontant(equipement?.coutAcquisition) },
+      { label: "Fin de garantie", key: "finGarantie" },
+      { label: "Coût d'acquisition", key: "coutAcquisition" },
     ],
     [
-      { label: "Catégorie", value: valeurAffichee(equipement?.categorie?.libelle) },
-      { label: "Type de catégorie", value: valeurAffichee(equipement?.categorie?.type) },
+      { label: "Catégorie", key: "categorie.libelle", readOnly: true },
+      { label: "Type de catégorie", key: "categorie.type", readOnly: true },
     ],
     [
-      { label: "Localisation — Annexe", value: valeurAffichee(localisation.annexe) },
-      { label: "Localisation — Service", value: valeurAffichee(localisation.service) },
+      { label: "Localisation — Annexe", key: "localisation.annexe" },
+      { label: "Localisation — Service", key: "localisation.service" },
     ],
     [
-      { label: "Localisation — Bureau", value: valeurAffichee(localisation.bureau) },
-      { label: "Localisation — Poste", value: valeurAffichee(localisation.poste) },
+      { label: "Localisation — Bureau", key: "localisation.bureau" },
+      { label: "Localisation — Poste", key: "localisation.poste" },
     ],
   ];
 }
 
-const GeneralEquipmentInformationSection = ({ equipement }) => {
-  const rows = buildRows(equipement);
+const GeneralEquipmentInformationSection = ({ donneesEditees = {}, onFieldChange }) => {
+  const rows = buildRows();
 
   return (
     <Box component="section" aria-labelledby="general-equipment-information-title" sx={{ width: "100%" }}>
@@ -87,14 +74,14 @@ const GeneralEquipmentInformationSection = ({ equipement }) => {
           <TableBody>
             {rows.map((pair, index) => (
               <TableRow
-                key={pair[0].label}
+                key={pair[0].key}
                 sx={{
                   bgcolor: index % 2 === 0 ? "grey.50" : "common.white",
                   "&:last-child .MuiTableCell-root": { borderBottom: 0 },
                 }}
               >
-                {pair.map(({ label, value }, cellIndex) => (
-                  <Fragment key={label}>
+                {pair.map(({ label, key, readOnly }, cellIndex) => (
+                  <Fragment key={key}>
                     <TableCell
                       component="th"
                       scope="row"
@@ -110,7 +97,12 @@ const GeneralEquipmentInformationSection = ({ equipement }) => {
                       {label}
                     </TableCell>
                     <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
-                      <Chip label={value} size="small" sx={chipSx} />
+                      <EditableChip
+                        fieldKey={key}
+                        value={donneesEditees[key] ?? ""}
+                        onFieldChange={onFieldChange}
+                        readOnly={readOnly}
+                      />
                     </TableCell>
                   </Fragment>
                 ))}

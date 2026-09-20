@@ -45,6 +45,17 @@ export const exportApi = {
             {
                 responseType: 'blob'
             }
+        ),
+
+       // Génère le document (DOCX ou PDF) à partir de ce que l'utilisateur a
+    // réellement édité dans EditorModal, au lieu de régénérer depuis la BDD.
+    genererDocumentEdite: ({ idEquipement, format, donneesEditees }) =>
+        axiosClient.post(
+            '/documents/export/generate',
+            { idEquipement, format, donneesEditees },
+            {
+                responseType: 'blob'
+            }
         )
 
 }

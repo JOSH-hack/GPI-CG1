@@ -9,6 +9,12 @@
  *
  * Propriétaire     : Josué BEDEL
  * Date de création : 10/09/2026
+ * Date de mise à jour : 19/09/2026
+ * Objet de mise à jour : Ajout de surcharges acceptant une map de donnees
+ *                        editees (Map<String,Object>), pour que l'en-tete et
+ *                        le pied de page suivent les valeurs modifiees dans
+ *                        EditorModal (frontend) - avec repli sur les valeurs
+ *                        par defaut si la map est absente ou incomplete.
  *
  */
 
@@ -30,6 +36,7 @@ import com.lowagie.text.pdf.draw.LineSeparator;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Gestion de l'en-tête et du pied de page officiels
@@ -40,342 +47,171 @@ import java.io.InputStream;
  */
 public final class EnTeteMairiePdf {
 
-    private EnTeteMairiePdf() {
-        // Classe utilitaire
-    }
-
-    /*
-     
-     * POLICES
-     
-     */
-
-    private static final Font FONT_MINISTERE =
-            new Font(Font.HELVETICA, 7, Font.NORMAL);
-
-    private static final Font FONT_COMMUNE =
-            new Font(Font.HELVETICA, 8, Font.BOLD);
-
-    private static final Font FONT_REPUBLIQUE =
-            new Font(Font.HELVETICA, 11, Font.BOLD);
-
-    private static final Font FONT_DEVISE =
-            new Font(Font.HELVETICA, 9, Font.NORMAL);
-
-    private static final Font FONT_TITRE =
-            new Font(Font.HELVETICA, 13, Font.BOLD);
-
-    private static final Font FONT_PIED =
-            new Font(Font.HELVETICA, 7, Font.NORMAL, Color.DARK_GRAY);
-
-
-    /*
-     
-     * EN-TÊTE OFFICIEL
-     
-     */
-
-    /**
-     * Ajoute l'en-tête officiel au document PDF.
-     *
-     * @param document     document PDF OpenPDF
-     * @param titreDocument titre du document affiché dans le cadre central
-     */
-    public static void ajouterEnTete(
-            Document document,
-            String titreDocument
-    ) throws DocumentException, IOException {
-
-        /*
-         
-         * Tableau principal de l'en-tête
-         *
-         * 1 colonne : blason
-         * 2 colonne : informations administratives
-         * 3 colonne : République Togolaise
-         
-         */
-        PdfPTable enTete = new PdfPTable(
-                new float[]{1, 3, 2}
-        );
-
-        enTete.setWidthPercentage(100);
-
-
-        /*
-         * 
-         * COLONNE GAUCHE : BLASON
-         * 
-         */
-
-        PdfPCell celluleBlason = new PdfPCell();
-
-        celluleBlason.setBorder(Rectangle.NO_BORDER);
-        celluleBlason.setHorizontalAlignment(Element.ALIGN_CENTER);
-        celluleBlason.setVerticalAlignment(Element.ALIGN_MIDDLE);
-
-        try (
-                InputStream in =
-                        EnTeteMairiePdf.class.getResourceAsStream(
-                                "/static/blason-mairie.png"
-                        )
-        ) {
-
-            if (in != null) {
-
-                Image blason = Image.getInstance(
-                        in.readAllBytes()
-                );
-
-                blason.scaleToFit(55, 55);
-
-                celluleBlason.addElement(blason);
-            }
+        private EnTeteMairiePdf() {
+                // Classe utilitaire
         }
 
-        enTete.addCell(celluleBlason);
+        private static final Font FONT_MINISTERE = new Font(Font.HELVETICA, 7, Font.NORMAL);
 
+        private static final Font FONT_COMMUNE = new Font(Font.HELVETICA, 8, Font.BOLD);
 
-        /*
-         * 
-         * COLONNE CENTRALE : INFORMATIONS ADMINISTRATIVES
-         * 
-         */
+        private static final Font FONT_REPUBLIQUE = new Font(Font.HELVETICA, 11, Font.BOLD);
 
-        PdfPCell celluleMinistere = new PdfPCell();
+        private static final Font FONT_DEVISE = new Font(Font.HELVETICA, 9, Font.NORMAL);
 
-        celluleMinistere.setBorder(Rectangle.NO_BORDER);
-        celluleMinistere.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        private static final Font FONT_TITRE = new Font(Font.HELVETICA, 13, Font.BOLD);
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "MINISTERE DE L'ADMINISTRATION TERRITORIALE\n" +
-                        "DE LA GOUVERNANCE ET DES AFFAIRES COUTUMIERES",
-                        FONT_MINISTERE
-                )
-        );
+        private static final Font FONT_PIED = new Font(Font.HELVETICA, 7, Font.NORMAL, Color.DARK_GRAY);
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "----------",
-                        FONT_MINISTERE
-                )
-        );
+        private static final Font FONT_PIED_MENTION = new Font(Font.HELVETICA, 7, Font.ITALIC, Color.DARK_GRAY);
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "REGION MARITIME",
-                        FONT_MINISTERE
-                )
-        );
+        private static final String DEFAUT_MINISTERE = "MINISTERE DE L'ADMINISTRATION TERRITORIALE\nDE LA GOUVERNANCE ET DES AFFAIRES COUTUMIERES";
+        private static final String DEFAUT_REGION = "REGION MARITIME";
+        private static final String DEFAUT_PREFECTURE = "PREFECTURE DU GOLFE";
+        private static final String DEFAUT_COMMUNE = "COMMUNE DU GOLFE 1";
+        private static final String DEFAUT_DIRECTION = "DIRECTION DE LA COMMUNICATION";
+        private static final String DEFAUT_CELLULE = "CELLULE INFORMATIQUE";
+        private static final String DEFAUT_REPUBLIQUE = "REPUBLIQUE TOGOLAISE";
+        private static final String DEFAUT_DEVISE = "Travail - Liberte - Patrie";
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "----------",
-                        FONT_MINISTERE
-                )
-        );
+        private static final String DEFAUT_ADRESSE = "36 Avenue Be-Pa de Souza. B.P. 62356  Tél. (228) 22 21 47 16 / 70 67 43 16";
+        private static final String DEFAUT_SITE_WEB = "www.golfe1.mairie.tg";
+        private static final String DEFAUT_EMAIL = "commulegofe1togo@gmail.com";
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "PREFECTURE DU GOLFE",
-                        FONT_MINISTERE
-                )
-        );
+        private static String champOuDefaut(Map<String, Object> donnees, String cle, String valeurParDefaut) {
+                if (donnees == null)
+                        return valeurParDefaut;
+                Object valeur = donnees.get(cle);
+                if (valeur == null)
+                        return valeurParDefaut;
+                String texte = String.valueOf(valeur).trim();
+                return texte.isEmpty() ? valeurParDefaut : texte;
+        }
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        " ",
-                        FONT_MINISTERE
-                )
-        );
+        public static void ajouterEnTete(Document document, String titreDocument)
+                        throws DocumentException, IOException {
+                ajouterEnTete(document, titreDocument, null);
+        }
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "COMMUNE DU GOLFE 1",
-                        FONT_COMMUNE
-                )
-        );
+        public static void ajouterEnTete(Document document, String titreDocument, Map<String, Object> donneesEditees)
+                        throws DocumentException, IOException {
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "----------",
-                        FONT_MINISTERE
-                )
-        );
+                PdfPTable enTete = new PdfPTable(new float[] { 1, 3, 2 });
+                enTete.setWidthPercentage(100);
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "DIRECTION DE LA COMMUNICATION",
-                        FONT_MINISTERE
-                )
-        );
+                PdfPCell celluleBlason = new PdfPCell();
+                celluleBlason.setBorder(Rectangle.NO_BORDER);
+                celluleBlason.setHorizontalAlignment(Element.ALIGN_CENTER);
+                celluleBlason.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        celluleMinistere.addElement(
-                new Paragraph(
-                        "CELLULE INFORMATIQUE",
-                        FONT_MINISTERE
-                )
-        );
+                try (InputStream in = EnTeteMairiePdf.class.getResourceAsStream("/static/blason-mairie.png")) {
+                        if (in != null) {
+                                Image blason = Image.getInstance(in.readAllBytes());
+                                blason.scaleToFit(55, 55);
+                                celluleBlason.addElement(blason);
+                        }
+                }
 
-        enTete.addCell(celluleMinistere);
+                enTete.addCell(celluleBlason);
 
+                PdfPCell celluleMinistere = new PdfPCell();
+                celluleMinistere.setBorder(Rectangle.NO_BORDER);
+                celluleMinistere.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        /*
-         * 
-         * COLONNE DROITE : REPUBLIQUE TOGOLAISE
-         * 
-         */
+                celluleMinistere.addElement(new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.ministere", DEFAUT_MINISTERE), FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph("----------", FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(champOuDefaut(donneesEditees, "entete.region", DEFAUT_REGION),
+                                FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph("----------", FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.prefecture", DEFAUT_PREFECTURE), FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(" ", FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.commune", DEFAUT_COMMUNE), FONT_COMMUNE));
+                celluleMinistere.addElement(new Paragraph("----------", FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.direction", DEFAUT_DIRECTION), FONT_MINISTERE));
+                celluleMinistere.addElement(new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.cellule", DEFAUT_CELLULE), FONT_MINISTERE));
 
-        PdfPCell celluleRepublique = new PdfPCell();
+                enTete.addCell(celluleMinistere);
 
-        celluleRepublique.setBorder(Rectangle.NO_BORDER);
-        celluleRepublique.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        celluleRepublique.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                PdfPCell celluleRepublique = new PdfPCell();
+                celluleRepublique.setBorder(Rectangle.NO_BORDER);
+                celluleRepublique.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                celluleRepublique.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
-        Paragraph republique =
-                new Paragraph(
-                        "REPUBLIQUE TOGOLAISE",
-                        FONT_REPUBLIQUE
-                );
+                Paragraph republique = new Paragraph(
+                                champOuDefaut(donneesEditees, "entete.republique", DEFAUT_REPUBLIQUE), FONT_REPUBLIQUE);
+                republique.setAlignment(Element.ALIGN_RIGHT);
+                celluleRepublique.addElement(republique);
 
-        republique.setAlignment(Element.ALIGN_RIGHT);
+                Paragraph devise = new Paragraph(champOuDefaut(donneesEditees, "entete.devise", DEFAUT_DEVISE),
+                                FONT_DEVISE);
+                devise.setAlignment(Element.ALIGN_RIGHT);
+                celluleRepublique.addElement(devise);
 
-        celluleRepublique.addElement(republique);
+                enTete.addCell(celluleRepublique);
 
+                document.add(enTete);
 
-        Paragraph devise =
-                new Paragraph(
-                        "Travail - Liberte - Patrie",
-                        FONT_DEVISE
-                );
+                LineSeparator separateur = new LineSeparator();
+                separateur.setLineWidth(1f);
+                document.add(new Chunk(separateur));
 
-        devise.setAlignment(Element.ALIGN_RIGHT);
+                Paragraph espace = new Paragraph(" ");
+                espace.setSpacingAfter(10);
+                document.add(espace);
 
-        celluleRepublique.addElement(devise);
+                PdfPTable cadreTitre = new PdfPTable(1);
+                cadreTitre.setWidthPercentage(70);
+                cadreTitre.setHorizontalAlignment(Element.ALIGN_CENTER);
 
-        enTete.addCell(celluleRepublique);
+                PdfPCell celluleTitre = new PdfPCell(new Phrase(titreDocument, FONT_TITRE));
+                celluleTitre.setPadding(8);
+                celluleTitre.setHorizontalAlignment(Element.ALIGN_CENTER);
+                celluleTitre.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cadreTitre.addCell(celluleTitre);
 
+                document.add(cadreTitre);
 
-        /*
-         * Ajout de l'en-tête au document
-         */
-        document.add(enTete);
+                Paragraph espace2 = new Paragraph(" ");
+                espace2.setSpacingAfter(15);
+                document.add(espace2);
+        }
 
+        public static void ajouterPiedDePage(Document document) throws DocumentException {
+                ajouterPiedDePage(document, null);
+        }
 
-        /*
-         * 
-         * SÉPARATEUR HORIZONTAL
-         * 
-         */
+        public static void ajouterPiedDePage(Document document, Map<String, Object> donneesEditees)
+                        throws DocumentException {
 
-        LineSeparator separateur = new LineSeparator();
+                String mention = champOuDefaut(donneesEditees, "pied.mention", null);
 
-        separateur.setLineWidth(1f);
+                if (mention != null) {
+                        Paragraph paragrapheMention = new Paragraph(mention, FONT_PIED_MENTION);
+                        paragrapheMention.setAlignment(Element.ALIGN_CENTER);
+                        paragrapheMention.setSpacingBefore(20);
+                        paragrapheMention.setSpacingAfter(4);
+                        document.add(paragrapheMention);
+                }
 
-        document.add(
-                new Chunk(separateur)
-        );
+                Paragraph pied = new Paragraph(
+                                champOuDefaut(donneesEditees, "pied.adresse", DEFAUT_ADRESSE) + "  " +
+                                                "Web : "
+                                                + champOuDefaut(donneesEditees, "pied.siteWeb", DEFAUT_SITE_WEB) + "  "
+                                                +
+                                                "E-mail : " + champOuDefaut(donneesEditees, "pied.email", DEFAUT_EMAIL),
+                                FONT_PIED);
 
+                pied.setAlignment(Element.ALIGN_CENTER);
 
-        /*
-         * 
-         * ESPACEMENT AVANT LE TITRE
-         * 
-         */
+                if (mention == null) {
+                        pied.setSpacingBefore(20);
+                }
 
-        Paragraph espace = new Paragraph(" ");
-
-        espace.setSpacingAfter(10);
-
-        document.add(espace);
-
-
-        /*
-         * 
-         * TITRE DU DOCUMENT
-         * 
-         */
-
-        PdfPTable cadreTitre =
-                new PdfPTable(1);
-
-        cadreTitre.setWidthPercentage(70);
-
-        cadreTitre.setHorizontalAlignment(
-                Element.ALIGN_CENTER
-        );
-
-
-        PdfPCell celluleTitre =
-                new PdfPCell(
-                        new Phrase(
-                                titreDocument,
-                                FONT_TITRE
-                        )
-                );
-
-        celluleTitre.setPadding(8);
-
-        celluleTitre.setHorizontalAlignment(
-                Element.ALIGN_CENTER
-        );
-
-        celluleTitre.setVerticalAlignment(
-                Element.ALIGN_MIDDLE
-        );
-
-        cadreTitre.addCell(celluleTitre);
-
-        document.add(cadreTitre);
-
-
-        /*
-         * 
-         * ESPACEMENT APRÈS LE TITRE
-         * 
-         */
-
-        Paragraph espace2 = new Paragraph(" ");
-
-        espace2.setSpacingAfter(15);
-
-        document.add(espace2);
-    }
-
-
-    /*
-     
-     * PIED DE PAGE
-     
-     */
-
-    /**
-     * Ajoute les coordonnées officielles de la Commune
-     * en bas du document PDF.
-     *
-     * @param document document PDF OpenPDF
-     */
-    public static void ajouterPiedDePage(
-            Document document
-    ) throws DocumentException {
-
-        Paragraph pied =
-                new Paragraph(
-                        "36 Avenue Be-Pa de Souza. B.P. 62356  " +
-                        "Tél. (228) 22 21 47 16 / 70 67 43 16  " +
-                        "Web : www.golfe1.mairie.tg  " +
-                        "E-mail : commulegofe1togo@gmail.com",
-                        FONT_PIED
-                );
-
-        pied.setAlignment(
-                Element.ALIGN_CENTER
-        );
-
-        pied.setSpacingBefore(20);
-
-        document.add(pied);
-    }
+                document.add(pied);
+        }
 }
-

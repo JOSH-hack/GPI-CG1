@@ -14,7 +14,8 @@ public class DocxExportGenerator implements ExportGenerator {
 
     @Override
     public byte[] generer(ExportRequest request) throws Exception {
-        return documentDocxService.genererFicheEquipement(request.getIdEquipement());
+        return documentDocxService.genererFicheEquipementEditee(
+                request.getIdEquipement(), request.getDonneesEditees());
     }
 
     @Override

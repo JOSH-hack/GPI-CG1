@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from "@mui/material";
 import logo from "../../assets/icons/logo.svg";
+import { EditableText } from "./EditableText";
 
 const mastheadTypo = {
   fontFamily: "Quicksand, sans-serif",
@@ -9,7 +10,7 @@ const mastheadTypo = {
   color: "#1c2a30",
 };
 
-const EquipmentDocumentMastheadSection = () => (
+const EquipmentDocumentMastheadSection = ({ donneesEditees = {}, onFieldChange }) => (
   <Box
     component="section"
     aria-label="En-tête institutionnel"
@@ -21,32 +22,70 @@ const EquipmentDocumentMastheadSection = () => (
     }}
   >
     <Stack alignItems="flex-start" spacing={0.15} textAlign="center" pt={0.5}>
-      <Typography sx={mastheadTypo}>
-        MINISTERE DE L&apos;ADMINISTRATION
-        <br />
-        TERRITORIALE DE LA GOUVERNANCE
-        <br />
-        ET DES AFFAIRES COUTUMIERES
-      </Typography>
+      <EditableText
+        fieldKey="entete.ministere"
+        value={donneesEditees["entete.ministere"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, display: "block" }}
+      />
       <Typography sx={{ ...mastheadTypo, fontWeight: 400, paddingLeft: 7.25 }}>--------------</Typography>
-      <Typography sx={{ ...mastheadTypo, paddingLeft: 5.5 }}>REGION MARITIME</Typography>
+      <EditableText
+        fieldKey="entete.region"
+        value={donneesEditees["entete.region"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, paddingLeft: 5.5 }}
+      />
       <Typography sx={{ ...mastheadTypo, fontWeight: 400, paddingLeft: 6.5 }}>------------------</Typography>
-      <Typography sx={{ ...mastheadTypo, paddingLeft: 4.25 }}>PREFECTURE DU GOLFE</Typography>
+      <EditableText
+        fieldKey="entete.prefecture"
+        value={donneesEditees["entete.prefecture"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, paddingLeft: 4.25 }}
+      />
       <Box component="img" src={logo} alt="Armoiries Commune du Golfe 1" sx={{ width: 40, height: 40, my: 0.25, left: 70, position: "relative" }} />
-      <Typography sx={{ ...mastheadTypo, paddingLeft: 4.75 }}>COMMUNE DU GOLFE 1</Typography>
+      <EditableText
+        fieldKey="entete.commune"
+        value={donneesEditees["entete.commune"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, paddingLeft: 4.75 }}
+      />
       <Typography sx={{ ...mastheadTypo, fontWeight: 400, paddingLeft: 7.25 }}>--------------</Typography>
-      <Typography sx={{ ...mastheadTypo, paddingLeft: 1.25 }}>DIRECTION DE LA COMMUNICATION</Typography>
+      <EditableText
+        fieldKey="entete.direction"
+        value={donneesEditees["entete.direction"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, paddingLeft: 1.25 }}
+      />
       <Typography sx={{ ...mastheadTypo, fontWeight: 400, paddingLeft: 6.5 }}>---------------------</Typography>
-      <Typography sx={{ ...mastheadTypo, paddingLeft: 4.25 }}>CELLULE INFORMATIQUE</Typography>
+      <EditableText
+        fieldKey="entete.cellule"
+        value={donneesEditees["entete.cellule"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, paddingLeft: 4.25 }}
+      />
     </Stack>
 
     <Stack alignItems="flex-end" spacing={0.15} textAlign="center" pt={0.5}>
-      <Typography sx={{ ...mastheadTypo, fontSize: 12, fontWeight: 400, paddingRight: -4, fontFamily: "'Quicksand, sans-serif'" }}>
-        REPUBLIQUE TOGOLAISE
-      </Typography>
-      <Typography sx={{ ...mastheadTypo, fontSize: 10.5, fontWeight: 700, paddingRight: 1.85, fontFamily: "'Quicksand, sans-serif'" }}>
-        Travail- Liberté – Patrie
-      </Typography>
+      <EditableText
+        fieldKey="entete.republique"
+        value={donneesEditees["entete.republique"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, fontSize: 12, fontWeight: 400, fontFamily: "'Quicksand, sans-serif'" }}
+      />
+      <EditableText
+        fieldKey="entete.devise"
+        value={donneesEditees["entete.devise"] ?? ""}
+        onFieldChange={onFieldChange}
+        component={Typography}
+        sx={{ ...mastheadTypo, fontSize: 10.5, fontWeight: 700, paddingRight: 1.85, fontFamily: "'Quicksand, sans-serif'" }}
+      />
     </Stack>
   </Box>
 );

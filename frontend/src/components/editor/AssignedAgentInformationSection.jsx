@@ -1,6 +1,5 @@
 import {
   Box,
-  Chip,
   Table,
   TableBody,
   TableCell,
@@ -8,16 +7,20 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { valeurAffichee } from "./documentValues";
+import { EditableChip } from "./EditableChip";
 
-const AssignedAgentInformationSection = ({ agent }) => {
-  const agentInformation = [
-    { label: "Identifiant agent", value: valeurAffichee(agent?.idAgent) },
-    { label: "Nom", value: valeurAffichee(agent?.nom) },
-    { label: "Prénom", value: valeurAffichee(agent?.prenom) },
-    { label: "Fonction", value: valeurAffichee(agent?.fonction) },
-    { label: "Téléphone", value: valeurAffichee(agent?.telephone) },
+function buildRows() {
+  return [
+    { label: "Identifiant agent", key: "agent.idAgent", readOnly: true },
+    { label: "Nom", key: "agent.nom" },
+    { label: "Prénom", key: "agent.prenom" },
+    { label: "Fonction", key: "agent.fonction" },
+    { label: "Téléphone", key: "agent.telephone" },
   ];
+}
+
+const AssignedAgentInformationSection = ({ donneesEditees = {}, onFieldChange }) => {
+  const rows = buildRows();
 
   return (
     <Box
@@ -43,9 +46,9 @@ const AssignedAgentInformationSection = ({ agent }) => {
           }}
         >
           <TableBody>
-            {agentInformation.map(({ label, value }, index) => (
+            {rows.map(({ label, key, readOnly }, index) => (
               <TableRow
-                key={label}
+                key={key}
                 sx={{
                   bgcolor: index % 2 === 0 ? "grey.50" : "common.white",
                   "&:last-child .MuiTableCell-root": { borderBottom: 0 },
@@ -59,19 +62,11 @@ const AssignedAgentInformationSection = ({ agent }) => {
                   {label}
                 </TableCell>
                 <TableCell sx={{ borderLeft: 1, borderLeftColor: "divider" }}>
-                  <Chip
-                    label={value}
-                    size="small"
-                    sx={{
-                      height: 18,
-                      bgcolor: "#e0f5ee",
-                      borderRadius: 1,
-                      color: "#146f42",
-                      fontFamily: "Quicksand, Helvetica, Arial, sans-serif",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      "& .MuiChip-label": { px: 0.75 },
-                    }}
+                  <EditableChip
+                    fieldKey={key}
+                    value={donneesEditees[key] ?? ""}
+                    onFieldChange={onFieldChange}
+                    readOnly={readOnly}
                   />
                 </TableCell>
               </TableRow>

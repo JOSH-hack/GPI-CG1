@@ -15,14 +15,20 @@ import { formaterDate, valeurAffichee } from "./documentValues";
 const columns = ["Date", "Description", "Statut", "Note de satisfaction"];
 
 const chipSx = {
-  height: 18,
+  height: "auto",
+  minHeight: 18,
   bgcolor: "#e0f5ee",
   borderRadius: 1,
   color: "#146f42",
-  fontFamily: "monospace",
-  fontSize: 10,
+  fontFamily: "Quicksand, sans-serif",
+  fontSize: 14,
   fontWeight: 600,
-  "& .MuiChip-label": { px: 0.75 },
+  "& .MuiChip-label": {
+    px: 0.75,
+    whiteSpace: "normal",
+    overflow: "visible",
+    textOverflow: "unset",
+  },
 };
 
 function buildRow(panne) {
@@ -40,11 +46,11 @@ const EquipmentFailureHistorySection = ({ pannes = [] }) => (
     <Typography
       id="equipment-failure-history-title"
       component="h2"
-      sx={{ mb: 0.5, color: "common.black", fontSize: 14, fontWeight: 700, lineHeight: 1.2 }}
+      sx={{ mb: 0.5, color: "common.black", fontSize: 16, fontWeight: 700, lineHeight: 1.2 }}
     >
       5. HISTORIQUE DES PANNES
     </Typography>
-    <Typography sx={{ mb: 0.75, fontFamily: "Inter, sans-serif", fontSize: 10, fontStyle: "italic", color: "#5c7078" }}>
+    <Typography sx={{ mb: 0.75, fontFamily: "Quicksand, sans-serif", fontSize: 14, fontStyle: "italic", color: "#5c7078" }}>
       Les lignes ci-dessous sont destinées aux enregistrements de l&apos;historique des pannes.
     </Typography>
     <TableContainer sx={{ border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden" }}>
@@ -53,7 +59,7 @@ const EquipmentFailureHistorySection = ({ pannes = [] }) => (
         aria-label="Historique des pannes"
         sx={{
           tableLayout: "fixed",
-          "& .MuiTableCell-root": { borderColor: "divider", px: 1, py: 0.5, fontSize: 10, lineHeight: 1.2 },
+          "& .MuiTableCell-root": { borderColor: "divider", px: 1, py: 0.5, fontSize: 14, lineHeight: 1.2 },
         }}
       >
         <TableHead>
