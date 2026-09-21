@@ -1,0 +1,63 @@
+### Backend — Spring Boot / Maven ###
+backend/target/
+backend/HELP.md
+!backend/.mvn/wrapper/maven-wrapper.jar
+!backend/**/src/main/**/target/
+!backend/**/src/test/**/target/
+
+# Fichiers générés par l'appli (uploads utilisateurs, sauvegardes BDD)
+backend/uploads/
+backend/backups/
+
+### Frontend — React / Vite ###
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Logs npm/yarn/pnpm
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+### Environnement (secrets, config locale — garder les .env.example versionnés) ###
+.env
+.env.local
+.env.*.local
+*/.env
+*/.env.local
+
+### Logs génériques ###
+*.log
+logs/
+
+### Éditeurs / IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/*
+!.vscode/extensions.json
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+.apt_generated
+
+### OS ###
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+### Divers ###
+*.tmp
+*.bak
+*.orig
