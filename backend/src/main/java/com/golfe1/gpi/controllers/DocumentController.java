@@ -7,11 +7,17 @@
  *
  * Propriétaire     : Josué BEDEL
  * Date de création : 10/09/2026
+ * Date de mise à jour : 19/09/2026
+ * Objet de mise à jour : Alignement des roles autorises sur
+ *                        POST /export/generate avec ceux des GET
+ *                        fiche-pdf/fiche-docx. Ajout de l'endpoint
+ *                        autocollant-pdf et de export/generate-image.
  *
  */
 
 package com.golfe1.gpi.controllers;
 
+import com.golfe1.gpi.dto.request.ExportImageRequest;
 import com.golfe1.gpi.dto.request.ExportRequest;
 import com.golfe1.gpi.services.DocumentDocxService;
 import com.golfe1.gpi.services.DocumentPdfService;
@@ -77,8 +83,32 @@ public class DocumentController {
                                 .body(new ByteArrayResource(docx));
         }
 
+        // Genere le petit autocollant d'identification (~100mm x 60mm) a coller
+        // physiquement sur l'equipement : nom, categorie, localisation, agent
+        // affecte + QR code (lien vers la fiche detaillee). Toujours base sur
+        // les donnees actuelles de la BDD - pas de version "editee".
+        @GetMapping("/equipement/{id}/autocollant-pdf")
+        @PreAuthorize("hasRole('ADMIN_INFO') or " +
+                        "hasRole('ADMIN_SYSTEME') or " +
+                        "hasRole('TECHNICIEN') or " +
+                        "hasRole('RESPONSABLE_DSI')")
+        public ResponseEntity<ByteArrayResource> autocollantIdentification(
+                        @PathVariable Long id) throws Exception {
+
+                byte[] pdf = documentPdfService.genererAutocollantIdentification(id);
+
+                return ResponseEntity.ok()
+                                .contentType(MediaType.APPLICATION_PDF)
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"autocollant-equipement-" + id + ".pdf\"")
+                                .body(new ByteArrayResource(pdf));
+        }
+
         @PostMapping("/export/generate")
-        @PreAuthorize("hasRole('ADMIN_INFO') or hasRole('TECHNICIEN')")
+        @PreAuthorize("hasRole('ADMIN_INFO') or " +
+                        "hasRole('ADMIN_SYSTEME') or " +
+                        "hasRole('TECHNICIEN') or " +
+                        "hasRole('RESPONSABLE_DSI')")
         public ResponseEntity<ByteArrayResource> genererDocumentEdite(
                         @RequestBody ExportRequest request) throws Exception {
 
@@ -102,5 +132,28 @@ public class DocumentController {
                                                 "attachment; filename=\"export-" + request.getIdEquipement() + "."
                                                                 + extension + "\"")
                                 .body(new ByteArrayResource(fichier));
+        }
+
+        // Genere un PDF a partir d'images (une par page) capturees du rendu
+        // reel de l'editeur de fiche equipement cote frontend - remplace, pour
+        // l'editeur, l'ancienne reconstruction champ par champ via
+        // genererFicheEquipementEditee(), qui restait sujette a des ecarts de
+        // mise en forme entre le HTML edite et le PDF genere.
+        @PostMapping("/export/generate-image")
+        @PreAuthorize("hasRole('ADMIN_INFO') or " +
+                        "hasRole('ADMIN_SYSTEME') or " +
+                        "hasRole('TECHNICIEN') or " +
+                        "hasRole('RESPONSABLE_DSI')")
+        public ResponseEntity<ByteArrayResource> genererDocumentEditeImage(
+                        @RequestBody ExportImageRequest request) throws Exception {
+
+                byte[] pdf = documentPdfService.genererPdfDepuisImages(request.getImages());
+
+                return ResponseEntity.ok()
+                                .contentType(MediaType.APPLICATION_PDF)
+                                .header(HttpHeaders.CONTENT_DISPOSITION,
+                                                "attachment; filename=\"export-" + request.getIdEquipement()
+                                                                + ".pdf\"")
+                                .body(new ByteArrayResource(pdf));
         }
 }

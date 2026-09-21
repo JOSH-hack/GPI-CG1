@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { QRCodeSVG } from "qrcode.react";
 import { valeurAffichee } from "./documentValues";
+import { construireLienFicheEquipement } from "../../utils/liens";
 
 const fieldTypo = {
   fontFamily: "Quicksand, sans-serif",
@@ -52,8 +53,8 @@ const EquipmentIdentifierQrSection = ({ equipement }) => (
         p: 0.5,
       }}
     >
-      {equipement?.codeInventaire ? (
-        <QRCodeSVG value={equipement.codeInventaire} size={80} />
+      {equipement?.idEquipement ? (
+        <QRCodeSVG value={construireLienFicheEquipement(equipement.idEquipement)} size={80} />
       ) : (
         <Typography sx={{ fontFamily: "Inter, sans-serif", fontSize: 14, color: "#5c7078", fontWeight: 600 }}>
           QR CODE

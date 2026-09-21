@@ -8,11 +8,9 @@
   *
   * Propriétaire     : Josué BEDEL
   * Date de création : 11/09/2026
-  * Date de mise à jour : 14/09/2026
-  * Objet de mise à jour : Correction des accès aux sous-types (instanceof),
-  *                        alignement getters (getStatut, getLibelle, getAnnexe, getAgent,
- getDateSurvenance),
-  *                        utilisation des bonnes méthodes de service (getParId, listerParEquipement).
+  * Date de mise à jour : 19/09/2026
+  * Objet de mise à jour : QR code delegue a QrCodeUtils (lien vers la fiche
+  *                        detaillee au lieu du texte "GPI-CG1|EQUIPEMENT|...").
   */
 
 package com.golfe1.gpi.services;
@@ -28,19 +26,12 @@ import com.golfe1.gpi.entities.Panne;
 import com.golfe1.gpi.services.EquipementService;
 import com.golfe1.gpi.services.HistoriqueMouvementService;
 import com.golfe1.gpi.services.PanneService;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import org.apache.poi.util.Units;
 import org.apache.poi.xwpf.usermodel.*;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.*;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,6 +55,7 @@ public class DocumentDocxService {
         private final EquipementService equipementService;
         private final PanneService panneService;
         private final HistoriqueMouvementService historiqueMouvementService;
+        private final QrCodeUtils qrCodeUtils;
 
         private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy/ HH:mm");
@@ -72,10 +64,12 @@ public class DocumentDocxService {
         public DocumentDocxService(
                         EquipementService equipementService,
                         PanneService panneService,
-                        HistoriqueMouvementService historiqueMouvementService) {
+                        HistoriqueMouvementService historiqueMouvementService,
+                        QrCodeUtils qrCodeUtils) {
                 this.equipementService = equipementService;
                 this.panneService = panneService;
                 this.historiqueMouvementService = historiqueMouvementService;
+                this.qrCodeUtils = qrCodeUtils;
         }
 
         public byte[] genererFicheEquipement(Long idEquipement) throws Exception {
@@ -907,58 +901,18 @@ public class DocumentDocxService {
                 }
         }
 
+        // Le contenu du QR code est desormais le lien vers la fiche detaillee
+        // de l'equipement dans l'application (voir QrCodeUtils.lienFicheEquipement) -
+        // scanner le QR ouvre directement cette page. Le parametre codeInventaire
+        // est conserve dans la signature pour ne pas casser les deux sites d'appel
+        // existants, mais n'est plus utilise dans le contenu encode.
         private byte[] genererQrCode(
                         Equipement equipement,
                         String codeInventaire) throws WriterException, IOException {
 
-                String contenu = "GPI-CG1|EQUIPEMENT|"
-                                + valeur(codeInventaire)
-                                + "|ID|"
-                                + equipement.getIdEquipement();
+                String contenu = qrCodeUtils.lienFicheEquipement(equipement.getIdEquipement());
 
-                Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
-
-                hints.put(
-                                EncodeHintType.ERROR_CORRECTION,
-                                ErrorCorrectionLevel.M);
-
-                hints.put(
-                                EncodeHintType.MARGIN,
-                                1);
-
-                BitMatrix matrix = new MultiFormatWriter().encode(
-                                contenu,
-                                BarcodeFormat.QR_CODE,
-                                300,
-                                300,
-                                hints);
-
-                BufferedImage image = new BufferedImage(
-                                matrix.getWidth(),
-                                matrix.getHeight(),
-                                BufferedImage.TYPE_INT_RGB);
-
-                for (int x = 0; x < matrix.getWidth(); x++) {
-
-                        for (int y = 0; y < matrix.getHeight(); y++) {
-
-                                image.setRGB(
-                                                x,
-                                                y,
-                                                matrix.get(x, y)
-                                                                ? 0xFF000000
-                                                                : 0xFFFFFFFF);
-                        }
-                }
-
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-                ImageIO.write(
-                                image,
-                                "PNG",
-                                outputStream);
-
-                return outputStream.toByteArray();
+                return qrCodeUtils.genererPng(contenu, 300);
         }
 
         private void ajouterTitreCellule(

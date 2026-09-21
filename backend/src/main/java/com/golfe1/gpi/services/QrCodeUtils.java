@@ -3,10 +3,18 @@
  * Nom du fichier   : QrCodeUtils.java
  *
  * Objectif         : Génération de QR codes PNG réutilisable par tous les
- *                    générateurs de documents (DOCX, PDF...) de l'application,
- *                    pour éviter de dupliquer la logique ZXing dans chaque
- *                    service. Le contenu encodé pour un équipement suit un
- *                    format unique et partagé : "GPI-CG1|EQUIPEMENT|<code>|ID|<id>".
+ *                    générateurs de documents (DOCX, PDF, autocollant...)
+ *                    de l'application. Le contenu encodé est désormais le
+ *                    lien vers la fiche détaillée de l'équipement dans
+ *                    l'application (scanner le QR ouvre cette page).
+ *
+ * Propriétaire     : Josué BEDEL
+ * Date de création : 19/09/2026
+ * Date de mise à jour : 19/09/2026
+ * Objet de mise à jour : Conversion en bean Spring (@Component) pour
+ *                        pouvoir injecter app.frontend-url ; le contenu
+ *                        encodé passe du format texte "GPI-CG1|EQUIPEMENT|..."
+ *                        a un lien "<frontend-url>/parc/equipements/<id>".
  *
  */
 
@@ -19,6 +27,9 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -26,31 +37,32 @@ import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 
-public final class QrCodeUtils {
+@Component
+public class QrCodeUtils {
 
     private static final int TAILLE_PAR_DEFAUT_PX = 300;
 
-    private QrCodeUtils() {
-        // Classe utilitaire
+    // URL de base du frontend (ex: https://gpi.golfe1.mairie.tg), configuree
+    // via app.frontend-url (application.properties / variable d'env
+    // FRONTEND_URL) - utilisee pour construire le lien encode dans chaque
+    // QR code equipement.
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    // Construit le lien vers la fiche detaillee de l'equipement dans
+    // l'application (ex: "https://.../parc/equipements/42"). Scanner ce
+    // QR code ouvre directement cette page, d'ou l'equipement peut etre
+    // exporte (bouton "Exporter le document").
+    public String lienFicheEquipement(Long idEquipement) {
+        String base = (frontendUrl == null) ? "" : frontendUrl.replaceAll("/+$", "");
+        return base + "/parc/equipements/" + idEquipement;
     }
 
-    /**
-     * Construit le contenu standard des QR codes équipement GPI, identique
-     * entre les exports DOCX et PDF, pour que le même code inventaire donne
-     * toujours le même QR code quel que soit le format exporté.
-     */
-    public static String contenuEquipement(String codeInventaire, Long idEquipement) {
-        String code = (codeInventaire == null || codeInventaire.isBlank())
-                ? "N/A"
-                : codeInventaire.trim();
-        return "GPI-CG1|EQUIPEMENT|" + code + "|ID|" + idEquipement;
-    }
-
-    public static byte[] genererPng(String contenu) throws WriterException, IOException {
+    public byte[] genererPng(String contenu) throws WriterException, IOException {
         return genererPng(contenu, TAILLE_PAR_DEFAUT_PX);
     }
 
-    public static byte[] genererPng(String contenu, int taillePx) throws WriterException, IOException {
+    public byte[] genererPng(String contenu, int taillePx) throws WriterException, IOException {
 
         Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
         hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);

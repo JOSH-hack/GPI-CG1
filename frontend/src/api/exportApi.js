@@ -9,10 +9,8 @@
  *
  * Date de création : 03/09/2026
  * Date de mise à jour : 19/09/2026
- * Objet de mise à jour : Ajout de genererDocumentEditeImage() - l'editeur
- *                        de fiche equipement n'exporte plus qu'en PDF, a
- *                        partir d'images capturees du rendu reel (plus
- *                        fidele qu'une reconstruction champ par champ).
+ * Objet de mise à jour : Ajout de telechargerAutocollant() et
+ *                        genererDocumentEditeImage().
  *
  */
 
@@ -47,6 +45,16 @@ export const exportApi = {
     telechargerFicheEquipementDocx: (idEquipement) =>
         axiosClient.get(
             `/documents/equipement/${idEquipement}/fiche-docx`,
+            {
+                responseType: 'blob'
+            }
+        ),
+
+    // Autocollant d'identification (~100mm x 60mm) a coller sur l'équipement -
+    // toujours base sur les données actuelles de la BDD, pas de version "éditée".
+    telechargerAutocollant: (idEquipement) =>
+        axiosClient.get(
+            `/documents/equipement/${idEquipement}/autocollant-pdf`,
             {
                 responseType: 'blob'
             }

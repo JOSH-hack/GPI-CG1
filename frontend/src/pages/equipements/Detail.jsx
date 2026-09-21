@@ -8,21 +8,23 @@ Objectif         : Fiche detaillee d'un equipement - fidele a la maquette
 Propriétaire     : Josué BEDEL
 Date de création : 05/09/2026
 Date de mise à jour : 19/09/2026
-Objet de mise à jour : Un seul bouton "Exporter le document" (ouvre
-                       l'éditeur) - suppression des boutons "Ouvrir
-                       l'éditeur", "Imprimer" et "Télécharger DOCX".
+Objet de mise à jour : QR code = lien vers la fiche détaillée (au lieu du
+                       code inventaire brut). Ajout du bouton "Autocollant
+                       d'identification".
 
 */
 
 import { useEffect, useState } from 'react'
 import { useParams, Link as RouterLink } from 'react-router-dom'
 import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined'
+import LocalOfferOutlined from '@mui/icons-material/LocalOfferOutlined'
 import StarIcon from '@mui/icons-material/Star'
 import StarBorderIcon from '@mui/icons-material/StarBorder'
 import NavigateNextIcon from '@mui/icons-material/NavigateNext'
 import { QRCodeSVG } from 'qrcode.react'
 import logo from '../../assets/icons/logo.svg'
 import { exportApi } from '../../api/exportApi'
+import { construireLienFicheEquipement } from '../../utils/liens'
 import EditorModal from '../../components/editor/EditorModal'
 
 import {
@@ -180,6 +182,27 @@ export default function Detail() {
     charger()
   }, [id])
 
+  async function telechargerAutocollant() {
+    try {
+      const response = await exportApi.telechargerAutocollant(equipement.idEquipement)
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+      const lien = document.createElement('a')
+      lien.href = url
+      lien.download = `autocollant-${equipement.codeInventaire || equipement.idEquipement}.pdf`
+      document.body.appendChild(lien)
+      lien.click()
+      lien.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (erreurRequete) {
+      const statut = erreurRequete?.response?.status
+      setErreurExport(
+        statut === 403
+          ? "Vous n'avez pas les droits nécessaires pour exporter ce document."
+          : "Une erreur est survenue pendant l'export de l'autocollant. Veuillez réessayer."
+      )
+    }
+  }
+
   async function telechargerDocumentPdfImage(images, nomFichier) {
     try {
       const response = await exportApi.genererDocumentEditeImage({
@@ -293,6 +316,16 @@ export default function Detail() {
               >
                 Exporter le document
               </Button>
+
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<LocalOfferOutlined sx={{ fontSize: 14 }} />}
+                onClick={telechargerAutocollant}
+                sx={{ ...typo, borderColor: '#146f42', color: '#146f42', fontSize: '0.7rem', fontWeight: 700, textTransform: 'none' }}
+              >
+                Autocollant d&apos;identification
+              </Button>
             </Stack>
           </Stack>
 
@@ -306,7 +339,7 @@ export default function Detail() {
               }}
             >
               <Stack alignItems="center" spacing={0.5} className="no-print">
-                <QRCodeSVG value={equipement.codeInventaire} size={106} />
+                <QRCodeSVG value={construireLienFicheEquipement(equipement.idEquipement)} size={106} />
               </Stack>
               <Stack spacing={0.4}>
                 <Typography sx={{ ...typo, color: '#0c5d7d', fontSize: '0.95rem', fontWeight: 600 }}>{equipement.codeInventaire}</Typography>

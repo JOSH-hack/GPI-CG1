@@ -2,10 +2,18 @@
 
 Nom du fichier   : DocumentPdfService.java
 Objectif         : Generation de la Fiche detaillee equipement en PDF officiel
+                    (en-tete Mairie + infos generales/specifiques + historiques
+                    pannes/mouvements) - premiere utilisation du gabarit
+                    EnTeteMairiePdf, destine a etre reutilise pour d'autres
+                    documents (rapports d'intervention, etc.)
+Propriétaire     : Josué BEDEL
+Date de création : 10/09/2026
 Date de mise à jour : 19/09/2026
 Objet de mise à jour : genererFicheEquipementEditee() applique reellement les
-                       surcharges de donneesEditees, avec QR code et section
-                       Signatures, a la parite avec DocumentDocxService.
+                       surcharges de donneesEditees, avec QR code (delegue a
+                       QrCodeUtils, lien vers la fiche) et section Signatures.
+                       Ajout de genererPdfDepuisImages() et
+                       genererAutocollantIdentification().
 
 */
 
@@ -24,6 +32,7 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +43,7 @@ public class DocumentPdfService {
     private final EquipementService equipementService;
     private final PanneService panneService;
     private final HistoriqueMouvementService historiqueMouvementService;
+    private final QrCodeUtils qrCodeUtils;
 
     private static final Font FONT_LABEL = new Font(Font.HELVETICA, 9, Font.BOLD);
     private static final Font FONT_VALEUR = new Font(Font.HELVETICA, 9, Font.NORMAL);
@@ -43,20 +53,36 @@ public class DocumentPdfService {
     private static final DateTimeFormatter FORMAT_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final int TAILLE_QR_PDF_PX = 240;
 
+    // Constantes de l'autocollant d'identification (voir genererAutocollantIdentification)
+    private static final float AUTOCOLLANT_LARGEUR_PT = 283f; // ~100mm
+    private static final float AUTOCOLLANT_HAUTEUR_PT = 170f; // ~60mm
+    private static final int TAILLE_QR_AUTOCOLLANT_PX = 200;
+    private static final Font FONT_AUTOCOLLANT_ENTETE = new Font(Font.HELVETICA, 6, Font.ITALIC, Color.GRAY);
+    private static final Font FONT_AUTOCOLLANT_NOM = new Font(Font.HELVETICA, 12, Font.BOLD);
+    private static final Font FONT_AUTOCOLLANT_LABEL = new Font(Font.HELVETICA, 7, Font.BOLD);
+    private static final Font FONT_AUTOCOLLANT_VALEUR = new Font(Font.HELVETICA, 7, Font.NORMAL);
+
     public DocumentPdfService(EquipementService equipementService,
             PanneService panneService,
-            HistoriqueMouvementService historiqueMouvementService) {
+            HistoriqueMouvementService historiqueMouvementService,
+            QrCodeUtils qrCodeUtils) {
         this.equipementService = equipementService;
         this.panneService = panneService;
         this.historiqueMouvementService = historiqueMouvementService;
+        this.qrCodeUtils = qrCodeUtils;
     }
 
     public byte[] genererFicheEquipement(Long idEquipement) throws DocumentException, IOException {
         Equipement equipement = equipementService.getParId(idEquipement);
         return genererPDF(equipement, panneService.listerParEquipement(idEquipement),
-                historiqueMouvementService.listerParEquipement(idEquipement), "FICHE DETAILLEE EQUIPEMENT");
+                          historiqueMouvementService.listerParEquipement(idEquipement), "FICHE DETAILLEE EQUIPEMENT");
     }
 
+    // Genere la fiche a partir de ce que l'utilisateur a reellement edite
+    // dans EditorModal (frontend), sur le meme principe que
+    // DocumentDocxService.genererFicheEquipementEditee : seuls l'historique
+    // des pannes/mouvements restent pilotes par la BDD (sections en lecture
+    // seule cote frontend, donc absentes de donneesEditees).
     public byte[] genererFicheEquipementEditee(Long idEquipement, Map<String, Object> donneesEditees)
             throws DocumentException, IOException, WriterException {
 
@@ -76,9 +102,56 @@ public class DocumentPdfService {
                 donneesEditees);
     }
 
-    private byte[] genererPDF(Equipement equipement, List<Panne> pannes, List<HistoriqueMouvement> mouvements,
-            String titre) throws DocumentException, IOException {
-        // ... inchangé (chemin non édité, toujours utilisé par le GET simple) ...
+    // Genere un PDF ou chaque page est integralement une image PNG fournie
+    // par le frontend (capture du rendu reel de EditorModal - voir
+    // exportCapture.js) - garantit une fidelite visuelle totale, sans
+    // reconstruire le contenu champ par champ comme genererPDFEdite().
+    public byte[] genererPdfDepuisImages(List<String> imagesBase64) throws DocumentException, IOException {
+
+        if (imagesBase64 == null || imagesBase64.isEmpty()) {
+            throw new IllegalArgumentException("Aucune image fournie pour générer le PDF.");
+        }
+
+        Document document = new Document(PageSize.A4, 0, 0, 0, 0);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        boolean premierePage = true;
+
+        for (String imageBase64 : imagesBase64) {
+            if (!premierePage) {
+                document.newPage();
+            }
+            premierePage = false;
+
+            byte[] octetsImage = decoderImageBase64(imageBase64);
+            Image image = Image.getInstance(octetsImage);
+
+            image.scaleToFit(PageSize.A4.getWidth(), PageSize.A4.getHeight());
+            image.setAbsolutePosition(
+                    (PageSize.A4.getWidth() - image.getScaledWidth()) / 2,
+                    (PageSize.A4.getHeight() - image.getScaledHeight()) / 2);
+
+            document.add(image);
+        }
+
+        document.close();
+        return out.toByteArray();
+    }
+
+    // Accepte aussi bien "data:image/png;base64,XXXX" que "XXXX" seul,
+    // pour rester tolerant sur ce que le frontend envoie exactement.
+    private byte[] decoderImageBase64(String valeur) {
+        String contenu = valeur;
+        int indexVirgule = valeur.indexOf(',');
+        if (valeur.startsWith("data:") && indexVirgule >= 0) {
+            contenu = valeur.substring(indexVirgule + 1);
+        }
+        return Base64.getDecoder().decode(contenu);
+    }
+
+    private byte[] genererPDF(Equipement equipement, List<Panne> pannes, List<HistoriqueMouvement> mouvements, String titre) throws DocumentException, IOException {
         Document document = new Document(PageSize.A4, 36, 36, 20, 20);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, out);
@@ -122,6 +195,10 @@ public class DocumentPdfService {
         return out.toByteArray();
     }
 
+    // Pendant du genererPDF() ci-dessus, mais entierement pilote par
+    // donneesEditees (en-tete, identification+QR, infos generales/
+    // specifiques, signatures, pied de page). Les historiques restent
+    // ceux de la BDD, comme convenu.
     private byte[] genererPDFEdite(Equipement equipement, List<Panne> pannes, List<HistoriqueMouvement> mouvements,
             Map<String, Object> donneesEditees) throws DocumentException, IOException, WriterException {
 
@@ -190,9 +267,8 @@ public class DocumentPdfService {
         celluleInfos.addElement(infos);
         table.addCell(celluleInfos);
 
-        String codeInventaire = champ(donneesEditees, "codeInventaire");
-        String contenuQr = QrCodeUtils.contenuEquipement(codeInventaire, equipement.getIdEquipement());
-        byte[] qrPng = QrCodeUtils.genererPng(contenuQr, TAILLE_QR_PDF_PX);
+        String contenuQr = qrCodeUtils.lienFicheEquipement(equipement.getIdEquipement());
+        byte[] qrPng = qrCodeUtils.genererPng(contenuQr, TAILLE_QR_PDF_PX);
         Image qrImage = Image.getInstance(qrPng);
         qrImage.scaleToFit(70, 70);
 
@@ -203,6 +279,90 @@ public class DocumentPdfService {
         table.addCell(celluleQr);
 
         return table;
+    }
+
+    // Genere un petit document PDF autonome (~100mm x 60mm, format
+    // autocollant) a coller physiquement sur l'equipement : nom complet,
+    // categorie, localisation, agent affecte a gauche, QR code (lien vers
+    // la fiche detaillee) a droite. Contrairement a genererPDFEdite(), ce
+    // document n'a pas de "version editee" - il reflete toujours les
+    // donnees actuelles de la BDD, comme un autocollant physique doit le faire.
+    public byte[] genererAutocollantIdentification(Long idEquipement)
+            throws DocumentException, IOException, WriterException {
+
+        Equipement equipement = equipementService.getParId(idEquipement);
+
+        if (equipement == null) {
+            throw new IllegalArgumentException("Équipement introuvable avec l'identifiant : " + idEquipement);
+        }
+
+        Document document = new Document(
+                new Rectangle(AUTOCOLLANT_LARGEUR_PT, AUTOCOLLANT_HAUTEUR_PT), 8, 8, 8, 8);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        PdfPTable cadre = new PdfPTable(1);
+        cadre.setWidthPercentage(100);
+
+        PdfPCell celluleCadre = new PdfPCell();
+        celluleCadre.setBorder(Rectangle.BOX);
+        celluleCadre.setBorderWidth(0.75f);
+        celluleCadre.setBorderColor(Color.DARK_GRAY);
+        celluleCadre.setPadding(6);
+
+        PdfPTable contenu = new PdfPTable(new float[] { 2.4f, 1f });
+        contenu.setWidthPercentage(100);
+
+        PdfPCell celluleTexte = new PdfPCell();
+        celluleTexte.setBorder(Rectangle.NO_BORDER);
+        celluleTexte.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        celluleTexte.setPadding(0);
+
+        Paragraph entete = new Paragraph("GPI - COMMUNE DU GOLFE 1", FONT_AUTOCOLLANT_ENTETE);
+        entete.setSpacingAfter(3);
+        celluleTexte.addElement(entete);
+
+        String nomComplet = java.util.stream.Stream
+                .of(equipement.getMarque(), equipement.getModele(), equipement.getNom())
+                .filter(v -> v != null && !v.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "));
+        Paragraph nom = new Paragraph(nomComplet.isBlank() ? "-" : nomComplet, FONT_AUTOCOLLANT_NOM);
+        nom.setSpacingAfter(4);
+        celluleTexte.addElement(nom);
+
+        celluleTexte.addElement(ligneAutocollant("Categorie",
+                equipement.getCategorie() != null ? equipement.getCategorie().getLibelle() : "-"));
+        celluleTexte.addElement(ligneAutocollant("Localisation", libelleLocalisation(equipement.getLocalisation())));
+        celluleTexte.addElement(ligneAutocollant("Agent", libelleAgent(equipement.getAgent())));
+
+        contenu.addCell(celluleTexte);
+
+        String contenuQr = qrCodeUtils.lienFicheEquipement(equipement.getIdEquipement());
+        byte[] qrPng = qrCodeUtils.genererPng(contenuQr, TAILLE_QR_AUTOCOLLANT_PX);
+        Image qrImage = Image.getInstance(qrPng);
+        qrImage.scaleToFit(90, 90);
+
+        PdfPCell celluleQrAutocollant = new PdfPCell(qrImage);
+        celluleQrAutocollant.setBorder(Rectangle.NO_BORDER);
+        celluleQrAutocollant.setHorizontalAlignment(Element.ALIGN_CENTER);
+        celluleQrAutocollant.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        contenu.addCell(celluleQrAutocollant);
+
+        celluleCadre.addElement(contenu);
+        cadre.addCell(celluleCadre);
+
+        document.add(cadre);
+        document.close();
+        return out.toByteArray();
+    }
+
+    private Paragraph ligneAutocollant(String label, String valeur) {
+        Paragraph p = new Paragraph();
+        p.add(new Chunk(label + " : ", FONT_AUTOCOLLANT_LABEL));
+        p.add(new Chunk(vide(valeur), FONT_AUTOCOLLANT_VALEUR));
+        p.setSpacingAfter(1.5f);
+        return p;
     }
 
     private void ajouterInfosSpecifiquesEditees(PdfPTable table, Map<String, Object> donneesEditees) {
@@ -282,165 +442,4 @@ public class DocumentPdfService {
         return sb.toString();
     }
 
-    private String agentEditee(Map<String, Object> donneesEditees) {
-
-        String nom = champ(donneesEditees, "agent.nom");
-        String prenom = champ(donneesEditees, "agent.prenom");
-
-        if ("-".equals(nom) && "-".equals(prenom)) {
-            return "Non affecte";
-        }
-
-        return nom + " " + prenom;
-    }
-
-    private void ajouterInfosSpecifiques(PdfPTable table, Equipement equipement) {
-        if (equipement instanceof EquipementMateriel materiel) {
-            ligne(table, "Processeur", materiel.getProcesseur());
-            ligne(table, "RAM", materiel.getRam());
-            ligne(table, "Capacite stockage", materiel.getCapaciteDisque());
-            ligne(table, "Adresse IP", materiel.getAdresseIp());
-            ligne(table, "Adresse MAC", materiel.getAdresseMac());
-            ligne(table, "Systeme d'exploitation", materiel.getSystemeExploitation());
-        } else if (equipement instanceof EquipementLogiciel logiciel) {
-            ligne(table, "Version", logiciel.getVersion());
-            ligne(table, "Nombre de licences",
-                    logiciel.getNombreLicences() != null ? String.valueOf(logiciel.getNombreLicences()) : "-");
-            ligne(table, "Cle de licence", logiciel.getCleLicence());
-            ligne(table, "Debut de licence", formaterDate(logiciel.getDateDebutLicence()));
-            ligne(table, "Expiration licence", formaterDate(logiciel.getDateExpirationLicence()));
-        } else if (equipement instanceof EquipementReseau reseau) {
-            ligne(table, "Type d'adresse", reseau.getTypeAdresse() != null ? reseau.getTypeAdresse().name() : "-");
-            ligne(table, "Adresse IP", reseau.getAdresseIp());
-            ligne(table, "Adresse MAC", reseau.getAdresseMac());
-            ligne(table, "Passerelle", reseau.getPasserelle());
-            ligne(table, "Nom d'hote", reseau.getNomHote());
-            ligne(table, "Nombre de ports",
-                    reseau.getNombrePorts() != null ? String.valueOf(reseau.getNombrePorts()) : "-");
-        }
-    }
-
-    private PdfPTable tableHistoriquePannes(List<Panne> pannes) {
-        PdfPTable table = new PdfPTable(new float[] { 2, 4, 2, 2 });
-        table.setWidthPercentage(100);
-        for (String entete : new String[] { "Date", "Description", "Priorite", "Statut" }) {
-            table.addCell(enteteTableau(entete));
-        }
-        if (pannes.isEmpty()) {
-            PdfPCell vide = new PdfPCell(new Phrase("Aucune panne enregistree", FONT_VALEUR));
-            vide.setColspan(4);
-            table.addCell(vide);
-        } else {
-            for (Panne p : pannes) {
-                table.addCell(new Phrase(
-                        p.getDateSurvenance() != null ? p.getDateSurvenance().format(FORMAT_DATE) : "-", FONT_VALEUR));
-                table.addCell(new Phrase(vide(p.getDescription()), FONT_VALEUR));
-                table.addCell(new Phrase(p.getPriorite() != null ? p.getPriorite().name() : "-", FONT_VALEUR));
-                table.addCell(new Phrase(p.getStatut() != null ? p.getStatut().name() : "-", FONT_VALEUR));
-            }
-        }
-        return table;
-    }
-
-    private PdfPTable tableHistoriqueMouvements(List<HistoriqueMouvement> mouvements) {
-        PdfPTable table = new PdfPTable(new float[] { 2, 3, 2, 2, 2, 2 });
-        table.setWidthPercentage(100);
-        for (String entete : new String[] { "Type", "Motif", "Ancienne valeur", "Nouvelle valeur", "Operateur",
-                "Date" }) {
-            table.addCell(enteteTableau(entete));
-        }
-        if (mouvements.isEmpty()) {
-            PdfPCell vide = new PdfPCell(new Phrase("Aucun mouvement enregistre", FONT_VALEUR));
-            vide.setColspan(6);
-            table.addCell(vide);
-        } else {
-            for (HistoriqueMouvement m : mouvements) {
-                table.addCell(
-                        new Phrase(m.getTypeMouvement() != null ? m.getTypeMouvement().name() : "-", FONT_VALEUR));
-                table.addCell(new Phrase(vide(m.getMotif()), FONT_VALEUR));
-                table.addCell(new Phrase(vide(m.getAncienneValeur()), FONT_VALEUR));
-                table.addCell(new Phrase(vide(m.getNouvelleValeur()), FONT_VALEUR));
-                table.addCell(new Phrase(m.getOperateur() != null ? m.getOperateur().getNom() : "-", FONT_VALEUR));
-                table.addCell(new Phrase(
-                        m.getDateMouvement() != null ? m.getDateMouvement().format(FORMAT_DATE) : "-", FONT_VALEUR));
-            }
-        }
-        return table;
-    }
-
-    private PdfPCell enteteTableau(String texte) {
-        Font fontEntete = new Font(Font.HELVETICA, 8, Font.BOLD, Color.WHITE);
-        PdfPCell cell = new PdfPCell(new Phrase(texte, fontEntete));
-        cell.setBackgroundColor(new Color(12, 93, 125));
-        cell.setPadding(4);
-        return cell;
-    }
-
-    private Paragraph section(String titre) {
-        Paragraph p = new Paragraph(titre, FONT_SECTION);
-        p.setSpacingBefore(10);
-        p.setSpacingAfter(6);
-        return p;
-    }
-
-    private PdfPTable nouvelleTableInfo() {
-        PdfPTable table = new PdfPTable(new float[] { 1, 2 });
-        table.setWidthPercentage(100);
-        return table;
-    }
-
-    private void ligne(PdfPTable table, String label, String valeur) {
-        PdfPCell celluleLabel = new PdfPCell(new Phrase(label, FONT_LABEL));
-        celluleLabel.setBorder(Rectangle.BOTTOM);
-        celluleLabel.setBorderColor(Color.LIGHT_GRAY);
-        celluleLabel.setPadding(3);
-        table.addCell(celluleLabel);
-
-        PdfPCell celluleValeur = new PdfPCell(new Phrase(vide(valeur), FONT_VALEUR));
-        celluleValeur.setBorder(Rectangle.BOTTOM);
-        celluleValeur.setBorderColor(Color.LIGHT_GRAY);
-        celluleValeur.setPadding(3);
-        table.addCell(celluleValeur);
-    }
-
-    private String vide(String valeur) {
-        return valeur == null || valeur.isBlank() ? "-" : valeur;
-    }
-
-    private String champ(Map<String, Object> donnees, String cle) {
-        if (donnees == null) {
-            return "-";
-        }
-        Object valeur = donnees.get(cle);
-        if (valeur == null) {
-            return "-";
-        }
-        String texte = String.valueOf(valeur).trim();
-        return texte.isEmpty() ? "-" : texte;
-    }
-
-    private String formaterDate(java.time.LocalDate date) {
-        return date != null ? date.format(FORMAT_DATE) : "-";
-    }
-
-    private String libelleLocalisation(Localisation loc) {
-        if (loc == null)
-            return "-";
-        StringBuilder sb = new StringBuilder();
-        if (loc.getAnnexe() != null)
-            sb.append(loc.getAnnexe());
-        if (loc.getService() != null)
-            sb.append(" - ").append(loc.getService());
-        if (loc.getBureau() != null)
-            sb.append(" - ").append(loc.getBureau());
-        return sb.length() == 0 ? "-" : sb.toString();
-    }
-
-    private String libelleAgent(Agent agent) {
-        if (agent == null)
-            return "Non affecte";
-        return agent.getNom() + " " + agent.getPrenom()
-                + (agent.getFonction() != null ? " - " + agent.getFonction() : "")
-                + (agent.getTelephone() != null ? " - " + agent.getTelephone() : "");
-    }
-}
+    private String agentEditee(Map<String, Object>
